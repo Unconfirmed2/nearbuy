@@ -18,8 +18,6 @@ const Index = () => {
   const [averageDistance, setAverageDistance] = useState(1.5);
   const [travelTime, setTravelTime] = useState(30);
 
-  // Distance/travel time state
-
   // Calculate EZ Score based on distance and price
   const calculateEZScore = (distance: number, price: number) => {
     // Normalize distance (closer = higher score, max distance 10 miles)
@@ -32,201 +30,51 @@ const Index = () => {
     return Math.round((distanceScore + priceScore) * 10) / 10;
   };
 
-  // Mock product data with multiple stores selling same products
+  // Mock product data with 30 diverse products
   const mockProducts = [
-    // Money Tree - sold by multiple stores
-    {
-      id: 1,
-      name: "Money Tree",
-      price: 19.99,
-      image: "https://images.unsplash.com/photo-1509423350716-97f2360af0e4?w=400&h=400&fit=crop",
-      distance: 1.4,
-      rating: 4.5,
-      seller: "Jim's Garden Center",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 11,
-      name: "Money Tree",
-      price: 24.99,
-      image: "https://images.unsplash.com/photo-1509423350716-97f2360af0e4?w=400&h=400&fit=crop",
-      distance: 0.6,
-      rating: 4.7,
-      seller: "Green Thumb Nursery",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 12,
-      name: "Money Tree",
-      price: 15.99,
-      image: "https://images.unsplash.com/photo-1509423350716-97f2360af0e4?w=400&h=400&fit=crop",
-      distance: 3.2,
-      rating: 4.3,
-      seller: "Budget Plants Co",
-      category: "House Plants",
-      ezScore: 0
-    },
-    // Snake Plant - sold by multiple stores
-    {
-      id: 2,
-      name: "Snake Plant",
-      price: 15.99,
-      image: "https://images.unsplash.com/photo-1493648668077-43febf035d3e?w=400&h=400&fit=crop",
-      distance: 0.8,
-      rating: 4.6,
-      seller: "Tony's Plant Shop",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 13,
-      name: "Snake Plant",
-      price: 22.50,
-      image: "https://images.unsplash.com/photo-1493648668077-43febf035d3e?w=400&h=400&fit=crop",
-      distance: 0.3,
-      rating: 4.8,
-      seller: "Urban Jungle",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 14,
-      name: "Snake Plant",
-      price: 12.99,
-      image: "https://images.unsplash.com/photo-1493648668077-43febf035d3e?w=400&h=400&fit=crop",
-      distance: 2.8,
-      rating: 4.4,
-      seller: "Plant Paradise",
-      category: "House Plants",
-      ezScore: 0
-    },
-    // Fiddle Leaf Fig - sold by multiple stores
-    {
-      id: 3,
-      name: "Fiddle Leaf Fig",
-      price: 89.99,
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop",
-      distance: 2.3,
-      rating: 4.8,
-      seller: "Green Thumb Nursery",
-      category: "House Plants",  
-      ezScore: 0
-    },
-    {
-      id: 15,
-      name: "Fiddle Leaf Fig",
-      price: 75.00,
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop",
-      distance: 4.1,
-      rating: 4.6,
-      seller: "Bloom & Grow",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 16,
-      name: "Fiddle Leaf Fig",
-      price: 95.00,
-      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop",
-      distance: 1.1,
-      rating: 4.9,
-      seller: "Premium Plants",
-      category: "House Plants",
-      ezScore: 0
-    },
-    // Rubber Plant - sold by multiple stores
-    {
-      id: 4,
-      name: "Rubber Plant",
-      price: 45.00,
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop",
-      distance: 1.9,
-      rating: 4.4,
-      seller: "Plant Paradise",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 17,
-      name: "Rubber Plant",
-      price: 38.99,
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop",
-      distance: 3.5,
-      rating: 4.2,
-      seller: "Budget Plants Co",
-      category: "House Plants",
-      ezScore: 0
-    },
-    // Peace Lily - sold by multiple stores
-    {
-      id: 5,
-      name: "Peace Lily",
-      price: 25.99,
-      image: "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=400&h=400&fit=crop",
-      distance: 3.1,
-      rating: 4.7,
-      seller: "Bloom & Grow",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 18,
-      name: "Peace Lily",
-      price: 19.50,
-      image: "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=400&h=400&fit=crop",
-      distance: 1.7,
-      rating: 4.5,
-      seller: "Tony's Plant Shop",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 19,
-      name: "Peace Lily",
-      price: 32.00,
-      image: "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=400&h=400&fit=crop",
-      distance: 0.9,
-      rating: 4.8,
-      seller: "Premium Plants",
-      category: "House Plants",
-      ezScore: 0
-    },
-    // Monstera Deliciosa - sold by multiple stores
-    {
-      id: 6,
-      name: "Monstera Deliciosa",
-      price: 65.00,
-      image: "https://images.unsplash.com/photo-1545239705-1564e58b75ea?w=400&h=400&fit=crop",
-      distance: 1.2,
-      rating: 4.9,
-      seller: "Urban Jungle",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 20,
-      name: "Monstera Deliciosa",
-      price: 58.99,
-      image: "https://images.unsplash.com/photo-1545239705-1564e58b75ea?w=400&h=400&fit=crop",
-      distance: 2.4,
-      rating: 4.6,
-      seller: "Jim's Garden Center",
-      category: "House Plants",
-      ezScore: 0
-    },
-    {
-      id: 21,
-      name: "Monstera Deliciosa",
-      price: 72.50,
-      image: "https://images.unsplash.com/photo-1545239705-1564e58b75ea?w=400&h=400&fit=crop",
-      distance: 0.7,
-      rating: 5.0,
-      seller: "Premium Plants",
-      category: "House Plants",
-      ezScore: 0
-    }
+    // Electronics
+    { id: 1, name: "iPhone 15 Pro", price: 999.99, image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=400&fit=crop", distance: 0.8, rating: 4.8, seller: "TechZone Electronics", category: "Electronics" },
+    { id: 2, name: "iPhone 15 Pro", price: 1049.99, image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=400&fit=crop", distance: 1.2, rating: 4.9, seller: "Digital Dreams", category: "Electronics" },
+    { id: 3, name: "MacBook Air M2", price: 1199.99, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop", distance: 1.5, rating: 4.7, seller: "TechZone Electronics", category: "Electronics" },
+    { id: 4, name: "Sony WH-1000XM5", price: 349.99, image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop", distance: 2.1, rating: 4.6, seller: "AudioHub", category: "Electronics" },
+    { id: 5, name: "iPad Pro 11\"", price: 799.99, image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=400&fit=crop", distance: 0.9, rating: 4.8, seller: "Digital Dreams", category: "Electronics" },
+    
+    // Clothing
+    { id: 6, name: "Levi's 501 Jeans", price: 89.99, image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop", distance: 1.3, rating: 4.5, seller: "Urban Threads", category: "Clothing" },
+    { id: 7, name: "Nike Air Force 1", price: 110.00, image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop", distance: 0.7, rating: 4.7, seller: "Sneaker Palace", category: "Clothing" },
+    { id: 8, name: "Nike Air Force 1", price: 95.99, image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop", distance: 2.4, rating: 4.4, seller: "FootLocker Downtown", category: "Clothing" },
+    { id: 9, name: "Champion Hoodie", price: 55.00, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop", distance: 1.8, rating: 4.3, seller: "Urban Threads", category: "Clothing" },
+    { id: 10, name: "Adidas Ultraboost 22", price: 180.00, image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&h=400&fit=crop", distance: 1.1, rating: 4.6, seller: "Sneaker Palace", category: "Clothing" },
+    
+    // Home & Furniture
+    { id: 11, name: "IKEA Billy Bookshelf", price: 49.99, image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop", distance: 3.2, rating: 4.2, seller: "Furniture Express", category: "Furniture" },
+    { id: 12, name: "Dyson V15 Vacuum", price: 749.99, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop", distance: 1.4, rating: 4.8, seller: "Home Essentials", category: "Home" },
+    { id: 13, name: "KitchenAid Stand Mixer", price: 449.99, image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop", distance: 2.0, rating: 4.9, seller: "Kitchen World", category: "Home" },
+    { id: 14, name: "Sectional Sofa", price: 1299.99, image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop", distance: 2.8, rating: 4.5, seller: "Furniture Express", category: "Furniture" },
+    { id: 15, name: "Coffee Table", price: 199.99, image: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400&h=400&fit=crop", distance: 1.9, rating: 4.4, seller: "Modern Living", category: "Furniture" },
+    
+    // Sports & Outdoors
+    { id: 16, name: "Yeti Rambler 30oz", price: 39.99, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop", distance: 1.6, rating: 4.7, seller: "Outdoor Gear Co", category: "Sports" },
+    { id: 17, name: "Wilson Tennis Racket", price: 129.99, image: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=400&fit=crop", distance: 2.3, rating: 4.5, seller: "Sports Authority", category: "Sports" },
+    { id: 18, name: "Patagonia Fleece Jacket", price: 179.99, image: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?w=400&h=400&fit=crop", distance: 0.6, rating: 4.8, seller: "Outdoor Gear Co", category: "Sports" },
+    { id: 19, name: "Hydro Flask 32oz", price: 44.95, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop", distance: 3.1, rating: 4.6, seller: "Sports Authority", category: "Sports" },
+    { id: 20, name: "Yoga Mat Premium", price: 79.99, image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop", distance: 1.7, rating: 4.4, seller: "Zen Fitness", category: "Sports" },
+    
+    // Books & Media
+    { id: 21, name: "The Psychology of Money", price: 16.99, image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop", distance: 0.9, rating: 4.6, seller: "Barnes & Noble", category: "Books" },
+    { id: 22, name: "Atomic Habits", price: 18.99, image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop", distance: 1.4, rating: 4.8, seller: "Book Haven", category: "Books" },
+    { id: 23, name: "Vinyl Record Player", price: 249.99, image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop", distance: 2.2, rating: 4.5, seller: "AudioHub", category: "Electronics" },
+    
+    // Food & Beverages
+    { id: 24, name: "Organic Coffee Beans", price: 24.99, image: "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=400&fit=crop", distance: 0.8, rating: 4.7, seller: "Local Roastery", category: "Food" },
+    { id: 25, name: "Artisan Chocolate Box", price: 32.99, image: "https://images.unsplash.com/photo-1511381939415-e44015466834?w=400&h=400&fit=crop", distance: 1.3, rating: 4.9, seller: "Sweet Treats", category: "Food" },
+    { id: 26, name: "Green Tea Set", price: 45.00, image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&h=400&fit=crop", distance: 2.1, rating: 4.4, seller: "Tea Corner", category: "Food" },
+    
+    // Beauty & Personal Care
+    { id: 27, name: "Skincare Routine Kit", price: 89.99, image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&h=400&fit=crop", distance: 1.2, rating: 4.6, seller: "Beauty Boutique", category: "Beauty" },
+    { id: 28, name: "Electric Toothbrush", price: 129.99, image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400&h=400&fit=crop", distance: 0.5, rating: 4.7, seller: "Health Plus", category: "Health" },
+    { id: 29, name: "Massage Gun", price: 199.99, image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop", distance: 1.8, rating: 4.5, seller: "Zen Fitness", category: "Health" },
+    { id: 30, name: "Essential Oil Diffuser", price: 49.99, image: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400&h=400&fit=crop", distance: 2.5, rating: 4.3, seller: "Wellness Store", category: "Health" }
   ].map(product => ({
     ...product,
     ezScore: calculateEZScore(product.distance, product.price)
@@ -379,7 +227,7 @@ const Index = () => {
           <div className="relative flex items-center bg-white rounded-lg shadow-md p-2 mb-4">
             <Search className="w-5 h-5 text-gray-400 ml-2" />
             <Input
-              placeholder="House Plants near Me"
+              placeholder="Search products near me"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 border-none bg-transparent placeholder:text-gray-400 focus-visible:ring-0"
