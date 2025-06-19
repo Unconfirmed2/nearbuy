@@ -14,6 +14,7 @@ const Index = () => {
   const [maxDistance, setMaxDistance] = useState(10);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState("distance");
+  const [basket, setBasket] = useState<{productId: number, storeId: number, productName: string, storeName: string, price: number}[]>([]);
 
   // Calculate EZ Score based on distance and price
   const calculateEZScore = (distance: number, price: number) => {
@@ -227,15 +228,50 @@ const Index = () => {
     ezScore: calculateEZScore(product.distance, product.price)
   }));
 
-  const filteredProducts = mockProducts
-    .filter(product => 
-      product.distance <= maxDistance &&
-      (searchQuery === "" || 
-       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-       product.seller.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-    .sort((a, b) => {
+  // Group products by name and structure them for the new card format
+  const groupedProducts = mockProducts.reduce((acc, product) => {
+    const existingProduct = acc.find(p => p.name === product.name);
+    
+    const store = {
+      id: product.id,
+      seller: product.seller,
+      price: product.price,
+      distance: product.distance,
+      rating: product.rating,
+      ezScore: product.ezScore
+    };
+
+    if (existingProduct) {
+      existingProduct.stores.push(store);
+    } else {
+      acc.push({
+        id: product.id,
+        name: product.name,
+        image: product.image,
+        category: product.category,
+        stores: [store]
+      });
+    }
+    
+    return acc;
+  }, [] as Array<{
+    id: number;
+    name: string;
+    image: string;
+    category: string;
+    stores: Array<{
+      id: number;
+      seller: string;
+      price: number;
+      distance: number;
+      rating: number;
+      ezScore: number;
+    }>;
+  }>);
+
+  // Sort stores within each product
+  groupedProducts.forEach(product => {
+    product.stores.sort((a, b) => {
       switch (sortBy) {
         case "distance":
           return a.distance - b.distance;
@@ -247,6 +283,34 @@ const Index = () => {
           return 0;
       }
     });
+  });
+
+  const filteredProducts = groupedProducts.filter(product => {
+    // Check if any store is within distance and matches search
+    const hasValidStore = product.stores.some(store => store.distance <= maxDistance);
+    const matchesSearch = searchQuery === "" || 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.stores.some(store => store.seller.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return hasValidStore && matchesSearch;
+  });
+
+  const handleAddToBasket = (productId: number, storeId: number) => {
+    const product = mockProducts.find(p => p.id === storeId);
+    if (product) {
+      const newItem = {
+        productId,
+        storeId,
+        productName: product.name,
+        storeName: product.seller,
+        price: product.price
+      };
+      setBasket(prev => [...prev, newItem]);
+      console.log("Added to basket:", newItem);
+      // Here you could show a toast notification
+    }
+  };
 
   useEffect(() => {
     // Request user location on component mount
@@ -284,7 +348,14 @@ const Index = () => {
                 </div>
               </div>
             </div>
-            <LocationButton userLocation={userLocation} />
+            <div className="flex items-center space-x-3">
+              {basket.length > 0 && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  Basket: {basket.length}
+                </Badge>
+              )}
+              <LocationButton userLocation={userLocation} />
+            </div>
           </div>
         </div>
       </header>
@@ -341,9 +412,13 @@ const Index = () => {
       {/* Products Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard 
+                key={`${product.name}-${product.id}`} 
+                product={product} 
+                onAddToBasket={handleAddToBasket}
+              />
             ))}
           </div>
         ) : (
