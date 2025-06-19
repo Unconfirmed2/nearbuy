@@ -14,76 +14,113 @@ const Index = () => {
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [maxDistance, setMaxDistance] = useState(10);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("distance");
 
-  // Mock product data - in a real app this would come from an API
+  // Calculate EZ Score based on distance and price
+  const calculateEZScore = (distance: number, price: number) => {
+    // Normalize distance (closer = higher score, max distance 10 miles)
+    const distanceScore = Math.max(0, (10 - distance) / 10 * 2.5);
+    
+    // Normalize price (cheaper = higher score, assume max price $2000)
+    const priceScore = Math.max(0, (2000 - price) / 2000 * 2.5);
+    
+    // Combine scores and round to 1 decimal
+    return Math.round((distanceScore + priceScore) * 10) / 10;
+  };
+
+  // Mock product data with EZ scores
   const mockProducts = [
     {
       id: 1,
-      name: "Vintage Leather Jacket",
-      price: 89.99,
-      image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=400&fit=crop",
-      distance: 0.8,
-      rating: 4.8,
-      seller: "Sarah's Vintage",
-      category: "Clothing"
+      name: "Money Tree",
+      price: 19.99,
+      image: "https://images.unsplash.com/photo-1509423350716-97f2360af0e4?w=400&h=400&fit=crop",
+      distance: 1.4,
+      rating: 4.5,
+      seller: "Jim's Garden Center",
+      category: "House Plants",
+      ezScore: 0
     },
     {
       id: 2,
-      name: "MacBook Pro 2019",
-      price: 1299.99,
-      image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop",
-      distance: 2.3,
-      rating: 4.9,
-      seller: "Tech Hub",
-      category: "Electronics"
+      name: "Snake Plant",
+      price: 15.99,
+      image: "https://images.unsplash.com/photo-1493648668077-43febf035d3e?w=400&h=400&fit=crop",
+      distance: 0.8,
+      rating: 4.6,
+      seller: "Tony's Plant Shop",
+      category: "House Plants",
+      ezScore: 0
     },
     {
       id: 3,
-      name: "Mountain Bike",
-      price: 450.00,
-      image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=400&fit=crop",
-      distance: 1.5,
-      rating: 4.6,
-      seller: "Mike's Bikes",
-      category: "Sports"
+      name: "Fiddle Leaf Fig",
+      price: 89.99,
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop",
+      distance: 2.3,
+      rating: 4.8,
+      seller: "Green Thumb Nursery",
+      category: "House Plants",  
+      ezScore: 0
     },
     {
       id: 4,
-      name: "Coffee Table",
-      price: 120.00,
-      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop",
-      distance: 3.2,
-      rating: 4.7,
-      seller: "Home Decor Plus",
-      category: "Furniture"
+      name: "Rubber Plant",
+      price: 45.00,
+      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop",
+      distance: 1.9,
+      rating: 4.4,
+      seller: "Plant Paradise",
+      category: "House Plants",
+      ezScore: 0
     },
     {
       id: 5,
-      name: "Canon DSLR Camera",
-      price: 650.00,
-      image: "https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=400&h=400&fit=crop",
-      distance: 4.1,
-      rating: 4.8,
-      seller: "Photo World",
-      category: "Electronics"
+      name: "Peace Lily",
+      price: 25.99,
+      image: "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=400&h=400&fit=crop",
+      distance: 3.1,
+      rating: 4.7,
+      seller: "Bloom & Grow",
+      category: "House Plants",
+      ezScore: 0
     },
     {
       id: 6,
-      name: "Designer Handbag",
-      price: 85.00,
-      image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop",
-      distance: 1.9,
-      rating: 4.5,
-      seller: "Fashion Forward",
-      category: "Accessories"
+      name: "Monstera Deliciosa",
+      price: 65.00,
+      image: "https://images.unsplash.com/photo-1545239705-1564e58b75ea?w=400&h=400&fit=crop",
+      distance: 1.2,
+      rating: 4.9,
+      seller: "Urban Jungle",
+      category: "House Plants",
+      ezScore: 0
     }
-  ];
+  ].map(product => ({
+    ...product,
+    ezScore: calculateEZScore(product.distance, product.price)
+  }));
 
-  const filteredProducts = mockProducts.filter(product => 
-    product.distance <= maxDistance &&
-    (searchQuery === "" || product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     product.category.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredProducts = mockProducts
+    .filter(product => 
+      product.distance <= maxDistance &&
+      (searchQuery === "" || 
+       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       product.seller.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "distance":
+          return a.distance - b.distance;
+        case "price":
+          return a.price - b.price;
+        case "ezScore":
+          return b.ezScore - a.ezScore;
+        default:
+          return 0;
+      }
+    });
 
   useEffect(() => {
     // Request user location on component mount
@@ -110,85 +147,75 @@ const Index = () => {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
+                <span className="text-white font-bold text-sm">NB</span>
               </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                NearBuy
-              </h1>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  NearBuy
+                </h1>
+                <div className="text-xs text-gray-600">
+                  Distance: 1.5 miles • Walking: 30 minutes
+                </div>
+              </div>
             </div>
             <LocationButton userLocation={userLocation} />
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            Find Products
-            <span className="block text-4xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Near You
-            </span>
-          </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Discover amazing products within your travel distance. Buy local, save time, and connect with your community.
-          </p>
-
+      {/* Search Section */}
+      <section className="px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-4xl mx-auto">
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto">
-            <div className="relative flex items-center bg-white rounded-2xl shadow-lg p-2">
-              <Search className="w-5 h-5 text-gray-400 ml-4" />
-              <Input
-                placeholder="Search for products, categories, or brands..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 border-none bg-transparent text-lg placeholder:text-gray-400 focus-visible:ring-0"
-              />
+          <div className="relative flex items-center bg-white rounded-lg shadow-md p-2 mb-4">
+            <Search className="w-5 h-5 text-gray-400 ml-2" />
+            <Input
+              placeholder="House Plants near Me"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 border-none bg-transparent placeholder:text-gray-400 focus-visible:ring-0"
+            />
+          </div>
+
+          {/* Sort and Filter Controls */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Sort by:</span>
+                <select 
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value="distance">Distance</option>
+                  <option value="price">Price</option>
+                  <option value="ezScore">EZ Score</option>
+                </select>
+              </div>
+              
               <Button
                 onClick={() => setIsFilterOpen(true)}
                 variant="outline"
                 size="sm"
-                className="mr-2"
+                className="text-sm"
               >
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
-              </Button>
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                Search
+                <Filter className="w-4 h-4 mr-1" />
+                Filter: Shopping Local
               </Button>
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="flex items-center justify-center space-x-8 mt-8 text-sm text-gray-600">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>{filteredProducts.length} products found</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Navigation className="w-4 h-4" />
-              <span>Within {maxDistance} miles</span>
-            </div>
+          {/* Results Count */}
+          <div className="text-sm text-gray-600 mb-4">
+            {filteredProducts.length} results found
           </div>
         </div>
       </section>
 
       {/* Products Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-2xl font-semibold text-gray-900">
-            Available Products
-          </h3>
-          <div className="flex items-center space-x-4">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-              <Clock className="w-3 h-3 mr-1" />
-              Updated 2 min ago
-            </Badge>
-          </div>
-        </div>
-
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

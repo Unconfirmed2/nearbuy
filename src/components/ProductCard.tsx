@@ -14,6 +14,7 @@ interface Product {
   rating: number;
   seller: string;
   category: string;
+  ezScore: number;
 }
 
 interface ProductCardProps {
@@ -29,45 +30,54 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <Button
           variant="ghost"
           size="sm"
-          className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm hover:bg-white"
+          className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-white p-1 h-8 w-8"
           onClick={() => setIsFavorited(!isFavorited)}
         >
           <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
         </Button>
-        <Badge className="absolute top-3 left-3 bg-blue-600 hover:bg-blue-600">
-          <MapPin className="w-3 h-3 mr-1" />
-          {product.distance} mi
-        </Badge>
       </div>
       
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+      <CardContent className="p-3">
+        <div className="space-y-2">
+          <h3 className="font-medium text-gray-900 text-sm line-clamp-2">
             {product.name}
           </h3>
-        </div>
-        
-        <div className="flex items-center space-x-1 mb-2">
-          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-          <span className="text-sm font-medium text-gray-700">{product.rating}</span>
-          <span className="text-sm text-gray-500">• {product.seller}</span>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-2xl font-bold text-gray-900">${product.price}</p>
-            <Badge variant="secondary" className="text-xs mt-1">
-              {product.category}
-            </Badge>
+          
+          <div className="text-xs text-gray-600">
+            <div>Sold by:</div>
+            <div className="font-medium">{product.seller}</div>
           </div>
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            View
-          </Button>
+          
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center space-x-1 text-gray-600">
+              <MapPin className="w-3 h-3" />
+              <span>{product.distance}mi/{Math.round(product.distance * 16)}min</span>
+            </div>
+            <div className="text-lg font-bold text-gray-900">
+              ${product.price}
+            </div>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-1">
+              <span className="text-xs text-gray-600">EZ Score:</span>
+              <div className="flex items-center space-x-1">
+                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-medium">{product.ezScore}/5</span>
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              className="bg-blue-600 hover:bg-blue-700 text-xs px-3 py-1 h-7"
+            >
+              Basket
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
