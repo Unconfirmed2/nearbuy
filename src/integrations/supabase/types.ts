@@ -524,6 +524,12 @@ export type Database = {
           logo_url: string | null
           name: string
           owner_id: string
+          business_name: string | null
+          tax_id: string | null
+          business_type: string | null
+          contact_phone: string | null
+          contact_email: string | null
+          onboarding_status: string | null
         }
         Insert: {
           address?: string | null
@@ -534,6 +540,12 @@ export type Database = {
           logo_url?: string | null
           name: string
           owner_id: string
+          business_name?: string | null
+          tax_id?: string | null
+          business_type?: string | null
+          contact_phone?: string | null
+          contact_email?: string | null
+          onboarding_status?: string | null
         }
         Update: {
           address?: string | null
@@ -544,6 +556,12 @@ export type Database = {
           logo_url?: string | null
           name?: string
           owner_id?: string
+          business_name?: string | null
+          tax_id?: string | null
+          business_type?: string | null
+          contact_phone?: string | null
+          contact_email?: string | null
+          onboarding_status?: string | null
         }
         Relationships: [
           {
@@ -553,6 +571,41 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      store_documents: {
+        Row: {
+          id: string
+          store_id: string
+          type: string
+          url: string
+          status: string
+          uploaded_at: string
+        }
+        Insert: {
+          id?: string
+          store_id: string
+          type: string
+          url: string
+          status?: string
+          uploaded_at?: string
+        }
+        Update: {
+          id?: string
+          store_id?: string
+          type?: string
+          url?: string
+          status?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_documents_store_id_fkey",
+            columns: ["store_id"],
+            isOneToOne: false,
+            referencedRelation: "stores",
+            referencedColumns: ["id"]
+          }
         ]
       }
       users: {

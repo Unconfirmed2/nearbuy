@@ -1,5 +1,4 @@
-
-import { Filter, MapPin, DollarSign, Star, Package } from "lucide-react";
+import { Filter, DollarSign, Star, Package } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -40,29 +39,6 @@ const FilterDialog = ({ isOpen, onClose, maxDistance, onDistanceChange }: Filter
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Distance Filter */}
-          <div className="space-y-3">
-            <Label className="flex items-center space-x-2 text-base font-medium">
-              <MapPin className="w-4 h-4" />
-              <span>Search Distance</span>
-            </Label>
-            <div className="space-y-3">
-              <Slider
-                value={[maxDistance]}
-                onValueChange={(value) => onDistanceChange(value[0])}
-                max={50}
-                min={1}
-                step={1}
-                className="w-full"
-              />
-              <div className="text-center text-sm text-gray-600">
-                Within {maxDistance} miles
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
           {/* Price Range */}
           <div className="space-y-3">
             <Label className="flex items-center space-x-2 text-base font-medium">

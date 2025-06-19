@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapPin, Search, Filter, Star, Clock, Navigation } from "lucide-react";
+import { MapPin, Search, Filter, Star, Clock, Navigation, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/ProductCard";
 import LocationButton from "@/components/LocationButton";
 import FilterDialog from "@/components/FilterDialog";
+import TravelFilter, { TravelFilterValue } from "@/components/TravelFilter";
+import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator } from "@/components/ui/menubar";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,6 +19,12 @@ const Index = () => {
   const [basket, setBasket] = useState<{productId: number, storeId: number, productName: string, storeName: string, price: number}[]>([]);
   const [averageDistance, setAverageDistance] = useState(1.5);
   const [travelTime, setTravelTime] = useState(30);
+  const [travelFilter, setTravelFilter] = useState<TravelFilterValue>({
+    mode: "walking",
+    type: "distance",
+    value: 2
+  });
+  const [searchType, setSearchType] = useState<'product' | 'store'>("product");
 
   // Calculate EZ Score based on distance and price
   const calculateEZScore = (distance: number, price: number) => {
@@ -138,14 +146,40 @@ const Index = () => {
   });
 
   const filteredProducts = groupedProducts.filter(product => {
-    // Check if any store is within distance and matches search
-    const hasValidStore = product.stores.some(store => store.distance <= maxDistance);
-    const matchesSearch = searchQuery === "" || 
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.stores.some(store => store.seller.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    return hasValidStore && matchesSearch;
+    if (searchType === "store") {
+      // Store search: match store name or category (e.g. "clothing stores", "sports apparel")
+      const storeMatch = product.stores.some(store =>
+        store.seller.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (searchQuery.toLowerCase().includes("store") && product.category.toLowerCase().includes(searchQuery.replace(/store(s)?/gi, "").trim()))
+      );
+      return storeMatch;
+    } else {
+      // Product search: match product name, category, or store
+      const hasValidStore = product.stores.some(store => {
+        if (travelFilter.type === "distance") {
+          // Convert miles to km if needed (assuming store.distance is in miles, travelFilter.value in km)
+          const storeDistanceKm = store.distance * 1.60934;
+          return storeDistanceKm <= travelFilter.value;
+        } else {
+          // Travel time: estimate time based on mode
+          // Simple estimation: walking 16min/mi, driving 2min/mi, biking 5min/mi, transit 8min/mi
+          const minPerMile = {
+            walking: 16,
+            driving: 2,
+            biking: 5,
+            transit: 8
+          };
+          const time = store.distance * minPerMile[travelFilter.mode];
+          return time <= travelFilter.value;
+        }
+      });
+      const matchesSearch = searchQuery === "" || 
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.stores.some(store => store.seller.toLowerCase().includes(searchQuery.toLowerCase()));
+      return hasValidStore && matchesSearch;
+    }
   });
 
   const handleAddToBasket = (productId: number, storeId: number) => {
@@ -197,7 +231,7 @@ const Index = () => {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
                 <span className="text-white font-bold text-sm">NB</span>
@@ -208,13 +242,38 @@ const Index = () => {
                 </h1>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-2">
+                <span className="text-base font-medium text-gray-700">Nearby</span>
+                <TravelFilter value={travelFilter} onChange={setTravelFilter} />
+                <LocationButton userLocation={userLocation} />
+              </div>
               {basket.length > 0 && (
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                   Basket: {basket.length}
                 </Badge>
               )}
-              <LocationButton userLocation={userLocation} />
+              {/* Menu Icon */}
+              <Menubar>
+                <MenubarMenu>
+                  <MenubarTrigger className="p-2 hover:bg-gray-100 rounded-full">
+                    <Menu className="w-6 h-6" />
+                  </MenubarTrigger>
+                  <MenubarContent align="end">
+                    <MenubarItem>Home</MenubarItem>
+                    <MenubarItem>Categories</MenubarItem>
+                    <MenubarItem>Orders</MenubarItem>
+                    <MenubarItem>Cart</MenubarItem>
+                    <MenubarSeparator />
+                    <MenubarItem>Account</MenubarItem>
+                    <MenubarItem>Messages</MenubarItem>
+                    <MenubarItem>Help Center</MenubarItem>
+                    <MenubarSeparator />
+                    <MenubarItem>Sign in as Consumer</MenubarItem>
+                    <MenubarItem>Sign in as Merchant</MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
+              </Menubar>
             </div>
           </div>
         </div>
@@ -227,22 +286,26 @@ const Index = () => {
           <div className="relative flex items-center bg-white rounded-lg shadow-md p-2 mb-4">
             <Search className="w-5 h-5 text-gray-400 ml-2" />
             <Input
-              placeholder="Search products near me"
+              placeholder={searchType === "product" ? "Search products near me" : "Search stores near me"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 border-none bg-transparent placeholder:text-gray-400 focus-visible:ring-0"
             />
-          </div>
-
-          {/* Distance/Travel Time Display */}
-          <div className="flex items-center justify-center space-x-6 mb-4 text-sm text-gray-600">
-            <div className="flex items-center space-x-2">
-              <MapPin className="w-4 h-4" />
-              <span>Average: {averageDistance.toFixed(1)} miles</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Clock className="w-4 h-4" />
-              <span>Walking: {travelTime} minutes</span>
+            <div className="ml-2 flex items-center gap-1">
+              <button
+                className={`px-2 py-1 text-xs rounded-l border border-gray-300 ${searchType === "product" ? "bg-blue-600 text-white" : "bg-white text-gray-700"}`}
+                onClick={() => setSearchType("product")}
+                type="button"
+              >
+                Products
+              </button>
+              <button
+                className={`px-2 py-1 text-xs rounded-r border border-gray-300 ${searchType === "store" ? "bg-blue-600 text-white" : "bg-white text-gray-700"}`}
+                onClick={() => setSearchType("store")}
+                type="button"
+              >
+                Stores
+              </button>
             </div>
           </div>
 
@@ -314,6 +377,8 @@ const Index = () => {
         onClose={() => setIsFilterOpen(false)}
         maxDistance={maxDistance}
         onDistanceChange={setMaxDistance}
+        travelFilter={travelFilter}
+        onTravelFilterChange={setTravelFilter}
       />
     </div>
   );
