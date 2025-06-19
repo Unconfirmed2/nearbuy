@@ -1,7 +1,6 @@
 
-import { MapPin, Star, Heart, Plus } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import StoreSelectionModal from "./StoreSelectionModal";
@@ -32,16 +31,9 @@ const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const visibleStores = product.stores.slice(0, 3);
-  const hasMoreStores = product.stores.length > 3;
   const bestPriceStore = product.stores.reduce((best, current) => 
     current.price < best.price ? current : best
   );
-
-  const handleQuickAdd = (storeId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    onAddToBasket(product.id, storeId);
-  };
 
   return (
     <>
@@ -63,57 +55,22 @@ const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
         </div>
         
         <CardContent className="p-3">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <h3 className="font-medium text-gray-900 text-sm line-clamp-2">
               {product.name}
             </h3>
             
-            <div className="text-xs text-gray-500 mb-2">
+            <div className="text-xs text-gray-500">
               From ${bestPriceStore.price} • {product.stores.length} store{product.stores.length !== 1 ? 's' : ''}
             </div>
             
-            {/* Store listings */}
-            <div className="space-y-1">
-              {visibleStores.map((store, index) => (
-                <div key={store.id} className="flex items-center justify-between text-xs bg-gray-50 rounded p-2">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-800 truncate">{store.seller}</div>
-                    <div className="flex items-center space-x-2 text-gray-600">
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="w-3 h-3" />
-                        <span>{store.distance}mi</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span>{store.ezScore}/5</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right ml-2">
-                    <div className="font-bold text-gray-900">${store.price}</div>
-                    <Button
-                      size="sm"
-                      onClick={(e) => handleQuickAdd(store.id, e)}
-                      className="bg-blue-600 hover:bg-blue-700 text-xs px-2 py-1 h-6 mt-1"
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              
-              {hasMoreStores && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsModalOpen(true)}
-                  className="w-full text-xs py-1 h-7 border-dashed"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  +{product.stores.length - 3} more stores
-                </Button>
-              )}
-            </div>
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
+              size="sm"
+            >
+              See stores
+            </Button>
           </div>
         </CardContent>
       </Card>

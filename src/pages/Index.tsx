@@ -15,6 +15,10 @@ const Index = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState("distance");
   const [basket, setBasket] = useState<{productId: number, storeId: number, productName: string, storeName: string, price: number}[]>([]);
+  const [averageDistance, setAverageDistance] = useState(1.5);
+  const [travelTime, setTravelTime] = useState(30);
+
+  // Distance/travel time state
 
   // Calculate EZ Score based on distance and price
   const calculateEZScore = (distance: number, price: number) => {
@@ -308,9 +312,20 @@ const Index = () => {
       };
       setBasket(prev => [...prev, newItem]);
       console.log("Added to basket:", newItem);
-      // Here you could show a toast notification
     }
   };
+
+  // Calculate average distance and travel time from products
+  useEffect(() => {
+    if (filteredProducts.length > 0) {
+      const allDistances = filteredProducts.flatMap(product => 
+        product.stores.map(store => store.distance)
+      );
+      const avgDist = allDistances.reduce((sum, dist) => sum + dist, 0) / allDistances.length;
+      setAverageDistance(avgDist);
+      setTravelTime(Math.round(avgDist * 16)); // Assuming 16 minutes per mile walking
+    }
+  }, [filteredProducts]);
 
   useEffect(() => {
     // Request user location on component mount
@@ -343,9 +358,6 @@ const Index = () => {
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   NearBuy
                 </h1>
-                <div className="text-xs text-gray-600">
-                  Distance: 1.5 miles • Walking: 30 minutes
-                </div>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -374,6 +386,18 @@ const Index = () => {
             />
           </div>
 
+          {/* Distance/Travel Time Display */}
+          <div className="flex items-center justify-center space-x-6 mb-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-2">
+              <MapPin className="w-4 h-4" />
+              <span>Average: {averageDistance.toFixed(1)} miles</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4" />
+              <span>Walking: {travelTime} minutes</span>
+            </div>
+          </div>
+
           {/* Sort and Filter Controls */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
@@ -397,7 +421,7 @@ const Index = () => {
                 className="text-sm"
               >
                 <Filter className="w-4 h-4 mr-1" />
-                Filter: Shopping Local
+                Filter: Max {maxDistance}mi
               </Button>
             </div>
           </div>
