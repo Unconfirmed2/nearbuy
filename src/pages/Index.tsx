@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MapPin, Search, Filter, Star, Clock, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,8 +27,9 @@ const Index = () => {
     return Math.round((distanceScore + priceScore) * 10) / 10;
   };
 
-  // Mock product data with EZ scores
+  // Mock product data with multiple stores selling same products
   const mockProducts = [
+    // Money Tree - sold by multiple stores
     {
       id: 1,
       name: "Money Tree",
@@ -42,6 +42,29 @@ const Index = () => {
       ezScore: 0
     },
     {
+      id: 11,
+      name: "Money Tree",
+      price: 24.99,
+      image: "https://images.unsplash.com/photo-1509423350716-97f2360af0e4?w=400&h=400&fit=crop",
+      distance: 0.6,
+      rating: 4.7,
+      seller: "Green Thumb Nursery",
+      category: "House Plants",
+      ezScore: 0
+    },
+    {
+      id: 12,
+      name: "Money Tree",
+      price: 15.99,
+      image: "https://images.unsplash.com/photo-1509423350716-97f2360af0e4?w=400&h=400&fit=crop",
+      distance: 3.2,
+      rating: 4.3,
+      seller: "Budget Plants Co",
+      category: "House Plants",
+      ezScore: 0
+    },
+    // Snake Plant - sold by multiple stores
+    {
       id: 2,
       name: "Snake Plant",
       price: 15.99,
@@ -52,6 +75,29 @@ const Index = () => {
       category: "House Plants",
       ezScore: 0
     },
+    {
+      id: 13,
+      name: "Snake Plant",
+      price: 22.50,
+      image: "https://images.unsplash.com/photo-1493648668077-43febf035d3e?w=400&h=400&fit=crop",
+      distance: 0.3,
+      rating: 4.8,
+      seller: "Urban Jungle",
+      category: "House Plants",
+      ezScore: 0
+    },
+    {
+      id: 14,
+      name: "Snake Plant",
+      price: 12.99,
+      image: "https://images.unsplash.com/photo-1493648668077-43febf035d3e?w=400&h=400&fit=crop",
+      distance: 2.8,
+      rating: 4.4,
+      seller: "Plant Paradise",
+      category: "House Plants",
+      ezScore: 0
+    },
+    // Fiddle Leaf Fig - sold by multiple stores
     {
       id: 3,
       name: "Fiddle Leaf Fig",
@@ -64,6 +110,29 @@ const Index = () => {
       ezScore: 0
     },
     {
+      id: 15,
+      name: "Fiddle Leaf Fig",
+      price: 75.00,
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop",
+      distance: 4.1,
+      rating: 4.6,
+      seller: "Bloom & Grow",
+      category: "House Plants",
+      ezScore: 0
+    },
+    {
+      id: 16,
+      name: "Fiddle Leaf Fig",
+      price: 95.00,
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop",
+      distance: 1.1,
+      rating: 4.9,
+      seller: "Premium Plants",
+      category: "House Plants",
+      ezScore: 0
+    },
+    // Rubber Plant - sold by multiple stores
+    {
       id: 4,
       name: "Rubber Plant",
       price: 45.00,
@@ -74,6 +143,18 @@ const Index = () => {
       category: "House Plants",
       ezScore: 0
     },
+    {
+      id: 17,
+      name: "Rubber Plant",
+      price: 38.99,
+      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop",
+      distance: 3.5,
+      rating: 4.2,
+      seller: "Budget Plants Co",
+      category: "House Plants",
+      ezScore: 0
+    },
+    // Peace Lily - sold by multiple stores
     {
       id: 5,
       name: "Peace Lily",
@@ -86,6 +167,29 @@ const Index = () => {
       ezScore: 0
     },
     {
+      id: 18,
+      name: "Peace Lily",
+      price: 19.50,
+      image: "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=400&h=400&fit=crop",
+      distance: 1.7,
+      rating: 4.5,
+      seller: "Tony's Plant Shop",
+      category: "House Plants",
+      ezScore: 0
+    },
+    {
+      id: 19,
+      name: "Peace Lily",
+      price: 32.00,
+      image: "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=400&h=400&fit=crop",
+      distance: 0.9,
+      rating: 4.8,
+      seller: "Premium Plants",
+      category: "House Plants",
+      ezScore: 0
+    },
+    // Monstera Deliciosa - sold by multiple stores
+    {
       id: 6,
       name: "Monstera Deliciosa",
       price: 65.00,
@@ -93,6 +197,28 @@ const Index = () => {
       distance: 1.2,
       rating: 4.9,
       seller: "Urban Jungle",
+      category: "House Plants",
+      ezScore: 0
+    },
+    {
+      id: 20,
+      name: "Monstera Deliciosa",
+      price: 58.99,
+      image: "https://images.unsplash.com/photo-1545239705-1564e58b75ea?w=400&h=400&fit=crop",
+      distance: 2.4,
+      rating: 4.6,
+      seller: "Jim's Garden Center",
+      category: "House Plants",
+      ezScore: 0
+    },
+    {
+      id: 21,
+      name: "Monstera Deliciosa",
+      price: 72.50,
+      image: "https://images.unsplash.com/photo-1545239705-1564e58b75ea?w=400&h=400&fit=crop",
+      distance: 0.7,
+      rating: 5.0,
+      seller: "Premium Plants",
       category: "House Plants",
       ezScore: 0
     }
