@@ -85,10 +85,6 @@ export default function App() {
     }
   };
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
   // Route user to appropriate portal based on role
   const getPortalRoute = (userProfile: UserProfile) => {
     switch (userProfile.role) {
@@ -102,6 +98,14 @@ export default function App() {
         return '/consumer';
     }
   };
+
+  // Show loading only when we're checking authentication, not for public pages
+  if (loading && (window.location.pathname.startsWith('/consumer') || 
+                 window.location.pathname.startsWith('/merchant') || 
+                 window.location.pathname.startsWith('/admin') || 
+                 window.location.pathname === '/dashboard')) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <BrowserRouter>
