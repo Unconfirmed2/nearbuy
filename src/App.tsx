@@ -10,6 +10,9 @@ import AuthLayout from './components/auth/AuthLayout';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 
+// Public pages
+import Index from './pages/Index';
+
 // Portal components
 import ConsumerApp from './portals/consumer/ConsumerApp';
 import MerchantApp from './portals/merchant/MerchantApp';
@@ -68,7 +71,13 @@ export default function App() {
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      
+      // Ensure role is properly typed
+      const profileData: UserProfile = {
+        ...data,
+        role: data.role as 'customer' | 'store_owner' | 'admin' | 'moderator'
+      };
+      setProfile(profileData);
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -85,12 +94,12 @@ export default function App() {
     switch (userProfile.role) {
       case 'admin':
       case 'moderator':
-        return '/admin/*';
+        return '/admin';
       case 'store_owner':
-        return '/merchant/*';
+        return '/merchant';
       case 'customer':
       default:
-        return '/consumer/*';
+        return '/consumer';
     }
   };
 
@@ -98,26 +107,32 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
         <Routes>
-          {/* Public routes */}
+          {/* Public routes - accessible without authentication */}
+          <Route path="/" element={<Index />} />
+          
+          {/* Auth routes */}
           <Route path="/auth" element={<AuthLayout />}>
             <Route path="signin" element={<SignIn />} />
             <Route path="signup" element={<SignUp />} />
           </Route>
 
-          {/* Protected routes */}
+          {/* Protected routes - require authentication */}
           {user && profile ? (
             <>
               <Route path="/consumer/*" element={<ConsumerApp user={user} profile={profile} />} />
               <Route path="/merchant/*" element={<MerchantApp user={user} profile={profile} />} />
               <Route path="/admin/*" element={<AdminApp user={user} profile={profile} />} />
               
-              {/* Default redirect based on user role */}
-              <Route path="/" element={<Navigate to={getPortalRoute(profile).replace('/*', '')} replace />} />
+              {/* Redirect to appropriate portal based on role */}
+              <Route path="/dashboard" element={<Navigate to={getPortalRoute(profile)} replace />} />
             </>
           ) : (
             <>
-              {/* Redirect unauthenticated users to sign in */}
-              <Route path="*" element={<Navigate to="/auth/signin" replace />} />
+              {/* Redirect to auth only for protected routes */}
+              <Route path="/consumer/*" element={<Navigate to="/auth/signin" replace />} />
+              <Route path="/merchant/*" element={<Navigate to="/auth/signin" replace />} />
+              <Route path="/admin/*" element={<Navigate to="/auth/signin" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/auth/signin" replace />} />
             </>
           )}
         </Routes>

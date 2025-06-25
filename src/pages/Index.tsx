@@ -1,24 +1,23 @@
 import { useState, useEffect } from "react";
-import { MapPin, Search, Filter, Star, Clock, Navigation, Menu } from "lucide-react";
+import { MapPin, Search, Filter, Star, Clock, Navigation, Menu, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/ProductCard";
 import LocationButton from "@/components/LocationButton";
-import FilterDialog from "@/components/FilterDialog";
 import TravelFilter, { TravelFilterValue } from "@/components/TravelFilter";
 import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator } from "@/components/ui/menubar";
+import { getBasket, addToBasket, getFavorites } from "@/utils/localStorage";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [maxDistance, setMaxDistance] = useState(10);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortBy, setSortBy] = useState("distance");
-  const [basket, setBasket] = useState<{productId: number, storeId: number, productName: string, storeName: string, price: number}[]>([]);
-  const [averageDistance, setAverageDistance] = useState(1.5);
-  const [travelTime, setTravelTime] = useState(30);
+  const [basket, setBasket] = useState(getBasket());
+  const [favorites, setFavorites] = useState(getFavorites());
   const [travelFilter, setTravelFilter] = useState<TravelFilterValue>({
     mode: "walking",
     type: "distance",
@@ -26,15 +25,22 @@ const Index = () => {
   });
   const [searchType, setSearchType] = useState<'product' | 'store'>("product");
 
+  // Update basket and favorites from localStorage on mount
+  useEffect(() => {
+    const updateFromStorage = () => {
+      setBasket(getBasket());
+      setFavorites(getFavorites());
+    };
+    
+    // Listen for storage changes (when user adds items in another tab)
+    window.addEventListener('storage', updateFromStorage);
+    return () => window.removeEventListener('storage', updateFromStorage);
+  }, []);
+
   // Calculate EZ Score based on distance and price
   const calculateEZScore = (distance: number, price: number) => {
-    // Normalize distance (closer = higher score, max distance 10 miles)
     const distanceScore = Math.max(0, (10 - distance) / 10 * 2.5);
-    
-    // Normalize price (cheaper = higher score, assume max price $2000)
     const priceScore = Math.max(0, (2000 - price) / 2000 * 2.5);
-    
-    // Combine scores and round to 1 decimal
     return Math.round((distanceScore + priceScore) * 10) / 10;
   };
 
@@ -147,7 +153,6 @@ const Index = () => {
 
   const filteredProducts = groupedProducts.filter(product => {
     if (searchType === "store") {
-      // Store search: match store name or category (e.g. "clothing stores", "sports apparel")
       const storeMatch = product.stores.some(store =>
         store.seller.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -155,15 +160,11 @@ const Index = () => {
       );
       return storeMatch;
     } else {
-      // Product search: match product name, category, or store
       const hasValidStore = product.stores.some(store => {
         if (travelFilter.type === "distance") {
-          // Convert miles to km if needed (assuming store.distance is in miles, travelFilter.value in km)
           const storeDistanceKm = store.distance * 1.60934;
           return storeDistanceKm <= travelFilter.value;
         } else {
-          // Travel time: estimate time based on mode
-          // Simple estimation: walking 16min/mi, driving 2min/mi, biking 5min/mi, transit 8min/mi
           const minPerMile = {
             walking: 16,
             driving: 2,
@@ -192,25 +193,13 @@ const Index = () => {
         storeName: product.seller,
         price: product.price
       };
-      setBasket(prev => [...prev, newItem]);
+      addToBasket(newItem);
+      setBasket(getBasket()); // Update state
       console.log("Added to basket:", newItem);
     }
   };
 
-  // Calculate average distance and travel time from products
   useEffect(() => {
-    if (filteredProducts.length > 0) {
-      const allDistances = filteredProducts.flatMap(product => 
-        product.stores.map(store => store.distance)
-      );
-      const avgDist = allDistances.reduce((sum, dist) => sum + dist, 0) / allDistances.length;
-      setAverageDistance(avgDist);
-      setTravelTime(Math.round(avgDist * 16)); // Assuming 16 minutes per mile walking
-    }
-  }, [filteredProducts]);
-
-  useEffect(() => {
-    // Request user location on component mount
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -253,6 +242,12 @@ const Index = () => {
                   Basket: {basket.length}
                 </Badge>
               )}
+              {favorites.length > 0 && (
+                <Badge variant="secondary" className="bg-pink-100 text-pink-800">
+                  <Heart className="w-3 h-3 mr-1" />
+                  {favorites.length}
+                </Badge>
+              )}
               {/* Menu Icon */}
               <Menubar>
                 <MenubarMenu>
@@ -260,17 +255,20 @@ const Index = () => {
                     <Menu className="w-6 h-6" />
                   </MenubarTrigger>
                   <MenubarContent align="end">
-                    <MenubarItem>Home</MenubarItem>
-                    <MenubarItem>Categories</MenubarItem>
-                    <MenubarItem>Orders</MenubarItem>
-                    <MenubarItem>Cart</MenubarItem>
+                    <MenubarItem>
+                      <Link to="/" className="w-full">Home</Link>
+                    </MenubarItem>
                     <MenubarSeparator />
-                    <MenubarItem>Account</MenubarItem>
-                    <MenubarItem>Messages</MenubarItem>
-                    <MenubarItem>Help Center</MenubarItem>
+                    <MenubarItem>
+                      <Link to="/auth/signin" className="w-full">Sign In</Link>
+                    </MenubarItem>
+                    <MenubarItem>
+                      <Link to="/auth/signup" className="w-full">Sign Up</Link>
+                    </MenubarItem>
                     <MenubarSeparator />
-                    <MenubarItem>Sign in as Consumer</MenubarItem>
-                    <MenubarItem>Sign in as Merchant</MenubarItem>
+                    <MenubarItem>
+                      <Link to="/dashboard" className="w-full">Dashboard</Link>
+                    </MenubarItem>
                   </MenubarContent>
                 </MenubarMenu>
               </Menubar>
@@ -324,16 +322,6 @@ const Index = () => {
                   <option value="ezScore">EZ Score</option>
                 </select>
               </div>
-              
-              <Button
-                onClick={() => setIsFilterOpen(true)}
-                variant="outline"
-                size="sm"
-                className="text-sm"
-              >
-                <Filter className="w-4 h-4 mr-1" />
-                Filter: Max {maxDistance}mi
-              </Button>
             </div>
           </div>
 
@@ -370,16 +358,6 @@ const Index = () => {
           </Card>
         )}
       </section>
-
-      {/* Filter Dialog */}
-      <FilterDialog
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-        maxDistance={maxDistance}
-        onDistanceChange={setMaxDistance}
-        travelFilter={travelFilter}
-        onTravelFilterChange={setTravelFilter}
-      />
     </div>
   );
 };
