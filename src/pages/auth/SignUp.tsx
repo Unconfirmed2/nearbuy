@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,22 @@ const SignUp: React.FC = () => {
   const [role, setRole] = useState('customer');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const roleParam = searchParams.get('role');
+    if (roleParam === 'customer' || roleParam === 'store_owner') {
+      setRole(roleParam);
+    }
+  }, [searchParams]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const redirectUrl = `${window.location.origin}/`;
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -29,6 +39,7 @@ const SignUp: React.FC = () => {
             name,
             role,
           },
+          emailRedirectTo: redirectUrl
         },
       });
 
@@ -43,15 +54,17 @@ const SignUp: React.FC = () => {
     }
   };
 
+  const roleDisplayName = role === 'store_owner' ? 'Merchant' : 'Consumer';
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
-        Sign Up
+        Sign Up as {roleDisplayName}
       </h2>
       
       <form onSubmit={handleSignUp} className="space-y-4">
         <div>
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">Full Name</Label>
           <Input
             id="name"
             type="text"
@@ -88,14 +101,14 @@ const SignUp: React.FC = () => {
         </div>
         
         <div>
-          <Label htmlFor="role">I am a</Label>
+          <Label htmlFor="role">Account Type</Label>
           <Select value={role} onValueChange={setRole}>
             <SelectTrigger>
-              <SelectValue placeholder="Select your role" />
+              <SelectValue placeholder="Select your account type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="customer">Customer</SelectItem>
-              <SelectItem value="store_owner">Store Owner</SelectItem>
+              <SelectItem value="customer">Consumer</SelectItem>
+              <SelectItem value="store_owner">Merchant</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -105,7 +118,7 @@ const SignUp: React.FC = () => {
           className="w-full"
           disabled={loading}
         >
-          {loading ? 'Creating Account...' : 'Sign Up'}
+          {loading ? 'Creating Account...' : `Sign Up as ${roleDisplayName}`}
         </Button>
       </form>
       
