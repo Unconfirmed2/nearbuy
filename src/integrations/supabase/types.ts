@@ -9,6 +9,36 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_actions: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       analytics: {
         Row: {
           created_at: string
@@ -364,6 +394,33 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          role: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+          role?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null
@@ -482,6 +539,41 @@ export type Database = {
           },
         ]
       }
+      store_documents: {
+        Row: {
+          id: string
+          status: string | null
+          store_id: string | null
+          type: string
+          uploaded_at: string | null
+          url: string
+        }
+        Insert: {
+          id?: string
+          status?: string | null
+          store_id?: string | null
+          type: string
+          uploaded_at?: string | null
+          url: string
+        }
+        Update: {
+          id?: string
+          status?: string | null
+          store_id?: string | null
+          type?: string
+          uploaded_at?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_documents_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_hours: {
         Row: {
           close_time: string
@@ -514,54 +606,95 @@ export type Database = {
           },
         ]
       }
+      store_hours_new: {
+        Row: {
+          close_time: string | null
+          day_of_week: number
+          id: string
+          open_time: string | null
+          store_id: string
+        }
+        Insert: {
+          close_time?: string | null
+          day_of_week: number
+          id?: string
+          open_time?: string | null
+          store_id: string
+        }
+        Update: {
+          close_time?: string | null
+          day_of_week?: number
+          id?: string
+          open_time?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_hours_new_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           address: string | null
+          business_name: string | null
+          business_type: string | null
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string
+          description: string | null
           id: string
+          is_active: boolean | null
           is_verified: boolean
           location: unknown | null
           logo_url: string | null
           name: string
-          owner_id: string
-          business_name: string | null
-          tax_id: string | null
-          business_type: string | null
-          contact_phone: string | null
-          contact_email: string | null
           onboarding_status: string | null
+          owner_id: string
+          phone: string | null
+          tax_id: string | null
         }
         Insert: {
           address?: string | null
+          business_name?: string | null
+          business_type?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
+          description?: string | null
           id?: string
+          is_active?: boolean | null
           is_verified?: boolean
           location?: unknown | null
           logo_url?: string | null
           name: string
-          owner_id: string
-          business_name?: string | null
-          tax_id?: string | null
-          business_type?: string | null
-          contact_phone?: string | null
-          contact_email?: string | null
           onboarding_status?: string | null
+          owner_id: string
+          phone?: string | null
+          tax_id?: string | null
         }
         Update: {
           address?: string | null
+          business_name?: string | null
+          business_type?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string
+          description?: string | null
           id?: string
+          is_active?: boolean | null
           is_verified?: boolean
           location?: unknown | null
           logo_url?: string | null
           name?: string
-          owner_id?: string
-          business_name?: string | null
-          tax_id?: string | null
-          business_type?: string | null
-          contact_phone?: string | null
-          contact_email?: string | null
           onboarding_status?: string | null
+          owner_id?: string
+          phone?: string | null
+          tax_id?: string | null
         }
         Relationships: [
           {
@@ -571,41 +704,6 @@ export type Database = {
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      store_documents: {
-        Row: {
-          id: string
-          store_id: string
-          type: string
-          url: string
-          status: string
-          uploaded_at: string
-        }
-        Insert: {
-          id?: string
-          store_id: string
-          type: string
-          url: string
-          status?: string
-          uploaded_at?: string
-        }
-        Update: {
-          id?: string
-          store_id?: string
-          type?: string
-          url?: string
-          status?: string
-          uploaded_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "store_documents_store_id_fkey",
-            columns: ["store_id"],
-            isOneToOne: false,
-            referencedRelation: "stores",
-            referencedColumns: ["id"]
-          }
         ]
       }
       users: {
@@ -1144,6 +1242,10 @@ export type Database = {
       gidx_out: {
         Args: { "": unknown }
         Returns: unknown
+      }
+      has_role: {
+        Args: { _user_id: string; _role: string }
+        Returns: boolean
       }
       json: {
         Args: { "": unknown }
@@ -2436,7 +2538,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      order_status: "pending" | "ready" | "completed" | "cancelled"
+      user_role: "customer" | "store_owner" | "admin" | "moderator"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -2559,6 +2662,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      order_status: ["pending", "ready", "completed", "cancelled"],
+      user_role: ["customer", "store_owner", "admin", "moderator"],
+    },
   },
 } as const
