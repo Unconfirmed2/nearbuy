@@ -92,28 +92,28 @@ const Analytics: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <AnalyticsCard
                 title="Total Revenue"
-                value={`$${analytics.total_revenue.toLocaleString()}`}
-                change={analytics.revenue_change}
+                value={`$${analytics.sales_metrics.total_revenue.toLocaleString()}`}
+                change={analytics.sales_metrics.revenue_change}
                 changeLabel="vs last period"
                 icon={<DollarSign className="w-4 h-4" />}
               />
               <AnalyticsCard
                 title="Total Orders"
-                value={analytics.total_orders}
-                change={analytics.order_change}
+                value={analytics.sales_metrics.total_orders}
+                change={analytics.sales_metrics.orders_change}
                 changeLabel="vs last period"
                 icon={<ShoppingCart className="w-4 h-4" />}
               />
               <AnalyticsCard
                 title="Average Order"
-                value={`$${analytics.avg_order_value.toFixed(2)}`}
-                change={analytics.aov_change}
+                value={`$${analytics.sales_metrics.average_order_value.toFixed(2)}`}
+                change={analytics.sales_metrics.aov_change}
                 changeLabel="vs last period"
                 icon={<TrendingUp className="w-4 h-4" />}
               />
               <AnalyticsCard
                 title="Active Products"
-                value={analytics.active_products}
+                value={analytics.product_performance.length}
                 icon={<Package className="w-4 h-4" />}
               />
             </div>
@@ -188,7 +188,9 @@ const Analytics: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="products">
-          <TopProductsTable merchantId="debug-merchant-id" />
+          {analytics && (
+            <TopProductsTable products={analytics.product_performance} />
+          )}
         </TabsContent>
 
         <TabsContent value="customers">
