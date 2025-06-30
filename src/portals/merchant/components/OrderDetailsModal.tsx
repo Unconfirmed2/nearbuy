@@ -19,7 +19,7 @@ interface OrderDetailsModalProps {
     profiles: {
       name: string;
       email: string;
-    };
+    } | null;
     stores: {
       name: string;
     };
@@ -111,7 +111,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Mail className="h-4 w-4" />
-                <span>{order.profiles?.email}</span>
+                <span>{order.profiles?.email || 'No email provided'}</span>
               </div>
             </div>
           </div>

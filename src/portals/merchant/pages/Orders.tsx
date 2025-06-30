@@ -25,7 +25,7 @@ interface Order {
   profiles: {
     name: string;
     email: string;
-  };
+  } | null;
   stores: {
     name: string;
   };
@@ -55,7 +55,7 @@ const Orders: React.FC = () => {
         .from('orders')
         .select(`
           *,
-          profiles (name, email),
+          profiles!orders_user_id_fkey (name, email),
           stores (name),
           order_items (
             quantity,
@@ -276,7 +276,7 @@ const Orders: React.FC = () => {
                     <TableCell>
                       <div>
                         <div className="font-medium">{order.profiles?.name || 'Unknown'}</div>
-                        <div className="text-sm text-gray-500">{order.profiles?.email}</div>
+                        <div className="text-sm text-gray-500">{order.profiles?.email || 'No email'}</div>
                       </div>
                     </TableCell>
                     <TableCell>
