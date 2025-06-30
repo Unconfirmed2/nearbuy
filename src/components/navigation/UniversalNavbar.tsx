@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -13,7 +14,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   ShoppingCart, 
-  Search, 
   Heart, 
   User as UserIcon, 
   LogOut, 
@@ -62,7 +62,6 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
   const user = propUser;
   const profile = propProfile;
 
-  const [searchQuery, setSearchQuery] = React.useState('');
   const [locationValue, setLocationValue] = React.useState('');
   const [isLocationPopoverOpen, setIsLocationPopoverOpen] = React.useState(false);
   const [travelFilter, setTravelFilter] = React.useState<TravelFilterValue>({
@@ -79,14 +78,6 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
 
   const handleAuthAction = () => {
     navigate('/auth-consumer');
-  };
-
-  const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      toast.error('Please enter a search term');
-      return;
-    }
-    navigate(`/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(locationValue)}`);
   };
 
   const handleLocationSelect = (selectedLocation: string) => {
@@ -131,113 +122,95 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
             </span>
           </Link>
 
-          {/* Search and Location - Desktop */}
-          <div className="hidden md:flex items-center flex-1 max-w-2xl mx-6 gap-2">
-            {/* Search Bar */}
-            <div className="relative flex items-center bg-white rounded-lg shadow-sm border p-2 flex-1">
-              <Search className="w-4 h-4 text-gray-400 ml-1" />
-              <Input
-                placeholder="Find products you want NearBuy"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 border-none bg-transparent placeholder:text-gray-400 focus-visible:ring-0"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <Button onClick={handleSearch} size="sm" className="ml-1">
-                Search
-              </Button>
-            </div>
-
-            {/* Location and Travel Filter */}
-            <div className="flex items-center gap-2">
-              <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
-                <PopoverTrigger asChild>
+          {/* Location and Travel Filter - Desktop */}
+          <div className="hidden md:flex items-center gap-2">
+            <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
+              <PopoverTrigger asChild>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Input
+                    placeholder="Location"
+                    value={locationValue}
+                    onChange={(e) => setLocationValue(e.target.value)}
+                    className="w-32 pl-10 cursor-pointer text-sm"
+                    readOnly
+                    onClick={() => setIsLocationPopoverOpen(true)}
+                  />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4" align="end">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Enter your location</h4>
+                  
+                  <Button
+                    onClick={handleUseMyLocation}
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Use My Current Location
+                  </Button>
+                  
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                    <Input
-                      placeholder="Location"
-                      value={locationValue}
-                      onChange={(e) => setLocationValue(e.target.value)}
-                      className="w-32 pl-10 cursor-pointer text-sm"
-                      readOnly
-                      onClick={() => setIsLocationPopoverOpen(true)}
-                    />
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">
+                        Or enter manually
+                      </span>
+                    </div>
                   </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-4" align="end">
-                  <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Enter your location</h4>
-                    
+                  
+                  <Input
+                    placeholder="Type your address..."
+                    value={locationValue}
+                    onChange={(e) => setLocationValue(e.target.value)}
+                    className="w-full"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && locationValue.trim()) {
+                        handleLocationSelect(locationValue);
+                      }
+                    }}
+                  />
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Popular locations:</p>
+                    <div className="space-y-1">
+                      {[
+                        'Downtown',
+                        'Main Street',
+                        'Shopping District',
+                        'University Area'
+                      ].map((popularLocation) => (
+                        <Button
+                          key={popularLocation}
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-left"
+                          onClick={() => handleLocationSelect(popularLocation)}
+                        >
+                          <MapPin className="h-4 w-4 mr-2" />
+                          {popularLocation}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  {locationValue.trim() && (
                     <Button
-                      onClick={handleUseMyLocation}
-                      variant="outline"
-                      className="w-full justify-start"
-                    >
-                      <Navigation className="h-4 w-4 mr-2" />
-                      Use My Current Location
-                    </Button>
-                    
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-white px-2 text-muted-foreground">
-                          Or enter manually
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <Input
-                      placeholder="Type your address..."
-                      value={locationValue}
-                      onChange={(e) => setLocationValue(e.target.value)}
+                      onClick={() => handleLocationSelect(locationValue)}
                       className="w-full"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && locationValue.trim()) {
-                          handleLocationSelect(locationValue);
-                        }
-                      }}
-                    />
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600">Popular locations:</p>
-                      <div className="space-y-1">
-                        {[
-                          'Downtown',
-                          'Main Street',
-                          'Shopping District',
-                          'University Area'
-                        ].map((popularLocation) => (
-                          <Button
-                            key={popularLocation}
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start text-left"
-                            onClick={() => handleLocationSelect(popularLocation)}
-                          >
-                            <MapPin className="h-4 w-4 mr-2" />
-                            {popularLocation}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                    {locationValue.trim() && (
-                      <Button
-                        onClick={() => handleLocationSelect(locationValue)}
-                        className="w-full"
-                      >
-                        Use "{locationValue}"
-                      </Button>
-                    )}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                    >
+                      Use "{locationValue}"
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
 
-              <TravelFilter 
-                value={travelFilter}
-                onChange={setTravelFilter}
-              />
-            </div>
+            <TravelFilter 
+              value={travelFilter}
+              onChange={setTravelFilter}
+            />
           </div>
           
           {/* Desktop Actions */}
@@ -516,23 +489,6 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-8">
-                  {/* Mobile Search */}
-                  <div className="space-y-2">
-                    <div className="relative flex items-center bg-white rounded-lg shadow-sm border p-2">
-                      <Search className="w-4 h-4 text-gray-400 ml-1" />
-                      <Input
-                        placeholder="Find products you want NearBuy"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="flex-1 border-none bg-transparent placeholder:text-gray-400 focus-visible:ring-0"
-                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                      />
-                    </div>
-                    <Button onClick={handleSearch} className="w-full">
-                      Search
-                    </Button>
-                  </div>
-
                   <Link to="/favorites" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                     <Heart className="h-5 w-5" />
                     <span className="text-lg font-medium">Favorites</span>
