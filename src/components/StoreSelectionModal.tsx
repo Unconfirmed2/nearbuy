@@ -11,7 +11,7 @@ interface Store {
   price: number;
   distance: number;
   rating: number;
-  ezScore: number;
+  nbScore: number;
 }
 
 interface Product {
@@ -68,7 +68,7 @@ const StoreSelectionModal = ({ isOpen, onClose, product, onAddToBasket }: StoreS
                 <div className="text-right">
                   <div className="text-lg font-bold">${store.price}</div>
                   <Badge variant="secondary" className="text-xs">
-                    EZ: {store.ezScore}/5
+                    NB: {store.nbScore}/5
                   </Badge>
                 </div>
               </div>

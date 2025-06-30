@@ -37,8 +37,8 @@ const Index = () => {
     return () => window.removeEventListener('storage', updateFromStorage);
   }, []);
 
-  // Calculate EZ Score based on distance and price
-  const calculateEZScore = (distance: number, price: number) => {
+  // Calculate NB Score based on distance and price
+  const calculateNBScore = (distance: number, price: number) => {
     const distanceScore = Math.max(0, (10 - distance) / 10 * 2.5);
     const priceScore = Math.max(0, (2000 - price) / 2000 * 2.5);
     return Math.round((distanceScore + priceScore) * 10) / 10;
@@ -91,7 +91,7 @@ const Index = () => {
     { id: 30, name: "Essential Oil Diffuser", price: 49.99, image: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400&h=400&fit=crop", distance: 2.5, rating: 4.3, seller: "Wellness Store", category: "Health" }
   ].map(product => ({
     ...product,
-    ezScore: calculateEZScore(product.distance, product.price)
+    nbScore: calculateNBScore(product.distance, product.price)
   }));
 
   // Group products by name and structure them for the new card format
@@ -104,7 +104,7 @@ const Index = () => {
       price: product.price,
       distance: product.distance,
       rating: product.rating,
-      ezScore: product.ezScore
+      nbScore: product.nbScore
     };
 
     if (existingProduct) {
@@ -131,7 +131,7 @@ const Index = () => {
       price: number;
       distance: number;
       rating: number;
-      ezScore: number;
+      nbScore: number;
     }>;
   }>);
 
@@ -143,8 +143,8 @@ const Index = () => {
           return a.distance - b.distance;
         case "price":
           return a.price - b.price;
-        case "ezScore":
-          return b.ezScore - a.ezScore;
+        case "nbScore":
+          return b.nbScore - a.nbScore;
         default:
           return 0;
       }
@@ -277,8 +277,17 @@ const Index = () => {
         </div>
       </header>
 
+      {/* Hero Section with Headline */}
+      <section className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto text-center mb-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Discover products at nearby stores with our NB score that combines price and proximity for the best deals.
+          </h2>
+        </div>
+      </section>
+
       {/* Search Section */}
-      <section className="px-4 sm:px-6 lg:px-8 py-6">
+      <section className="px-4 sm:px-6 lg:px-8 pb-6">
         <div className="max-w-4xl mx-auto">
           {/* Search Bar */}
           <div className="relative flex items-center bg-white rounded-lg shadow-md p-2 mb-4">
@@ -319,7 +328,7 @@ const Index = () => {
                 >
                   <option value="distance">Distance</option>
                   <option value="price">Price</option>
-                  <option value="ezScore">EZ Score</option>
+                  <option value="nbScore">NB Score</option>
                 </select>
               </div>
             </div>
