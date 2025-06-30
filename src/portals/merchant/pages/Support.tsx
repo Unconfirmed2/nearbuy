@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,8 @@ import {
   Mail,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Package
 } from 'lucide-react';
 import { toast } from 'sonner';
 

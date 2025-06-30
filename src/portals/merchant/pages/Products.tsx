@@ -34,7 +34,7 @@ const Products: React.FC = () => {
   const filteredProducts = products
     .filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (categoryFilter === 'all' || product.category === categoryFilter)
+      (categoryFilter === 'all' || product.category_id === categoryFilter)
     )
     .sort((a, b) => {
       if (sortBy === 'name') {
@@ -74,19 +74,24 @@ const Products: React.FC = () => {
     }
   };
 
-  const handleProductAction = (product: any, action: string) => {
-    switch (action) {
-      case 'duplicate':
-        setSelectedProduct(product);
-        setShowDuplicateDialog(true);
-        break;
-      case 'edit':
-        setSelectedProduct(product);
-        setShowCreateProduct(true);
-        break;
-      default:
-        console.log(`${action} product:`, product);
-    }
+  const handleEdit = (product: any) => {
+    setSelectedProduct(product);
+    setShowCreateProduct(true);
+  };
+
+  const handleDuplicate = (product: any) => {
+    setSelectedProduct(product);
+    setShowDuplicateDialog(true);
+  };
+
+  const handleDelete = (productId: string) => {
+    console.log('Delete product:', productId);
+    // TODO: Implement delete functionality
+  };
+
+  const handleToggleStatus = (productId: string, isActive: boolean) => {
+    console.log('Toggle product status:', productId, isActive);
+    // TODO: Implement toggle status functionality
   };
 
   if (loading) {
@@ -204,7 +209,10 @@ const Products: React.FC = () => {
             <ProductCard
               key={product.id}
               product={product}
-              onAction={handleProductAction}
+              onEdit={handleEdit}
+              onDuplicate={handleDuplicate}
+              onDelete={handleDelete}
+              onToggleStatus={handleToggleStatus}
             />
           ))}
         </div>
