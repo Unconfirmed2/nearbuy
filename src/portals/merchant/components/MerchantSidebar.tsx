@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -8,7 +9,9 @@ import {
   ShoppingCart, 
   BarChart3, 
   Settings,
-  Megaphone
+  Megaphone,
+  Zap,
+  HelpCircle
 } from 'lucide-react';
 
 interface MerchantSidebarProps {
@@ -25,7 +28,9 @@ const MerchantSidebar: React.FC<MerchantSidebarProps> = ({ className }) => {
     { name: 'Orders', href: '/merchant/orders', icon: ShoppingCart },
     { name: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
     { name: 'Marketing', href: '/merchant/marketing', icon: Megaphone },
+    { name: 'Integrations', href: '/merchant/integrations', icon: Zap },
     { name: 'Settings', href: '/merchant/settings', icon: Settings },
+    { name: 'Support', href: '/merchant/support', icon: HelpCircle },
   ];
 
   return (

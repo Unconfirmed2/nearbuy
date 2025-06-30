@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -9,6 +10,8 @@ import Orders from './pages/Orders';
 import Analytics from './pages/Analytics';
 import Marketing from './pages/Marketing';
 import Settings from './pages/Settings';
+import Integrations from './pages/Integrations';
+import Support from './pages/Support';
 
 interface MerchantAppProps {
   user?: User | null;
@@ -40,7 +43,9 @@ const MerchantApp: React.FC<MerchantAppProps> = ({ user, profile }) => {
         <Route path="orders" element={<Orders />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="marketing" element={<Marketing />} />
+        <Route path="integrations" element={<Integrations />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="support" element={<Support />} />
       </Routes>
     </MerchantLayout>
   );
