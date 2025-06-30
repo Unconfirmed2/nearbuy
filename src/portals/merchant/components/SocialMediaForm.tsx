@@ -17,14 +17,18 @@ interface SocialMediaLinks {
 interface SocialMediaFormProps {
   storeId?: string;
   initialLinks?: SocialMediaLinks;
+  socialMedia?: any;
+  onChange?: (social: any) => void;
 }
 
 const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ 
   storeId, 
-  initialLinks 
+  initialLinks,
+  socialMedia: externalSocialMedia,
+  onChange
 }) => {
   const [links, setLinks] = useState<SocialMediaLinks>(
-    initialLinks || {
+    initialLinks || externalSocialMedia || {
       website: '',
       facebook: '',
       instagram: '',
@@ -33,7 +37,12 @@ const SocialMediaForm: React.FC<SocialMediaFormProps> = ({
   );
 
   const updateLink = (platform: keyof SocialMediaLinks, value: string) => {
-    setLinks(prev => ({ ...prev, [platform]: value }));
+    const newLinks = { ...links, [platform]: value };
+    setLinks(newLinks);
+    
+    if (onChange) {
+      onChange(newLinks);
+    }
   };
 
   const handleSave = () => {
@@ -67,6 +76,31 @@ const SocialMediaForm: React.FC<SocialMediaFormProps> = ({
       placeholder: 'https://twitter.com/yourbusiness'
     }
   ];
+
+  // If this is being used as a controlled component, don't show the card wrapper
+  if (onChange && externalSocialMedia) {
+    return (
+      <div className="space-y-4">
+        {socialPlatforms.map((platform) => {
+          const Icon = platform.icon;
+          return (
+            <div key={platform.key} className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Icon className="w-4 h-4" />
+                {platform.label}
+              </Label>
+              <Input
+                type="url"
+                value={links[platform.key]}
+                onChange={(e) => updateLink(platform.key, e.target.value)}
+                placeholder={platform.placeholder}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <Card>

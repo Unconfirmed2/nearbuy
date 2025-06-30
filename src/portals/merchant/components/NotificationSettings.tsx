@@ -27,31 +27,35 @@ interface NotificationPreferences {
 }
 
 interface NotificationSettingsProps {
-  merchantId: string;
+  merchantId?: string;
   initialSettings?: NotificationPreferences;
+  preferences?: any;
+  onSave?: (preferences: any) => void;
 }
 
 const NotificationSettings: React.FC<NotificationSettingsProps> = ({ 
   merchantId, 
-  initialSettings 
+  initialSettings,
+  preferences: externalPreferences,
+  onSave
 }) => {
   const [settings, setSettings] = useState<NotificationPreferences>(
     initialSettings || {
       email: {
-        newOrders: true,
-        lowStock: true,
-        reviews: true,
-        promotions: false
+        newOrders: externalPreferences?.email_new_orders ?? true,
+        lowStock: externalPreferences?.email_low_stock ?? true,
+        reviews: externalPreferences?.email_customer_reviews ?? true,
+        promotions: externalPreferences?.email_marketing_updates ?? false
       },
       inApp: {
-        newOrders: true,
-        lowStock: true,
-        reviews: true,
-        promotions: true
+        newOrders: externalPreferences?.push_new_orders ?? true,
+        lowStock: externalPreferences?.push_low_stock ?? true,
+        reviews: externalPreferences?.push_order_updates ?? true,
+        promotions: externalPreferences?.in_app_all ?? true
       },
       sms: {
-        newOrders: false,
-        urgentAlerts: true
+        newOrders: externalPreferences?.sms_order_confirmations ?? false,
+        urgentAlerts: externalPreferences?.sms_urgent_alerts ?? true
       }
     }
   );
@@ -61,13 +65,31 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
     setting: string,
     value: boolean
   ) => {
-    setSettings(prev => ({
-      ...prev,
+    const newSettings = {
+      ...settings,
       [category]: {
-        ...prev[category],
+        ...settings[category],
         [setting]: value
       }
-    }));
+    };
+    setSettings(newSettings);
+    
+    if (onSave) {
+      // Convert to external format
+      const externalFormat = {
+        email_new_orders: newSettings.email.newOrders,
+        email_low_stock: newSettings.email.lowStock,
+        email_customer_reviews: newSettings.email.reviews,
+        email_marketing_updates: newSettings.email.promotions,
+        push_new_orders: newSettings.inApp.newOrders,
+        push_order_updates: newSettings.inApp.reviews,
+        push_low_stock: newSettings.inApp.lowStock,
+        sms_urgent_alerts: newSettings.sms.urgentAlerts,
+        sms_order_confirmations: newSettings.sms.newOrders,
+        in_app_all: newSettings.inApp.promotions
+      };
+      onSave(externalFormat);
+    }
   };
 
   const handleSave = () => {
@@ -150,10 +172,12 @@ const NotificationSettings: React.FC<NotificationSettingsProps> = ({
           </div>
         </div>
 
-        <Button onClick={handleSave} className="w-full">
-          <Save className="w-4 h-4 mr-2" />
-          Save Notification Settings
-        </Button>
+        {!onSave && (
+          <Button onClick={handleSave} className="w-full">
+            <Save className="w-4 h-4 mr-2" />
+            Save Notification Settings
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

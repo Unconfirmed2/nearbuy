@@ -28,10 +28,11 @@ interface POSIntegration {
 }
 
 interface POSIntegrationProps {
-  storeId: string;
+  merchantId?: string;
+  storeId?: string;
 }
 
-const POSIntegration: React.FC<POSIntegrationProps> = ({ storeId }) => {
+const POSIntegration: React.FC<POSIntegrationProps> = ({ merchantId, storeId }) => {
   const [integrations, setIntegrations] = useState<POSIntegration[]>([
     {
       id: '1',

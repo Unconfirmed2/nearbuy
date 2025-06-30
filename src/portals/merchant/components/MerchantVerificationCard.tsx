@@ -7,7 +7,7 @@ import MerchantVerification from './MerchantVerification';
 
 interface MerchantVerificationCardProps {
   merchantId: string;
-  verificationStatus: 'pending' | 'verified' | 'rejected' | 'not_started';
+  verificationStatus: 'pending' | 'verified' | 'rejected' | 'incomplete';
 }
 
 const MerchantVerificationCard: React.FC<MerchantVerificationCardProps> = ({
@@ -41,7 +41,7 @@ const MerchantVerificationCard: React.FC<MerchantVerificationCardProps> = ({
         return {
           icon: AlertCircle,
           color: 'bg-gray-100 text-gray-800',
-          label: 'Not Started',
+          label: 'Incomplete',
           description: 'Complete verification to start accepting orders'
         };
     }
