@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,8 +21,13 @@ import { useStores } from '../hooks/useStores';
 import { useProducts } from '../hooks/useProducts';
 import AnalyticsCard from '../components/AnalyticsCard';
 import RevenueChart from '../components/RevenueChart';
+import MerchantVerificationCard from '../components/MerchantVerificationCard';
+import OrderNotifications from '../components/OrderNotifications';
+import CustomerEngagementCard from '../components/CustomerEngagementCard';
 
 const Dashboard: React.FC = () => {
+  const [lastOrderCount, setLastOrderCount] = useState(0);
+  
   const { orders, loading: ordersLoading } = useOrders('', 'all');
   const { analytics, loading: analyticsLoading } = useAnalytics('debug-merchant-id');
   const { stores } = useStores('debug-merchant-id');
@@ -54,22 +59,50 @@ const Dashboard: React.FC = () => {
     );
   }
 
+  const customerEngagementData = {
+    total_favorites: 156,
+    recent_favorites: 12,
+    pending_reviews: 3,
+    average_rating: 4.2,
+    total_reviews: 89,
+    repeat_customers: 67,
+    new_customers: 23
+  };
+
+  const handleViewFavorites = () => {
+    console.log('View favorites');
+  };
+
+  const handleViewReviews = () => {
+    console.log('View reviews');
+  };
+
+  const handleViewCustomers = () => {
+    console.log('View customers');
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <OrderNotifications
+        orders={orders}
+        lastOrderCount={lastOrderCount}
+        onOrderCountChange={setLastOrderCount}
+      />
+
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-gray-600 mt-2">
-            Welcome back! Here's what's happening with your business today.
+            Welcome back! Here's what's happening with your business.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Product
-          </Button>
-        </div>
       </div>
+
+      {/* Verification Status */}
+      <MerchantVerificationCard
+        merchantId="debug-merchant-id"
+        verificationStatus="pending"
+      />
 
       {/* Key Metrics */}
       {analytics && (
@@ -243,6 +276,17 @@ const Dashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Customer Engagement */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Customer Engagement</h2>
+        <CustomerEngagementCard
+          data={customerEngagementData}
+          onViewFavorites={handleViewFavorites}
+          onViewReviews={handleViewReviews}
+          onViewCustomers={handleViewCustomers}
+        />
       </div>
 
       {/* Revenue Chart */}
