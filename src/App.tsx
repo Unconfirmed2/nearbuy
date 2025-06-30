@@ -9,6 +9,8 @@ import { Toaster } from '@/components/ui/sonner';
 import AuthLayout from './components/auth/AuthLayout';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
+import ConsumerSignUp from './pages/auth/ConsumerSignUp';
+import MerchantSignUp from './pages/auth/MerchantSignUp';
 
 // Public pages
 import Index from './pages/Index';
@@ -118,6 +120,8 @@ export default function App() {
           <Route path="/auth" element={<AuthLayout />}>
             <Route path="signin" element={<SignIn />} />
             <Route path="signup" element={<SignUp />} />
+            <Route path="signup/consumer" element={<ConsumerSignUp />} />
+            <Route path="signup/merchant" element={<MerchantSignUp />} />
           </Route>
 
           {/* Protected routes - require authentication */}

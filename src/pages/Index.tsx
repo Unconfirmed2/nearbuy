@@ -7,9 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/ProductCard";
 import LocationButton from "@/components/LocationButton";
 import TravelFilter, { TravelFilterValue } from "@/components/TravelFilter";
-import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator } from "@/components/ui/menubar";
+import GuestNavbar from "@/components/navigation/GuestNavbar";
 import { getBasket, addToBasket, getFavorites } from "@/utils/localStorage";
-import { Link } from "react-router-dom";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -222,64 +221,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm">NB</span>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  NearBuy
-                </h1>
-              </div>
-            </div>
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <span className="text-base font-medium text-gray-700">Nearby</span>
-                <TravelFilter value={travelFilter} onChange={setTravelFilter} />
-                <LocationButton userLocation={userLocation} onLocationChange={handleLocationChange} />
-              </div>
-              {basket.length > 0 && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  Basket: {basket.length}
-                </Badge>
-              )}
-              {favorites.length > 0 && (
-                <Badge variant="secondary" className="bg-pink-100 text-pink-800">
-                  <Heart className="w-3 h-3 mr-1" />
-                  {favorites.length}
-                </Badge>
-              )}
-              {/* Menu Icon */}
-              <Menubar>
-                <MenubarMenu>
-                  <MenubarTrigger className="p-2 hover:bg-gray-100 rounded-full">
-                    <Menu className="w-6 h-6" />
-                  </MenubarTrigger>
-                  <MenubarContent align="end">
-                    <MenubarItem>
-                      <Link to="/" className="w-full">Home</Link>
-                    </MenubarItem>
-                    <MenubarSeparator />
-                    <MenubarItem>
-                      <Link to="/auth/signin" className="w-full">Sign In</Link>
-                    </MenubarItem>
-                    <MenubarItem>
-                      <Link to="/auth/signup" className="w-full">Sign Up</Link>
-                    </MenubarItem>
-                    <MenubarSeparator />
-                    <MenubarItem>
-                      <Link to="/dashboard" className="w-full">Dashboard</Link>
-                    </MenubarItem>
-                  </MenubarContent>
-                </MenubarMenu>
-              </Menubar>
-            </div>
-          </div>
-        </div>
-      </header>
+      <GuestNavbar />
 
       {/* Hero Section with Headline */}
       <section className="px-4 sm:px-6 lg:px-8 py-8">
@@ -320,9 +262,14 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Sort and Filter Controls */}
+          {/* Filter Controls */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-base font-medium text-gray-700">Nearby</span>
+                <TravelFilter value={travelFilter} onChange={setTravelFilter} />
+                <LocationButton userLocation={userLocation} onLocationChange={handleLocationChange} />
+              </div>
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Sort by:</span>
                 <select 
@@ -336,6 +283,17 @@ const Index = () => {
                 </select>
               </div>
             </div>
+            {basket.length > 0 && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                Basket: {basket.length}
+              </Badge>
+            )}
+            {favorites.length > 0 && (
+              <Badge variant="secondary" className="bg-pink-100 text-pink-800">
+                <Heart className="w-3 h-3 mr-1" />
+                {favorites.length}
+              </Badge>
+            )}
           </div>
 
           {/* Results Count */}
