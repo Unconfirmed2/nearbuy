@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock, Star, Heart, ShoppingCart } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { MapPin, Clock, Star, Heart, ShoppingCart, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { addToBasket, addToFavorites } from '@/utils/localStorage';
 import { toast } from 'sonner';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const Home: React.FC = () => {
   const [featuredProducts] = useState([
@@ -43,6 +45,8 @@ const Home: React.FC = () => {
   ]);
   
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('products');
 
   const handleAddToCart = (product: any) => {
     addToBasket({
@@ -65,6 +69,14 @@ const Home: React.FC = () => {
     toast.success('Added to favorites!');
   };
 
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      toast.error('Please enter a search term');
+      return;
+    }
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}&type=${searchType}`);
+  };
+
   return (
     <div className="space-y-8 container mx-auto px-4 py-8">
       {/* Hero Section */}
@@ -75,11 +87,48 @@ const Home: React.FC = () => {
         </div>
       </div>
 
+      {/* Search Section */}
+      <div className="max-w-2xl mx-auto space-y-4">
+        <div className="text-center">
+          <ToggleGroup 
+            type="single" 
+            value={searchType} 
+            onValueChange={(value) => value && setSearchType(value)}
+            className="mb-4"
+          >
+            <ToggleGroupItem value="products" aria-label="Search products">
+              Products
+            </ToggleGroupItem>
+            <ToggleGroupItem value="stores" aria-label="Search stores">
+              Stores
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
+        
+        <div className="relative flex items-center bg-white rounded-lg shadow-md border p-2">
+          <Search className="w-5 h-5 text-gray-400 ml-2" />
+          <Input
+            placeholder={
+              searchType === 'products' 
+                ? "Search for products..." 
+                : "Search stores by name or description..."
+            }
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 border-none bg-transparent placeholder:text-gray-400 focus-visible:ring-0"
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <Button onClick={handleSearch} className="ml-2">
+            Search
+          </Button>
+        </div>
+      </div>
+
       {/* Featured Products */}
       <div>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Featured Products Near You</h2>
-          <Button variant="outline" onClick={() => navigate('/consumer/search')}>
+          <Button variant="outline" onClick={() => navigate('/search')}>
             View All
           </Button>
         </div>
@@ -110,7 +159,7 @@ const Home: React.FC = () => {
                 <div className="space-y-3">
                   <div>
                     <h3 className="font-medium text-gray-900 line-clamp-2 cursor-pointer" 
-                        onClick={() => navigate(`/consumer/product/${product.id}`)}>
+                        onClick={() => navigate(`/product/${product.id}`)}>
                       {product.name}
                     </h3>
                     <p className="text-sm text-gray-500">{product.store}</p>
