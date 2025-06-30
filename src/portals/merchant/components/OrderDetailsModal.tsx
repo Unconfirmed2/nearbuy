@@ -13,15 +13,7 @@ import {
   Package,
   DollarSign
 } from 'lucide-react';
-import { Order } from '../types/order';
-
-interface OrderWithDetails extends Order {
-  order_number: string;
-  customer_name: string;
-  customer_email: string;
-  store_name: string;
-  items_count: number;
-}
+import { OrderWithDetails } from '../types/order';
 
 interface OrderDetailsModalProps {
   open: boolean;
@@ -112,10 +104,10 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 <span className="font-medium">Order Date:</span>
                 <span>{formatDate(order.created_at)}</span>
               </div>
-              {order.pickup_date && (
+              {order.pickup_time && (
                 <div className="flex justify-between">
-                  <span className="font-medium">Pickup Date:</span>
-                  <span>{formatDate(order.pickup_date)}</span>
+                  <span className="font-medium">Pickup Time:</span>
+                  <span>{formatDate(order.pickup_time)}</span>
                 </div>
               )}
             </div>

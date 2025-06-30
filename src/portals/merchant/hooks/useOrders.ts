@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Order } from '../types/order';
+import { OrderWithDetails } from '../types/order';
 
 interface OrdersStats {
   total_orders: number;
@@ -11,14 +11,6 @@ interface OrdersStats {
   total_revenue: number;
   today_orders: number;
   cancelled_orders: number;
-}
-
-interface OrderWithDetails extends Order {
-  order_number: string;
-  customer_name: string;
-  customer_email: string;
-  store_name: string;
-  items_count: number;
 }
 
 export const useOrders = (merchantId: string, searchTerm?: string, statusFilter?: string) => {
@@ -46,7 +38,25 @@ export const useOrders = (merchantId: string, searchTerm?: string, statusFilter?
           total_amount: 299.99,
           tax_amount: 24.00,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          pickup_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+          profiles: {
+            name: 'John Doe',
+            email: 'john.doe@email.com'
+          },
+          stores: {
+            name: 'Downtown Electronics'
+          },
+          order_items: [
+            {
+              quantity: 2,
+              unit_price: 149.99,
+              products: {
+                name: 'Wireless Headphones',
+                brand: 'TechBrand'
+              }
+            }
+          ]
         },
         {
           id: 'order-2',
@@ -61,7 +71,25 @@ export const useOrders = (merchantId: string, searchTerm?: string, statusFilter?
           total_amount: 149.99,
           tax_amount: 12.00,
           created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          pickup_time: new Date(Date.now() + 43200000).toISOString(), // 12 hours from now
+          profiles: {
+            name: 'Jane Smith',
+            email: 'jane.smith@email.com'
+          },
+          stores: {
+            name: 'Downtown Electronics'
+          },
+          order_items: [
+            {
+              quantity: 1,
+              unit_price: 149.99,
+              products: {
+                name: 'Bluetooth Speaker',
+                brand: 'AudioTech'
+              }
+            }
+          ]
         }
       ];
       

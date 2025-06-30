@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,7 @@ import AnalyticsCard from '../components/AnalyticsCard';
 import RevenueChart from '../components/RevenueChart';
 
 const Dashboard: React.FC = () => {
-  const { orders, isLoading: ordersLoading } = useOrders('', 'all');
+  const { orders, loading: ordersLoading } = useOrders('', 'all');
   const { analytics, loading: analyticsLoading } = useAnalytics('debug-merchant-id');
   const { stores } = useStores('debug-merchant-id');
   const { products } = useProducts('debug-merchant-id');

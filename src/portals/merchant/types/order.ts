@@ -24,4 +24,14 @@ export interface Order {
   }>;
 }
 
+export interface OrderWithDetails extends Order {
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  store_name: string;
+  items_count: number;
+  tax_amount?: number;
+  updated_at: string;
+}
+
 export type OrderStatus = 'pending' | 'confirmed' | 'ready' | 'completed' | 'cancelled';
