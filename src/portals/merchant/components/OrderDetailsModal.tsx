@@ -1,25 +1,32 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
   User, 
   MapPin, 
   Phone, 
   Mail, 
-  Clock, 
+  Calendar,
   Package,
-  DollarSign,
-  RefreshCw
+  DollarSign
 } from 'lucide-react';
-import OrderStatusBadge from './OrderStatusBadge';
+import { Order } from '../types/order';
+
+interface OrderWithDetails extends Order {
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  store_name: string;
+  items_count: number;
+}
 
 interface OrderDetailsModalProps {
   open: boolean;
   onClose: () => void;
-  order: any;
+  order: OrderWithDetails | null;
   onUpdateStatus: (orderId: string, status: string) => void;
   onRefund: (orderId: string) => void;
 }
@@ -33,180 +40,145 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 }) => {
   if (!order) return null;
 
-  const getNextActions = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return [
-          { label: 'Confirm Order', status: 'confirmed', variant: 'default' as const },
-          { label: 'Cancel Order', status: 'cancelled', variant: 'destructive' as const }
-        ];
-      case 'confirmed':
-        return [
-          { label: 'Mark Ready for Pickup', status: 'ready_for_pickup', variant: 'default' as const },
-          { label: 'Cancel Order', status: 'cancelled', variant: 'destructive' as const }
-        ];
-      case 'ready_for_pickup':
-        return [
-          { label: 'Mark as Picked Up', status: 'picked_up', variant: 'default' as const }
-        ];
-      default:
-        return [];
-    }
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      pending: { color: 'bg-yellow-100 text-yellow-800', label: 'Pending' },
+      confirmed: { color: 'bg-blue-100 text-blue-800', label: 'Confirmed' },
+      ready_for_pickup: { color: 'bg-green-100 text-green-800', label: 'Ready for Pickup' },
+      picked_up: { color: 'bg-gray-100 text-gray-800', label: 'Picked Up' },
+      cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled' }
+    };
+    
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    return <Badge className={config.color}>{config.label}</Badge>;
   };
 
-  const actions = getNextActions(order.status);
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Order #{order.order_number}</span>
-            <OrderStatusBadge status={order.status} />
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Order #{order.order_number}</DialogTitle>
+            {getStatusBadge(order.status)}
+          </div>
         </DialogHeader>
         
         <div className="space-y-6">
           {/* Customer Information */}
           <div>
-            <h3 className="font-medium flex items-center gap-2 mb-3">
-              <User className="w-4 h-4" />
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <User className="w-5 h-5" />
               Customer Information
             </h3>
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div className="font-medium">{order.customer_name}</div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Mail className="w-4 h-4" />
-                {order.customer_email}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium">Name:</span> {order.customer_name}
               </div>
-              {order.customer_phone && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Phone className="w-4 h-4" />
-                  {order.customer_phone}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Store & Pickup Information */}
-          <div>
-            <h3 className="font-medium flex items-center gap-2 mb-3">
-              <MapPin className="w-4 h-4" />
-              Pickup Information
-            </h3>
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div className="font-medium">{order.store_name}</div>
-              {order.store_address && (
-                <div className="text-sm text-gray-600">{order.store_address}</div>
-              )}
-              {order.pickup_time && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  Scheduled: {new Date(order.pickup_time).toLocaleString()}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div>
-            <h3 className="font-medium flex items-center gap-2 mb-3">
-              <Package className="w-4 h-4" />
-              Order Items
-            </h3>
-            <div className="space-y-2">
-              {order.items?.map((item: any, index: number) => (
-                <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="font-medium">{item.product_name}</div>
-                    {item.variant && (
-                      <div className="text-sm text-gray-600">{item.variant}</div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Badge variant="outline">Qty: {item.quantity}</Badge>
-                    <div className="font-medium">${(item.price * item.quantity).toFixed(2)}</div>
-                  </div>
-                </div>
-              )) || (
-                <div className="text-center py-4 text-gray-500">
-                  No items details available
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Order Summary */}
-          <div>
-            <h3 className="font-medium flex items-center gap-2 mb-3">
-              <DollarSign className="w-4 h-4" />
-              Order Summary
-            </h3>
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal:</span>
-                <span>${(order.total_amount - (order.tax_amount || 0)).toFixed(2)}</span>
-              </div>
-              {order.tax_amount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span>Tax:</span>
-                  <span>${order.tax_amount.toFixed(2)}</span>
-                </div>
-              )}
-              <Separator />
-              <div className="flex justify-between font-medium">
-                <span>Total:</span>
-                <span>${order.total_amount.toFixed(2)}</span>
+              <div>
+                <span className="font-medium">Email:</span> {order.customer_email}
               </div>
             </div>
           </div>
 
-          {/* Order Timeline */}
+          <Separator />
+
+          {/* Order Details */}
           <div>
-            <h3 className="font-medium mb-3">Order Timeline</h3>
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Order Details
+            </h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>Order Placed:</span>
-                <span>{new Date(order.created_at).toLocaleString()}</span>
+                <span className="font-medium">Store:</span>
+                <span>{order.store_name}</span>
               </div>
-              {order.updated_at && order.updated_at !== order.created_at && (
+              <div className="flex justify-between">
+                <span className="font-medium">Items:</span>
+                <span>{order.items_count} items</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Order Date:</span>
+                <span>{formatDate(order.created_at)}</span>
+              </div>
+              {order.pickup_date && (
                 <div className="flex justify-between">
-                  <span>Last Updated:</span>
-                  <span>{new Date(order.updated_at).toLocaleString()}</span>
+                  <span className="font-medium">Pickup Date:</span>
+                  <span>{formatDate(order.pickup_date)}</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Actions */}
-          {actions.length > 0 && (
-            <div className="flex gap-3 pt-4 border-t">
-              {actions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant={action.variant}
-                  onClick={() => {
-                    onUpdateStatus(order.id, action.status);
-                    onClose();
-                  }}
+          <Separator />
+
+          {/* Payment Information */}
+          <div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <DollarSign className="w-5 h-5" />
+              Payment Information
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="font-medium">Subtotal:</span>
+                <span>${(order.total_amount || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Tax:</span>
+                <span>${(order.tax_amount || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-base">
+                <span>Total:</span>
+                <span>${((order.total_amount || 0) + (order.tax_amount || 0)).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-4 border-t">
+            {order.status === 'pending' && (
+              <Button onClick={() => onUpdateStatus(order.id, 'confirmed')}>
+                Confirm Order
+              </Button>
+            )}
+            {order.status === 'confirmed' && (
+              <Button onClick={() => onUpdateStatus(order.id, 'ready_for_pickup')}>
+                Mark Ready
+              </Button>
+            )}
+            {order.status === 'ready_for_pickup' && (
+              <Button onClick={() => onUpdateStatus(order.id, 'picked_up')}>
+                Mark Picked Up
+              </Button>
+            )}
+            {['pending', 'confirmed'].includes(order.status) && (
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => onUpdateStatus(order.id, 'cancelled')}
                 >
-                  {action.label}
+                  Cancel Order
                 </Button>
-              ))}
-              {(order.status === 'picked_up' || order.status === 'cancelled') && (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onRefund(order.id);
-                    onClose();
-                  }}
+                <Button 
+                  variant="destructive" 
+                  onClick={() => onRefund(order.id)}
                 >
-                  <RefreshCw className="w-4 h-4 mr-2" />
                   Process Refund
                 </Button>
-              )}
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

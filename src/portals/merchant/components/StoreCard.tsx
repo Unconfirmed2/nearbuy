@@ -1,45 +1,21 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { 
   MapPin, 
   Phone, 
+  Mail, 
   Globe, 
   Clock, 
   Edit, 
-  Eye, 
-  MoreVertical,
+  Eye,
   CheckCircle,
-  AlertCircle,
-  Mail
+  AlertCircle
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
-interface Store {
-  id: string;
-  name: string;
-  description?: string;
-  address: string;
-  city?: string;
-  state?: string;
-  zip_code?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  is_active: boolean;
-  is_verified: boolean;
-  logo_url?: string;
-  business_hours?: any;
-  created_at: string;
-}
+import { Store } from '../types/store';
 
 interface StoreCardProps {
   store: Store;
@@ -48,169 +24,130 @@ interface StoreCardProps {
   onViewDetails: (store: Store) => void;
 }
 
-const StoreCard: React.FC<StoreCardProps> = ({
-  store,
-  onEdit,
-  onToggleStatus,
-  onViewDetails
+const StoreCard: React.FC<StoreCardProps> = ({ 
+  store, 
+  onEdit, 
+  onToggleStatus, 
+  onViewDetails 
 }) => {
   const getStatusBadge = () => {
-    if (!store.is_verified) {
-      return (
-        <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-          <AlertCircle className="w-3 h-3 mr-1" />
-          Pending Verification
-        </Badge>
-      );
-    }
-    
-    if (store.is_active) {
+    if (store.is_verified) {
       return (
         <Badge className="bg-green-100 text-green-800">
           <CheckCircle className="w-3 h-3 mr-1" />
-          Active
+          Verified
         </Badge>
       );
     }
-    
     return (
-      <Badge variant="outline" className="text-gray-600">
-        Inactive
+      <Badge className="bg-yellow-100 text-yellow-800">
+        <AlertCircle className="w-3 h-3 mr-1" />
+        Pending Verification
       </Badge>
     );
   };
 
-  const getCurrentStatus = () => {
+  const formatBusinessHours = () => {
     if (!store.business_hours) return 'Hours not set';
     
-    const now = new Date();
-    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-    const dayOfWeek = dayNames[now.getDay()];
-    const currentTime = now.toTimeString().slice(0, 5);
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as keyof typeof store.business_hours;
+    const todayHours = store.business_hours[today];
     
-    const todayHours = store.business_hours[dayOfWeek];
-    if (!todayHours?.isOpen) return 'Closed today';
-    
-    if (currentTime >= todayHours.openTime && currentTime <= todayHours.closeTime) {
-      return `Open until ${todayHours.closeTime}`;
+    if (!todayHours || todayHours.closed) {
+      return 'Closed today';
     }
     
-    return `Opens at ${todayHours.openTime}`;
+    return `${todayHours.open} - ${todayHours.close} today`;
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className={`transition-all hover:shadow-md ${!store.is_active ? 'opacity-75' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            {store.logo_url ? (
-              <img 
-                src={store.logo_url} 
-                alt={`${store.name} logo`}
-                className="w-12 h-12 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 font-semibold text-lg">
-                  {store.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-            <div>
-              <CardTitle className="text-lg">{store.name}</CardTitle>
+          <div className="flex-1">
+            <CardTitle className="text-lg mb-2">{store.name}</CardTitle>
+            <div className="flex items-center gap-2 mb-2">
               {getStatusBadge()}
+              <Badge variant={store.is_active ? 'default' : 'secondary'}>
+                {store.is_active ? 'Active' : 'Inactive'}
+              </Badge>
             </div>
           </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreVertical className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onViewDetails(store)}>
-                <Eye className="w-4 h-4 mr-2" />
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onEdit(store)}>
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Store
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {store.logo_url && (
+            <img 
+              src={store.logo_url} 
+              alt={`${store.name} logo`}
+              className="w-12 h-12 rounded-lg object-cover"
+            />
+          )}
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {store.description && (
           <p className="text-sm text-gray-600 line-clamp-2">{store.description}</p>
         )}
         
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center gap-2 text-gray-600">
             <MapPin className="w-4 h-4" />
-            <span className="line-clamp-1">
-              {store.address}
-              {store.city && `, ${store.city}`}
-              {store.state && `, ${store.state}`}
-            </span>
+            <span>{store.address}, {store.city}, {store.state} {store.zip_code}</span>
           </div>
           
-          {store.phone && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+          {store.contact_phone && (
+            <div className="flex items-center gap-2 text-gray-600">
               <Phone className="w-4 h-4" />
-              <span>{store.phone}</span>
+              <span>{store.contact_phone}</span>
             </div>
           )}
           
-          {store.email && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+          {store.contact_email && (
+            <div className="flex items-center gap-2 text-gray-600">
               <Mail className="w-4 h-4" />
-              <span>{store.email}</span>
+              <span>{store.contact_email}</span>
             </div>
           )}
           
           {store.website && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-gray-600">
               <Globe className="w-4 h-4" />
-              <a 
-                href={store.website} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                Visit Website
+              <a href={store.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                Website
               </a>
             </div>
           )}
           
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-gray-600">
             <Clock className="w-4 h-4" />
-            <span>{getCurrentStatus()}</span>
+            <span>{formatBusinessHours()}</span>
           </div>
         </div>
-        
-        <div className="flex items-center justify-between pt-4 border-t">
-          <div className="flex items-center space-x-2">
+
+        <div className="flex items-center justify-between pt-3 border-t">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Active:</span>
             <Switch
               checked={store.is_active}
               onCheckedChange={(checked) => onToggleStatus(store.id, checked)}
-              disabled={!store.is_verified}
             />
-            <span className="text-sm text-gray-600">
-              {store.is_active ? 'Active' : 'Inactive'}
-            </span>
           </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onEdit(store)}
-          >
-            <Edit className="w-4 h-4 mr-1" />
-            Edit
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onViewDetails(store)}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEdit(store)}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
