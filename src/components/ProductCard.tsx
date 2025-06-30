@@ -11,7 +11,7 @@ interface Store {
   price: number;
   distance: number;
   rating: number;
-  ezScore: number;
+  nbScore: number;
 }
 
 interface Product {
