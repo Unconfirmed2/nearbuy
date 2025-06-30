@@ -101,6 +101,7 @@ export const useStores = (merchantId?: string) => {
         ...storeData,
         status: 'active',
         is_verified: false,
+        is_active: true, // Added this missing property
         merchant_id: merchantId || 'debug-merchant-id',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
