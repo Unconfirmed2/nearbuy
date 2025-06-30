@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Search, Clock, Star, Heart, ShoppingCart } from 'lucide-react';
+import { MapPin, Search, Clock, Star, Heart, ShoppingCart, Navigation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
 import { addToBasket, addToFavorites } from '@/utils/localStorage';
@@ -71,6 +72,27 @@ const Home: React.FC = () => {
     setLocation(selectedLocation);
     setIsLocationPopoverOpen(false);
     toast.success('Location updated!');
+  };
+
+  const handleUseMyLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // For now, we'll use coordinates format until we have reverse geocoding
+          const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          setLocation(locationString);
+          setIsLocationPopoverOpen(false);
+          toast.success('Location updated to your current position!');
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          toast.error('Unable to get your location. Please enter manually.');
+        }
+      );
+    } else {
+      toast.error('Geolocation is not supported by this browser.');
+    }
   };
 
   const handleAddToCart = (product: any) => {
@@ -143,6 +165,28 @@ const Home: React.FC = () => {
                   <PopoverContent className="w-80 p-4" align="start">
                     <div className="space-y-4">
                       <h4 className="font-medium text-gray-900">Enter your location</h4>
+                      
+                      {/* Use My Location Button */}
+                      <Button
+                        onClick={handleUseMyLocation}
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <Navigation className="h-4 w-4 mr-2" />
+                        Use My Current Location
+                      </Button>
+                      
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-white px-2 text-muted-foreground">
+                            Or enter manually
+                          </span>
+                        </div>
+                      </div>
+                      
                       <Input
                         placeholder="Type your address..."
                         value={location}
@@ -191,33 +235,6 @@ const Home: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/consumer/search')}>
-          <CardContent className="p-6 text-center">
-            <Search className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-            <h3 className="font-semibold">Browse Products</h3>
-            <p className="text-sm text-gray-600">Search and filter local inventory</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/consumer/route-planner')}>
-          <CardContent className="p-6 text-center">
-            <MapPin className="h-8 w-8 text-green-600 mx-auto mb-2" />
-            <h3 className="font-semibold">Route Planner</h3>
-            <p className="text-sm text-gray-600">Plan your pickup route</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/consumer/support')}>
-          <CardContent className="p-6 text-center">
-            <Clock className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-            <h3 className="font-semibold">Support</h3>
-            <p className="text-sm text-gray-600">Get help and support</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Featured Products */}
