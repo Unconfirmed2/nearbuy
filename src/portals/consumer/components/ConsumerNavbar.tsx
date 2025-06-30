@@ -23,7 +23,8 @@ import {
   HelpCircle,
   Menu,
   Home,
-  Route
+  Route,
+  Store
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -180,6 +181,7 @@ const ConsumerNavbar: React.FC<ConsumerNavbarProps> = ({ user: propUser, profile
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-8">
+                  {/* Navigation Items */}
                   {navigationItems.map((item) => (
                     <Link
                       key={item.path}
@@ -198,6 +200,12 @@ const ConsumerNavbar: React.FC<ConsumerNavbarProps> = ({ user: propUser, profile
                   <Link to="/consumer/favorites" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                     <Heart className="h-5 w-5" />
                     <span className="text-lg font-medium">Favorites</span>
+                  </Link>
+
+                  {/* Merchant Portal Link */}
+                  <Link to="/merchant" className="flex items-center space-x-3 px-3 py-2 rounded-md text-green-600 hover:text-green-700 hover:bg-green-50">
+                    <Store className="h-5 w-5" />
+                    <span className="text-lg font-medium">Merchant Portal</span>
                   </Link>
 
                   {user ? (

@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Search, Clock, Star, Heart, ShoppingCart, Store } from 'lucide-react';
+import { MapPin, Search, Clock, Star, Heart, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
 import { addToBasket, addToFavorites } from '@/utils/localStorage';
@@ -162,23 +163,6 @@ const Home: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
-
-          {/* Single Call-to-Action for Merchants */}
-          <div className="flex justify-center mt-8">
-            <Card className="bg-white/10 backdrop-blur-sm border-white/20 max-w-md">
-              <CardContent className="p-6 text-center">
-                <Store className="h-12 w-12 text-white mx-auto mb-3" />
-                <h3 className="text-xl font-semibold mb-2">Are you a merchant?</h3>
-                <p className="text-white/80 mb-4">List your products and reach local customers</p>
-                <Button 
-                  onClick={() => navigate('/merchant')}
-                  className="bg-green-600 text-white hover:bg-green-700"
-                >
-                  Access Merchant Portal
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
