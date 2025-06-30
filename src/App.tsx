@@ -46,33 +46,20 @@ export default function App() {
     avatar_url: null
   } : null;
 
-  // Route user to appropriate portal based on role
-  const getPortalRoute = (userProfile: UserProfile) => {
-    switch (userProfile.role) {
-      case 'admin':
-      case 'moderator':
-        return '/admin';
-      case 'store_owner':
-        return '/merchant';
-      case 'customer':
-      default:
-        return '/consumer';
-    }
-  };
-
-  // Get dashboard route based on debug role
-  const getDashboardRoute = () => {
-    console.log('Dashboard route - current debug role:', debugRole);
+  // Dashboard redirect component that uses current debug role
+  const DashboardRedirect = () => {
+    console.log('Dashboard redirect - current debug role:', debugRole);
+    
     switch (debugRole) {
       case 'store_owner':
         console.log('Redirecting to merchant dashboard');
-        return '/merchant';
+        return <Navigate to="/merchant" replace />;
       case 'customer':
         console.log('Redirecting to consumer dashboard');
-        return '/consumer';
+        return <Navigate to="/consumer" replace />;
       default:
         console.log('Redirecting to main page');
-        return '/';
+        return <Navigate to="/" replace />;
     }
   };
 
@@ -105,7 +92,7 @@ export default function App() {
           <Route path="/admin/*" element={<AdminApp user={mockUser} profile={mockProfile} />} />
           
           {/* Dashboard route - redirect based on current debug role */}
-          <Route path="/dashboard" element={<Navigate to={getDashboardRoute()} replace />} />
+          <Route path="/dashboard" element={<DashboardRedirect />} />
         </Routes>
         <Toaster />
       </div>
