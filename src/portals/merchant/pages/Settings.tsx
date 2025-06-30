@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MerchantSettings from '../components/MerchantSettings';
 import NotificationSettings from '../components/NotificationSettings';
 import SupportTicketSystem from '../components/SupportTicketSystem';
+import MerchantProfileForm from '../components/MerchantProfileForm';
+import SecuritySettings from '../components/SecuritySettings';
 
 const Settings: React.FC = () => {
   // Mock notification preferences
@@ -36,14 +38,14 @@ const Settings: React.FC = () => {
   ]);
 
   // Mock merchant profile data
-  const mockProfile = {
+  const [merchantProfile, setMerchantProfile] = useState({
     name: 'Debug Merchant',
     email: 'merchant@example.com',
     phone: '+1-555-0123',
     business_name: 'Debug Store',
     business_description: 'A test store for debugging purposes',
     business_address: '123 Main St, City, State 12345'
-  };
+  });
 
   const handleSaveNotifications = (preferences: any) => {
     setNotificationPreferences(preferences);
@@ -71,6 +73,11 @@ const Settings: React.FC = () => {
     );
   };
 
+  const handleSaveProfile = (profile: any) => {
+    setMerchantProfile(profile);
+    console.log('Profile saved:', profile);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -80,18 +87,26 @@ const Settings: React.FC = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="general">General</TabsTrigger>
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="business">Business</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="support">Support</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="support">Support</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general">
+        <TabsContent value="profile">
+          <MerchantProfileForm
+            profile={merchantProfile}
+            onSave={handleSaveProfile}
+          />
+        </TabsContent>
+
+        <TabsContent value="business">
           <MerchantSettings
             merchantId="debug-merchant-id"
-            profile={mockProfile}
+            profile={merchantProfile}
           />
         </TabsContent>
 
@@ -103,6 +118,10 @@ const Settings: React.FC = () => {
           />
         </TabsContent>
 
+        <TabsContent value="security">
+          <SecuritySettings merchantId="debug-merchant-id" />
+        </TabsContent>
+
         <TabsContent value="support">
           <SupportTicketSystem
             merchantId="debug-merchant-id"
@@ -110,12 +129,6 @@ const Settings: React.FC = () => {
             onCreateTicket={handleCreateTicket}
             onUpdateTicket={handleUpdateTicket}
           />
-        </TabsContent>
-
-        <TabsContent value="security">
-          <div className="text-center py-12">
-            <p className="text-gray-600">Security settings coming soon...</p>
-          </div>
         </TabsContent>
       </Tabs>
     </div>
