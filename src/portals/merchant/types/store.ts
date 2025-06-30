@@ -17,6 +17,7 @@ export interface Store {
   contact_email?: string;
   status: 'active' | 'inactive' | 'pending_verification' | 'suspended';
   is_verified: boolean;
+  is_active: boolean; // Added this missing property
   business_hours?: BusinessHours;
   social_media?: SocialMedia;
   merchant_id: string;

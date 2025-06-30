@@ -25,6 +25,7 @@ export const useStores = (merchantId?: string) => {
       logo_url: '/placeholder.svg',
       status: 'active',
       is_verified: true,
+      is_active: true, // Added this property
       merchant_id: 'debug-merchant-id',
       business_hours: {
         monday: { open: '09:00', close: '18:00' },
@@ -54,6 +55,7 @@ export const useStores = (merchantId?: string) => {
       contact_email: 'hello@techcorner.com',
       status: 'inactive',
       is_verified: false,
+      is_active: false, // Added this property
       merchant_id: 'debug-merchant-id',
       business_hours: {
         monday: { open: '10:00', close: '19:00' },
