@@ -1,154 +1,149 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Store, CreateStoreData } from '../types/store';
 import { toast } from 'sonner';
 
-export const useStores = (merchantId?: string) => {
+interface Store {
+  id: string;
+  name: string;
+  address: string;
+  phone?: string;
+  description?: string;
+  business_name?: string;
+  business_type?: string;
+  tax_id?: string;
+  is_active: boolean;
+  is_verified: boolean;
+  created_at: string;
+  merchant_id: string;
+  business_hours?: any;
+  social_media?: any;
+  latitude?: number;
+  longitude?: number;
+}
+
+export const useStores = (merchantId: string) => {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data for development
-  const mockStores: Store[] = [
-    {
-      id: 'store-1',
-      name: 'Downtown Electronics',
-      description: 'Your one-stop shop for all electronics and gadgets',
-      address: '123 Main Street',
-      city: 'San Francisco',
-      state: 'CA',
-      zip_code: '94102',
-      contact_phone: '(555) 123-4567',
-      contact_email: 'info@downtown-electronics.com',
-      website: 'https://downtown-electronics.com',
-      logo_url: '/placeholder.svg',
-      status: 'active',
-      is_verified: true,
-      is_active: true, // Added this property
-      merchant_id: 'debug-merchant-id',
-      business_hours: {
-        monday: { open: '09:00', close: '18:00' },
-        tuesday: { open: '09:00', close: '18:00' },
-        wednesday: { open: '09:00', close: '18:00' },
-        thursday: { open: '09:00', close: '18:00' },
-        friday: { open: '09:00', close: '20:00' },
-        saturday: { open: '10:00', close: '20:00' },
-        sunday: { closed: true, open: '', close: '' }
-      },
-      social_media: {
-        facebook: 'https://facebook.com/downtown-electronics',
-        instagram: 'https://instagram.com/downtown_electronics'
-      },
-      created_at: '2024-01-15T10:00:00Z',
-      updated_at: '2024-06-20T15:30:00Z'
-    },
-    {
-      id: 'store-2',
-      name: 'Tech Corner',
-      description: 'Specialized in laptops, phones, and accessories',
-      address: '456 Tech Ave',
-      city: 'San Francisco',
-      state: 'CA',
-      zip_code: '94103',
-      contact_phone: '(555) 987-6543',
-      contact_email: 'hello@techcorner.com',
-      status: 'inactive',
-      is_verified: false,
-      is_active: false, // Added this property
-      merchant_id: 'debug-merchant-id',
-      business_hours: {
-        monday: { open: '10:00', close: '19:00' },
-        tuesday: { open: '10:00', close: '19:00' },
-        wednesday: { open: '10:00', close: '19:00' },
-        thursday: { open: '10:00', close: '19:00' },
-        friday: { open: '10:00', close: '21:00' },
-        saturday: { open: '09:00', close: '21:00' },
-        sunday: { open: '11:00', close: '17:00' }
-      },
-      created_at: '2024-02-01T14:00:00Z',
-      updated_at: '2024-06-15T09:15:00Z'
-    }
-  ];
+  // Mock data for demonstration
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        setLoading(true);
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const mockStores: Store[] = [
+          {
+            id: 'store-1',
+            name: 'Downtown Electronics',
+            address: '123 Main St, Downtown, CA 90210',
+            phone: '+1 (555) 123-4567',
+            description: 'Your one-stop shop for electronics and gadgets',
+            business_name: 'Downtown Electronics LLC',
+            business_type: 'Electronics Store',
+            tax_id: '12-3456789',
+            is_active: true,
+            is_verified: true,
+            created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            merchant_id: merchantId,
+            latitude: 34.0522,
+            longitude: -118.2437
+          },
+          {
+            id: 'store-2',
+            name: 'Westside Books',
+            address: '456 Oak Ave, Westside, CA 90211',
+            phone: '+1 (555) 987-6543',
+            description: 'Independent bookstore with rare and new books',
+            business_name: 'Westside Books Inc',
+            business_type: 'Bookstore',
+            is_active: false,
+            is_verified: false,
+            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            merchant_id: merchantId,
+            latitude: 34.0522,
+            longitude: -118.2437
+          }
+        ];
+        
+        setStores(mockStores);
+      } catch (err) {
+        setError('Failed to fetch stores');
+        console.error('Error fetching stores:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const fetchStores = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // For now, use mock data
-      console.log('Fetching stores for merchant:', merchantId);
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
-      setStores(mockStores);
-    } catch (err: any) {
-      console.error('Error fetching stores:', err);
-      setError(err.message);
-      toast.error('Failed to load stores');
-    } finally {
-      setLoading(false);
+    if (merchantId) {
+      fetchStores();
     }
-  };
+  }, [merchantId]);
 
-  const createStore = async (storeData: CreateStoreData): Promise<Store> => {
+  const createStore = async (storeData: Partial<Store>) => {
     try {
-      console.log('Creating store:', storeData);
-      
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       const newStore: Store = {
         id: `store-${Date.now()}`,
-        ...storeData,
-        status: 'active',
-        is_verified: false,
-        is_active: true, // Added this missing property
-        merchant_id: merchantId || 'debug-merchant-id',
+        name: storeData.name || '',
+        address: storeData.address || '',
+        phone: storeData.phone,
+        description: storeData.description,
+        business_name: storeData.business_name,
+        business_type: storeData.business_type,
+        tax_id: storeData.tax_id,
+        is_active: storeData.is_active ?? true,
+        is_verified: storeData.is_verified ?? false,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        merchant_id: merchantId,
+        business_hours: storeData.business_hours,
+        social_media: storeData.social_media,
+        latitude: storeData.latitude,
+        longitude: storeData.longitude
       };
       
       setStores(prev => [...prev, newStore]);
-      toast.success('Store created successfully');
       return newStore;
-    } catch (err: any) {
-      console.error('Error creating store:', err);
-      toast.error('Failed to create store');
-      throw err;
-    }
-  };
-
-  const updateStore = async (storeId: string, updates: Partial<Store>): Promise<Store> => {
-    try {
-      console.log('Updating store:', storeId, updates);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const updatedStore = stores.find(s => s.id === storeId);
-      if (!updatedStore) throw new Error('Store not found');
-      
-      const newStore = { ...updatedStore, ...updates, updated_at: new Date().toISOString() };
-      setStores(prev => prev.map(s => s.id === storeId ? newStore : s));
-      toast.success('Store updated successfully');
-      return newStore;
-    } catch (err: any) {
-      console.error('Error updating store:', err);
-      toast.error('Failed to update store');
-      throw err;
-    }
-  };
-
-  const toggleStoreStatus = async (storeId: string, newStatus: 'active' | 'inactive') => {
-    try {
-      await updateStore(storeId, { status: newStatus });
     } catch (err) {
-      console.error('Error toggling store status:', err);
+      console.error('Error creating store:', err);
+      throw new Error('Failed to create store');
     }
   };
 
-  useEffect(() => {
-    fetchStores();
-  }, [merchantId]);
+  const updateStore = async (storeId: string, updates: Partial<Store>) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setStores(prev => 
+        prev.map(store => 
+          store.id === storeId 
+            ? { ...store, ...updates }
+            : store
+        )
+      );
+    } catch (err) {
+      console.error('Error updating store:', err);
+      throw new Error('Failed to update store');
+    }
+  };
+
+  const deleteStore = async (storeId: string) => {
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setStores(prev => prev.filter(store => store.id !== storeId));
+    } catch (err) {
+      console.error('Error deleting store:', err);
+      throw new Error('Failed to delete store');
+    }
+  };
 
   return {
     stores,
@@ -156,7 +151,11 @@ export const useStores = (merchantId?: string) => {
     error,
     createStore,
     updateStore,
-    toggleStoreStatus,
-    refetch: fetchStores
+    deleteStore,
+    refetch: () => {
+      setLoading(true);
+      // Re-trigger the useEffect
+      setStores([]);
+    }
   };
 };

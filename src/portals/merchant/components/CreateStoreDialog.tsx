@@ -5,16 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload } from 'lucide-react';
-import { CreateStoreData, BusinessHours } from '../types/store';
-import BusinessHoursForm from './BusinessHoursForm';
-import SocialMediaForm from './SocialMediaForm';
+import { Store, MapPin, Clock, Globe } from 'lucide-react';
+import BusinessHoursForm, { BusinessHours } from './BusinessHoursForm';
+import SocialMediaForm, { SocialMedia } from './SocialMediaForm';
 
 interface CreateStoreDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateStoreData) => void;
+  onSubmit: (storeData: any) => void;
   loading?: boolean;
 }
 
@@ -24,183 +24,214 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
   onSubmit,
   loading = false
 }) => {
-  const [formData, setFormData] = useState<CreateStoreData>({
+  const [storeData, setStoreData] = useState({
     name: '',
+    business_name: '',
     description: '',
     address: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    contact_phone: '',
+    phone: '',
     contact_email: '',
-    website: '',
-    business_hours: {
-      monday: { open: '09:00', close: '17:00' },
-      tuesday: { open: '09:00', close: '17:00' },
-      wednesday: { open: '09:00', close: '17:00' },
-      thursday: { open: '09:00', close: '17:00' },
-      friday: { open: '09:00', close: '17:00' },
-      saturday: { open: '10:00', close: '16:00' },
-      sunday: { closed: true, open: '', close: '' }
-    },
-    social_media: {
-      facebook: '',
-      instagram: '',
-      twitter: '',
-      linkedin: ''
-    }
+    business_type: '',
+    tax_id: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
+  const [businessHours, setBusinessHours] = useState<BusinessHours>({
+    monday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    tuesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    wednesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    thursday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    friday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    saturday: { isOpen: true, openTime: '10:00', closeTime: '16:00' },
+    sunday: { isOpen: false, openTime: '10:00', closeTime: '16:00' }
+  });
+
+  const [socialMedia, setSocialMedia] = useState<SocialMedia>({});
+
+  const businessTypes = [
+    'Retail Store',
+    'Restaurant',
+    'Cafe',
+    'Grocery Store',
+    'Pharmacy',
+    'Electronics Store',
+    'Clothing Store',
+    'Bookstore',
+    'Hardware Store',
+    'Other'
+  ];
+
+  const handleInputChange = (field: string, value: string) => {
+    setStoreData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleInputChange = (field: keyof CreateStoreData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleSubmit = () => {
+    const fullStoreData = {
+      ...storeData,
+      business_hours: businessHours,
+      social_media: socialMedia
+    };
+    onSubmit(fullStoreData);
   };
 
-  const handleBusinessHoursChange = (hours: BusinessHours) => {
-    setFormData(prev => ({ ...prev, business_hours: hours }));
+  const resetForm = () => {
+    setStoreData({
+      name: '',
+      business_name: '',
+      description: '',
+      address: '',
+      phone: '',
+      contact_email: '',
+      business_type: '',
+      tax_id: ''
+    });
+    setBusinessHours({
+      monday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      tuesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      wednesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      thursday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      friday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      saturday: { isOpen: true, openTime: '10:00', closeTime: '16:00' },
+      sunday: { isOpen: false, openTime: '10:00', closeTime: '16:00' }
+    });
+    setSocialMedia({});
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Store</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Store className="w-5 h-5" />
+            Create New Store
+          </DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="contact">Contact</TabsTrigger>
-              <TabsTrigger value="hours">Hours</TabsTrigger>
-              <TabsTrigger value="social">Social</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="basic" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Store Name *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="website">Website</Label>
-                  <Input
-                    id="website"
-                    type="url"
-                    value={formData.website}
-                    onChange={(e) => handleInputChange('website', e.target.value)}
-                    placeholder="https://example.com"
-                  />
-                </div>
-              </div>
-              
+
+        <Tabs defaultValue="basic" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+            <TabsTrigger value="location">Location</TabsTrigger>
+            <TabsTrigger value="hours">Hours</TabsTrigger>
+            <TabsTrigger value="social">Social</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="basic" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  rows={3}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="address">Address *</Label>
+                <Label>Store Name *</Label>
                 <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
-                  required
+                  value={storeData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="My Awesome Store"
                 />
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="city">City *</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="state">State *</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => handleInputChange('state', e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="zip_code">ZIP Code *</Label>
-                  <Input
-                    id="zip_code"
-                    value={formData.zip_code}
-                    onChange={(e) => handleInputChange('zip_code', e.target.value)}
-                    required
-                  />
-                </div>
+              <div>
+                <Label>Business Name</Label>
+                <Input
+                  value={storeData.business_name}
+                  onChange={(e) => handleInputChange('business_name', e.target.value)}
+                  placeholder="Official business name"
+                />
               </div>
-            </TabsContent>
-            
-            <TabsContent value="contact" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="contact_phone">Phone</Label>
-                  <Input
-                    id="contact_phone"
-                    type="tel"
-                    value={formData.contact_phone}
-                    onChange={(e) => handleInputChange('contact_phone', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="contact_email">Email</Label>
-                  <Input
-                    id="contact_email"
-                    type="email"
-                    value={formData.contact_email}
-                    onChange={(e) => handleInputChange('contact_email', e.target.value)}
-                  />
-                </div>
+            </div>
+
+            <div>
+              <Label>Description</Label>
+              <Textarea
+                value={storeData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Tell customers about your store..."
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Business Type</Label>
+                <Select value={storeData.business_type} onValueChange={(value) => handleInputChange('business_type', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select business type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {businessTypes.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="hours">
-              <BusinessHoursForm
-                businessHours={formData.business_hours}
-                onChange={handleBusinessHoursChange}
+              <div>
+                <Label>Tax ID</Label>
+                <Input
+                  value={storeData.tax_id}
+                  onChange={(e) => handleInputChange('tax_id', e.target.value)}
+                  placeholder="Tax identification number"
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="location" className="space-y-4">
+            <div>
+              <Label className="flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Store Address *
+              </Label>
+              <Textarea
+                value={storeData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                placeholder="123 Main St, City, State, ZIP"
+                rows={3}
               />
-            </TabsContent>
-            
-            <TabsContent value="social">
-              <SocialMediaForm
-                socialMedia={formData.social_media}
-                onChange={(social) => handleInputChange('social_media', social)}
-              />
-            </TabsContent>
-          </Tabs>
-          
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Store'}
-            </Button>
-          </div>
-        </form>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Phone Number</Label>
+                <Input
+                  value={storeData.phone}
+                  onChange={(e) => handleInputChange('phone', e.target.value)}
+                  placeholder="+1 (555) 123-4567"
+                />
+              </div>
+              <div>
+                <Label>Contact Email</Label>
+                <Input
+                  type="email"
+                  value={storeData.contact_email}
+                  onChange={(e) => handleInputChange('contact_email', e.target.value)}
+                  placeholder="store@example.com"
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="hours">
+            <BusinessHoursForm 
+              businessHours={businessHours} 
+              onChange={setBusinessHours} 
+            />
+          </TabsContent>
+
+          <TabsContent value="social">
+            <SocialMediaForm 
+              socialMedia={socialMedia} 
+              onChange={setSocialMedia} 
+            />
+          </TabsContent>
+        </Tabs>
+
+        <div className="flex gap-2 pt-4">
+          <Button onClick={handleSubmit} disabled={loading || !storeData.name || !storeData.address}>
+            {loading ? 'Creating...' : 'Create Store'}
+          </Button>
+          <Button variant="outline" onClick={handleClose}>
+            Cancel
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

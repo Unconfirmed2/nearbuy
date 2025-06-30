@@ -4,135 +4,79 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Facebook, Instagram, Twitter, Globe, Save } from 'lucide-react';
+import { Globe, Facebook, Instagram, Twitter, Linkedin, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface SocialMediaLinks {
-  website: string;
-  facebook: string;
-  instagram: string;
-  twitter: string;
+export interface SocialMedia {
+  website?: string;
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  linkedin?: string;
 }
 
 interface SocialMediaFormProps {
-  storeId?: string;
-  initialLinks?: SocialMediaLinks;
-  socialMedia?: any;
-  onChange?: (social: any) => void;
+  socialMedia?: SocialMedia;
+  onChange?: (social: SocialMedia) => void;
+  onSave?: (social: SocialMedia) => void;
 }
 
 const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ 
-  storeId, 
-  initialLinks,
-  socialMedia: externalSocialMedia,
-  onChange
+  socialMedia: externalSocial, 
+  onChange,
+  onSave 
 }) => {
-  const [links, setLinks] = useState<SocialMediaLinks>(
-    initialLinks || externalSocialMedia || {
-      website: '',
-      facebook: '',
-      instagram: '',
-      twitter: ''
-    }
-  );
+  const [social, setSocial] = useState<SocialMedia>(externalSocial || {});
 
-  const updateLink = (platform: keyof SocialMediaLinks, value: string) => {
-    const newLinks = { ...links, [platform]: value };
-    setLinks(newLinks);
-    
-    if (onChange) {
-      onChange(newLinks);
-    }
+  const socialFields = [
+    { key: 'website', label: 'Website', icon: Globe, placeholder: 'https://yourwebsite.com' },
+    { key: 'facebook', label: 'Facebook', icon: Facebook, placeholder: 'https://facebook.com/yourpage' },
+    { key: 'instagram', label: 'Instagram', icon: Instagram, placeholder: 'https://instagram.com/youraccount' },
+    { key: 'twitter', label: 'Twitter', icon: Twitter, placeholder: 'https://twitter.com/youraccount' },
+    { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, placeholder: 'https://linkedin.com/company/yourcompany' }
+  ];
+
+  const handleChange = (field: keyof SocialMedia, value: string) => {
+    const updatedSocial = { ...social, [field]: value };
+    setSocial(updatedSocial);
+    onChange?.(updatedSocial);
   };
 
   const handleSave = () => {
-    console.log('Saving social media links:', links);
+    onSave?.(social);
     toast.success('Social media links updated successfully');
   };
-
-  const socialPlatforms = [
-    {
-      key: 'website' as keyof SocialMediaLinks,
-      label: 'Website',
-      icon: Globe,
-      placeholder: 'https://yourbusiness.com'
-    },
-    {
-      key: 'facebook' as keyof SocialMediaLinks,
-      label: 'Facebook',
-      icon: Facebook,
-      placeholder: 'https://facebook.com/yourbusiness'
-    },
-    {
-      key: 'instagram' as keyof SocialMediaLinks,
-      label: 'Instagram',
-      icon: Instagram,
-      placeholder: 'https://instagram.com/yourbusiness'
-    },
-    {
-      key: 'twitter' as keyof SocialMediaLinks,
-      label: 'Twitter',
-      icon: Twitter,
-      placeholder: 'https://twitter.com/yourbusiness'
-    }
-  ];
-
-  // If this is being used as a controlled component, don't show the card wrapper
-  if (onChange && externalSocialMedia) {
-    return (
-      <div className="space-y-4">
-        {socialPlatforms.map((platform) => {
-          const Icon = platform.icon;
-          return (
-            <div key={platform.key} className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Icon className="w-4 h-4" />
-                {platform.label}
-              </Label>
-              <Input
-                type="url"
-                value={links[platform.key]}
-                onChange={(e) => updateLink(platform.key, e.target.value)}
-                placeholder={platform.placeholder}
-              />
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Social Media & Website</CardTitle>
-        <p className="text-sm text-gray-600">
-          Add your social media profiles and website to help customers find you online
-        </p>
+        <CardTitle className="flex items-center gap-2">
+          <Globe className="w-5 h-5" />
+          Social Media & Website
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {socialPlatforms.map((platform) => {
-          const Icon = platform.icon;
-          return (
-            <div key={platform.key} className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Icon className="w-4 h-4" />
-                {platform.label}
-              </Label>
-              <Input
-                type="url"
-                value={links[platform.key]}
-                onChange={(e) => updateLink(platform.key, e.target.value)}
-                placeholder={platform.placeholder}
-              />
-            </div>
-          );
-        })}
+        {socialFields.map(({ key, label, icon: Icon, placeholder }) => (
+          <div key={key}>
+            <Label className="flex items-center gap-2 mb-2">
+              <Icon className="w-4 h-4" />
+              {label}
+            </Label>
+            <Input
+              type="url"
+              placeholder={placeholder}
+              value={social[key as keyof SocialMedia] || ''}
+              onChange={(e) => handleChange(key as keyof SocialMedia, e.target.value)}
+            />
+          </div>
+        ))}
 
-        <Button onClick={handleSave} className="w-full">
-          <Save className="w-4 h-4 mr-2" />
-          Save Social Media Links
-        </Button>
+        {onSave && (
+          <Button onClick={handleSave} className="w-full">
+            <Save className="w-4 h-4 mr-2" />
+            Save Social Media Links
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

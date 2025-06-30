@@ -4,318 +4,257 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Zap, CheckCircle, AlertCircle, RefreshCw, Settings } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Store, Zap, Settings, Plus, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface POSIntegration {
-  id: string;
-  provider: string;
-  logo: string;
-  name: string;
-  description: string;
-  connected: boolean;
-  last_sync?: string;
-  config?: {
-    api_key?: string;
-    store_id?: string;
-    sync_frequency?: string;
-    auto_sync?: boolean;
-  };
-}
 
 interface POSIntegrationProps {
   merchantId?: string;
   storeId?: string;
+  integrations?: any[];
+  onConnect?: (provider: string, credentials: any) => void;
+  onSync?: (integrationId: string) => void;
 }
 
-const POSIntegration: React.FC<POSIntegrationProps> = ({ merchantId, storeId }) => {
-  const [integrations, setIntegrations] = useState<POSIntegration[]>([
+const POSIntegration: React.FC<POSIntegrationProps> = ({
+  merchantId,
+  storeId,
+  integrations: externalIntegrations,
+  onConnect,
+  onSync
+}) => {
+  const [showConnectDialog, setShowConnectDialog] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState('');
+  const [credentials, setCredentials] = useState<any>({});
+  const [connecting, setConnecting] = useState(false);
+
+  // Mock integrations data
+  const [integrations, setIntegrations] = useState(externalIntegrations || []);
+
+  const posProviders = [
     {
-      id: '1',
-      provider: 'shopify',
-      logo: '🛍️',
-      name: 'Shopify',
-      description: 'Sync products and inventory with your Shopify store',
-      connected: true,
-      last_sync: '2024-01-15T10:30:00Z',
-      config: {
-        store_id: 'my-store.myshopify.com',
-        sync_frequency: 'hourly',
-        auto_sync: true
-      }
-    },
-    {
-      id: '2',
-      provider: 'square',
-      logo: '⬜',
+      id: 'square',
       name: 'Square',
       description: 'Connect your Square POS system',
-      connected: false
+      fields: [
+        { key: 'applicationId', label: 'Application ID', type: 'text' },
+        { key: 'accessToken', label: 'Access Token', type: 'password' }
+      ]
     },
     {
-      id: '3',
-      provider: 'lightspeed',
-      logo: '⚡',
+      id: 'shopify',
+      name: 'Shopify',
+      description: 'Sync with your Shopify store',
+      fields: [
+        { key: 'shopName', label: 'Shop Name', type: 'text' },
+        { key: 'apiKey', label: 'API Key', type: 'password' },
+        { key: 'apiSecret', label: 'API Secret', type: 'password' }
+      ]
+    },
+    {
+      id: 'lightspeed',
       name: 'Lightspeed',
-      description: 'Sync with Lightspeed Retail POS',
-      connected: false
+      description: 'Connect to Lightspeed Retail',
+      fields: [
+        { key: 'accountId', label: 'Account ID', type: 'text' },
+        { key: 'clientId', label: 'Client ID', type: 'text' },
+        { key: 'clientSecret', label: 'Client Secret', type: 'password' }
+      ]
     },
     {
-      id: '4',
-      provider: 'clover',
-      logo: '🍀',
+      id: 'clover',
       name: 'Clover',
       description: 'Integrate with Clover POS',
-      connected: false
+      fields: [
+        { key: 'merchantId', label: 'Merchant ID', type: 'text' },
+        { key: 'accessToken', label: 'Access Token', type: 'password' }
+      ]
     }
-  ]);
+  ];
 
-  const [connectionData, setConnectionData] = useState<{[key: string]: any}>({});
-  const [showConnectionForm, setShowConnectionForm] = useState<{[key: string]: boolean}>({});
-  const [syncing, setSyncing] = useState<{[key: string]: boolean}>({});
+  const handleConnect = async () => {
+    if (!selectedProvider || !credentials) return;
 
-  const handleConnect = (integrationId: string) => {
-    const data = connectionData[integrationId];
-    if (!data?.api_key || !data?.store_id) {
-      toast.error('Please fill in all required fields');
-      return;
+    try {
+      setConnecting(true);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const newIntegration = {
+        id: `integration-${Date.now()}`,
+        provider: selectedProvider,
+        status: 'connected',
+        lastSynced: new Date().toISOString(),
+        credentials: credentials
+      };
+
+      if (onConnect) {
+        onConnect(selectedProvider, credentials);
+      } else {
+        setIntegrations([...integrations, newIntegration]);
+      }
+
+      setShowConnectDialog(false);
+      setSelectedProvider('');
+      setCredentials({});
+      toast.success(`${posProviders.find(p => p.id === selectedProvider)?.name} connected successfully`);
+    } catch (error) {
+      toast.error('Failed to connect POS system');
+    } finally {
+      setConnecting(false);
     }
-
-    setIntegrations(prev => prev.map(integration =>
-      integration.id === integrationId
-        ? {
-            ...integration,
-            connected: true,
-            config: {
-              ...data,
-              sync_frequency: 'hourly',
-              auto_sync: true
-            },
-            last_sync: new Date().toISOString()
-          }
-        : integration
-    ));
-
-    setShowConnectionForm(prev => ({ ...prev, [integrationId]: false }));
-    setConnectionData(prev => ({ ...prev, [integrationId]: {} }));
-    toast.success('Integration connected successfully');
-  };
-
-  const handleDisconnect = (integrationId: string) => {
-    setIntegrations(prev => prev.map(integration =>
-      integration.id === integrationId
-        ? { ...integration, connected: false, config: undefined, last_sync: undefined }
-        : integration
-    ));
-    toast.success('Integration disconnected');
   };
 
   const handleSync = async (integrationId: string) => {
-    setSyncing(prev => ({ ...prev, [integrationId]: true }));
-    
-    // Simulate sync process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIntegrations(prev => prev.map(integration =>
-      integration.id === integrationId
-        ? { ...integration, last_sync: new Date().toISOString() }
-        : integration
-    ));
-    
-    setSyncing(prev => ({ ...prev, [integrationId]: false }));
-    toast.success('Sync completed successfully');
+    try {
+      if (onSync) {
+        onSync(integrationId);
+      } else {
+        // Update last synced time
+        setIntegrations(prev => 
+          prev.map(integration =>
+            integration.id === integrationId
+              ? { ...integration, lastSynced: new Date().toISOString() }
+              : integration
+          )
+        );
+      }
+      toast.success('Sync completed successfully');
+    } catch (error) {
+      toast.error('Sync failed');
+    }
   };
 
-  const updateIntegrationConfig = (integrationId: string, key: string, value: any) => {
-    setIntegrations(prev => prev.map(integration =>
-      integration.id === integrationId
-        ? {
-            ...integration,
-            config: { ...integration.config, [key]: value }
-          }
-        : integration
-    ));
-  };
-
-  const renderConnectionForm = (integration: POSIntegration) => {
-    if (!showConnectionForm[integration.id]) return null;
-
-    return (
-      <div className="mt-4 p-4 border rounded-lg space-y-4">
-        <h4 className="font-medium">Connect {integration.name}</h4>
-        
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <Label>API Key *</Label>
-            <Input
-              type="password"
-              placeholder="Enter your API key"
-              value={connectionData[integration.id]?.api_key || ''}
-              onChange={(e) => setConnectionData(prev => ({
-                ...prev,
-                [integration.id]: { ...prev[integration.id], api_key: e.target.value }
-              }))}
-            />
-          </div>
-          
-          <div>
-            <Label>Store ID *</Label>
-            <Input
-              placeholder="Enter your store ID"
-              value={connectionData[integration.id]?.store_id || ''}
-              onChange={(e) => setConnectionData(prev => ({
-                ...prev,
-                [integration.id]: { ...prev[integration.id], store_id: e.target.value }
-              }))}
-            />
-          </div>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button onClick={() => handleConnect(integration.id)}>
-            Connect
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => setShowConnectionForm(prev => ({ ...prev, [integration.id]: false }))}
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderConnectedIntegration = (integration: POSIntegration) => {
-    if (!integration.connected) return null;
-
-    return (
-      <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-green-600" />
-            <span className="text-green-800 font-medium">Connected</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleSync(integration.id)}
-              disabled={syncing[integration.id]}
-            >
-              {syncing[integration.id] ? (
-                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-              ) : (
-                <RefreshCw className="w-3 h-3 mr-1" />
-              )}
-              Sync Now
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDisconnect(integration.id)}
-              className="text-red-600 hover:text-red-800"
-            >
-              Disconnect
-            </Button>
-          </div>
-        </div>
-
-        {integration.last_sync && (
-          <p className="text-sm text-green-700">
-            Last synced: {new Date(integration.last_sync).toLocaleString()}
-          </p>
-        )}
-
-        <Separator />
-
-        <div className="space-y-3">
-          <h5 className="font-medium flex items-center gap-2">
-            <Settings className="w-4 h-4" />
-            Sync Settings
-          </h5>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Sync Frequency</Label>
-              <Select
-                value={integration.config?.sync_frequency || 'hourly'}
-                onValueChange={(value) => updateIntegrationConfig(integration.id, 'sync_frequency', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="realtime">Real-time</SelectItem>
-                  <SelectItem value="hourly">Every Hour</SelectItem>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="manual">Manual Only</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={integration.config?.auto_sync || false}
-                onCheckedChange={(checked) => updateIntegrationConfig(integration.id, 'auto_sync', checked)}
-              />
-              <Label>Auto Sync</Label>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const selectedProviderInfo = posProviders.find(p => p.id === selectedProvider);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Zap className="w-5 h-5" />
-          POS Integrations
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Store className="w-5 h-5" />
+            POS Integrations
+          </CardTitle>
+          <Dialog open={showConnectDialog} onOpenChange={setShowConnectDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Connect POS
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Connect POS System</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>POS Provider</Label>
+                  <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select POS provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {posProviders.map(provider => (
+                        <SelectItem key={provider.id} value={provider.id}>
+                          {provider.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedProviderInfo && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">{selectedProviderInfo.description}</p>
+                    {selectedProviderInfo.fields.map(field => (
+                      <div key={field.key}>
+                        <Label>{field.label}</Label>
+                        <Input
+                          type={field.type}
+                          value={credentials[field.key] || ''}
+                          onChange={(e) => setCredentials(prev => ({
+                            ...prev,
+                            [field.key]: e.target.value
+                          }))}
+                          placeholder={`Enter ${field.label.toLowerCase()}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleConnect} 
+                    disabled={!selectedProvider || connecting}
+                    className="flex-1"
+                  >
+                    {connecting ? 'Connecting...' : 'Connect'}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowConnectDialog(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
         <p className="text-sm text-gray-600">
-          Connect your Point of Sale system to sync products and inventory automatically
+          Connect your Point of Sale system to sync inventory and orders
         </p>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          {integrations.map(integration => (
-            <div key={integration.id} className="border rounded-lg p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl">{integration.logo}</div>
-                  <div>
-                    <h3 className="font-medium flex items-center gap-2">
-                      {integration.name}
-                      {integration.connected && (
-                        <Badge className="bg-green-100 text-green-800">Connected</Badge>
-                      )}
-                    </h3>
-                    <p className="text-sm text-gray-600">{integration.description}</p>
+        {integrations.length === 0 ? (
+          <div className="text-center py-8">
+            <Store className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No POS integrations</h3>
+            <p className="text-gray-600 mb-4">Connect your POS system to sync products and inventory</p>
+            <Button onClick={() => setShowConnectDialog(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Connect Your First POS
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {integrations.map(integration => {
+              const provider = posProviders.find(p => p.id === integration.provider);
+              return (
+                <div key={integration.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-5 h-5 text-green-600" />
+                    <div>
+                      <h4 className="font-medium">{provider?.name || integration.provider}</h4>
+                      <p className="text-sm text-gray-600">
+                        Last synced: {new Date(integration.lastSynced).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-100 text-green-800">Connected</Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSync(integration.id)}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Sync
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Settings className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-                
-                {!integration.connected && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowConnectionForm(prev => ({ ...prev, [integration.id]: true }))}
-                    disabled={showConnectionForm[integration.id]}
-                  >
-                    Connect
-                  </Button>
-                )}
-              </div>
-
-              {renderConnectionForm(integration)}
-              {renderConnectedIntegration(integration)}
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

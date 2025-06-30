@@ -97,6 +97,7 @@ const Settings: React.FC = () => {
 
         <TabsContent value="notifications">
           <NotificationSettings
+            merchantId="debug-merchant-id"
             preferences={notificationPreferences}
             onSave={handleSaveNotifications}
           />
@@ -104,6 +105,7 @@ const Settings: React.FC = () => {
 
         <TabsContent value="support">
           <SupportTicketSystem
+            merchantId="debug-merchant-id"
             tickets={supportTickets}
             onCreateTicket={handleCreateTicket}
             onUpdateTicket={handleUpdateTicket}

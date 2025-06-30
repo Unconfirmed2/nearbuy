@@ -154,7 +154,10 @@ const Integrations: React.FC = () => {
         </TabsList>
 
         <TabsContent value="pos">
-          <POSIntegration merchantId="debug-merchant-id" />
+          <POSIntegration 
+            merchantId="debug-merchant-id" 
+            storeId="debug-store-id" 
+          />
         </TabsContent>
 
         <TabsContent value="payments">
