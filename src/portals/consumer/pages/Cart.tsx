@@ -6,10 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Plus, Minus, Trash2, MapPin, Route } from 'lucide-react';
 import { getBasket, removeFromBasket, BasketItem } from '@/utils/localStorage';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const Cart: React.FC = () => {
   const [basketItems, setBasketItems] = useState<BasketItem[]>(getBasket());
+  const navigate = useNavigate();
 
   const updateQuantity = (productId: number, storeId: number, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -48,9 +50,7 @@ const Cart: React.FC = () => {
   );
 
   const handlePlanRoute = () => {
-    const storeNames = Object.keys(groupedByStore).map(key => key.split('-')[1]);
-    toast.success(`Planning route for ${storeNames.length} stores: ${storeNames.join(', ')}`);
-    // In a real app, this would integrate with Google Maps API
+    navigate('/consumer/route-planner');
   };
 
   const handleCheckout = () => {
@@ -58,7 +58,7 @@ const Cart: React.FC = () => {
       toast.error('Your cart is empty');
       return;
     }
-    toast.info('Checkout functionality would be implemented here');
+    navigate('/consumer/checkout');
   };
 
   if (basketItems.length === 0) {
@@ -70,7 +70,7 @@ const Cart: React.FC = () => {
           <p className="text-gray-600 mb-6">
             Start shopping to add items to your cart.
           </p>
-          <Button onClick={() => window.history.back()}>
+          <Button onClick={() => navigate('/consumer')}>
             Continue Shopping
           </Button>
         </div>

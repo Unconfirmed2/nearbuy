@@ -14,6 +14,10 @@ import Auth from './pages/Auth';
 import ForgotPassword from './pages/ForgotPassword';
 import Addresses from './pages/Addresses';
 import PaymentMethods from './pages/PaymentMethods';
+import RoutePlanner from './pages/RoutePlanner';
+import Support from './pages/Support';
+import Checkout from './pages/Checkout';
+import OrderConfirmation from './pages/OrderConfirmation';
 import { useAuth } from './hooks/useAuth';
 
 interface ConsumerAppProps {
@@ -55,11 +59,15 @@ const ConsumerApp: React.FC<ConsumerAppProps> = ({ user: propUser, profile: prop
         <Route path="search" element={<ProductSearch />} />
         <Route path="product/:id" element={<ProductDetails />} />
         <Route path="cart" element={<Cart />} />
+        <Route path="checkout" element={<Checkout />} />
+        <Route path="order-confirmation" element={<OrderConfirmation />} />
+        <Route path="route-planner" element={<RoutePlanner />} />
         <Route path="profile" element={<Profile user={user} profile={profile} />} />
         <Route path="addresses" element={<Addresses />} />
         <Route path="payment-methods" element={<PaymentMethods />} />
         <Route path="orders" element={<OrderHistory />} />
         <Route path="favorites" element={<Favorites />} />
+        <Route path="support" element={<Support />} />
         <Route path="auth" element={<Auth />} />
         <Route path="auth/forgot-password" element={<ForgotPassword />} />
       </Routes>

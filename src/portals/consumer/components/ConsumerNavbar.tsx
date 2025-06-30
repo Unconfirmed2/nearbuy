@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ShoppingCart, Search, Heart, User as UserIcon, LogOut, MapPin, CreditCard, Package } from 'lucide-react';
+import { ShoppingCart, Search, Heart, User as UserIcon, LogOut, MapPin, CreditCard, Package, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getBasket } from '@/utils/localStorage';
 import { toast } from 'sonner';
@@ -103,6 +103,10 @@ const ConsumerNavbar: React.FC<ConsumerNavbarProps> = ({ user: propUser, profile
                   <DropdownMenuItem onClick={() => navigate('/consumer/orders')}>
                     <Package className="h-4 w-4 mr-2" />
                     Order History
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/consumer/support')}>
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Support
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
