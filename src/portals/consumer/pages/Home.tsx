@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,8 @@ const Home: React.FC = () => {
     type: 'distance',
     value: 5
   });
+  
+  // Reduced number of featured products for better performance
   const [featuredProducts] = useState([
     {
       id: 1,
@@ -47,18 +50,9 @@ const Home: React.FC = () => {
       distance: '2.1 mi',
       rating: 4.9,
       category: 'Pantry'
-    },
-    {
-      id: 4,
-      name: 'Free-Range Eggs',
-      price: 5.49,
-      image: '/placeholder.svg',
-      store: 'Green Grocer',
-      distance: '0.5 mi',
-      rating: 4.6,
-      category: 'Dairy'
     }
   ]);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -80,7 +74,7 @@ const Home: React.FC = () => {
       toast.error('Please enter a search term');
       return;
     }
-    navigate(`/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(location)}`);
+    navigate(`/consumer/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(location)}`);
   };
 
   const handleGetLocation = () => {
@@ -174,7 +168,7 @@ const Home: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/search')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/consumer/search')}>
           <CardContent className="p-6 text-center">
             <Search className="h-8 w-8 text-blue-600 mx-auto mb-2" />
             <h3 className="font-semibold">Browse Products</h3>
@@ -182,7 +176,7 @@ const Home: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/route-planner')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/consumer/route-planner')}>
           <CardContent className="p-6 text-center">
             <MapPin className="h-8 w-8 text-green-600 mx-auto mb-2" />
             <h3 className="font-semibold">Route Planner</h3>
@@ -190,7 +184,7 @@ const Home: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/orders')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/consumer/orders')}>
           <CardContent className="p-6 text-center">
             <Clock className="h-8 w-8 text-purple-600 mx-auto mb-2" />
             <h3 className="font-semibold">Order History</h3>
@@ -203,12 +197,12 @@ const Home: React.FC = () => {
       <div>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Featured Products Near You</h2>
-          <Button variant="outline" onClick={() => navigate('/search')}>
+          <Button variant="outline" onClick={() => navigate('/consumer/search')}>
             View All
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {featuredProducts.map((product) => (
             <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-shadow">
               <div className="relative">
@@ -234,7 +228,7 @@ const Home: React.FC = () => {
                 <div className="space-y-3">
                   <div>
                     <h3 className="font-medium text-gray-900 line-clamp-2 cursor-pointer" 
-                        onClick={() => navigate(`/product/${product.id}`)}>
+                        onClick={() => navigate(`/consumer/product/${product.id}`)}>
                       {product.name}
                     </h3>
                     <p className="text-sm text-gray-500">{product.store}</p>
