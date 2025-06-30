@@ -8,11 +8,12 @@ import MerchantNavbar from '@/portals/merchant/components/MerchantNavbar';
 interface MainNavigationProps {
   user?: User | null;
   profile?: any;
+  debugMode?: boolean;
 }
 
-const MainNavigation: React.FC<MainNavigationProps> = ({ user, profile }) => {
-  // Guest/logged out state
-  if (!user || !profile) {
+const MainNavigation: React.FC<MainNavigationProps> = ({ user, profile, debugMode = false }) => {
+  // In debug mode or guest/logged out state
+  if (!user || !profile || debugMode) {
     return <GuestNavbar />;
   }
 

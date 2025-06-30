@@ -1,9 +1,8 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
 import { Toaster } from '@/components/ui/sonner';
+import DebugUserSwitch from '@/components/DebugUserSwitch';
 
 // Auth components
 import AuthLayout from './components/auth/AuthLayout';
@@ -20,9 +19,6 @@ import ConsumerApp from './portals/consumer/ConsumerApp';
 import MerchantApp from './portals/merchant/MerchantApp';
 import AdminApp from './portals/admin/AdminApp';
 
-// Loading component
-import LoadingSpinner from './components/LoadingSpinner';
-
 // Types
 interface UserProfile {
   id: string;
@@ -33,59 +29,22 @@ interface UserProfile {
 }
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [debugRole, setDebugRole] = useState<'guest' | 'customer' | 'store_owner'>('guest');
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+  // Mock user and profile for debug mode
+  const mockUser = debugRole !== 'guest' ? {
+    id: 'debug-user-id',
+    email: 'debug@example.com',
+    user_metadata: { role: debugRole }
+  } as any : null;
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        } else {
-          setProfile(null);
-          setLoading(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      
-      // Ensure role is properly typed
-      const profileData: UserProfile = {
-        ...data,
-        role: data.role as 'customer' | 'store_owner' | 'admin' | 'moderator'
-      };
-      setProfile(profileData);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const mockProfile = debugRole !== 'guest' ? {
+    id: 'debug-user-id',
+    email: 'debug@example.com',
+    name: debugRole === 'customer' ? 'Debug Consumer' : 'Debug Merchant',
+    role: debugRole,
+    avatar_url: null
+  } : null;
 
   // Route user to appropriate portal based on role
   const getPortalRoute = (userProfile: UserProfile) => {
@@ -101,17 +60,17 @@ export default function App() {
     }
   };
 
-  // Show loading only when we're checking authentication, not for public pages
-  if (loading && (window.location.pathname.startsWith('/consumer') || 
-                 window.location.pathname.startsWith('/merchant') || 
-                 window.location.pathname.startsWith('/admin') || 
-                 window.location.pathname === '/dashboard')) {
-    return <LoadingSpinner />;
-  }
-
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
+        {/* Debug Switch - Only show in development */}
+        <div className="fixed top-4 right-4 z-50">
+          <DebugUserSwitch 
+            currentRole={debugRole} 
+            onRoleChange={setDebugRole} 
+          />
+        </div>
+
         <Routes>
           {/* Public routes - accessible without authentication */}
           <Route path="/" element={<Index />} />
@@ -124,25 +83,29 @@ export default function App() {
             <Route path="signup/merchant" element={<MerchantSignUp />} />
           </Route>
 
-          {/* Protected routes - require authentication */}
-          {user && profile ? (
-            <>
-              <Route path="/consumer/*" element={<ConsumerApp user={user} profile={profile} />} />
-              <Route path="/merchant/*" element={<MerchantApp user={user} profile={profile} />} />
-              <Route path="/admin/*" element={<AdminApp user={user} profile={profile} />} />
-              
-              {/* Redirect to appropriate portal based on role */}
-              <Route path="/dashboard" element={<Navigate to={getPortalRoute(profile)} replace />} />
-            </>
-          ) : (
-            <>
-              {/* Redirect to auth only for protected routes */}
-              <Route path="/consumer/*" element={<Navigate to="/auth/signin" replace />} />
-              <Route path="/merchant/*" element={<Navigate to="/auth/signin" replace />} />
-              <Route path="/admin/*" element={<Navigate to="/auth/signin" replace />} />
-              <Route path="/dashboard" element={<Navigate to="/auth/signin" replace />} />
-            </>
-          )}
+          {/* Debug mode routes - accessible without real authentication */}
+          <Route path="/consumer/*" element={
+            mockUser && mockProfile ? 
+              <ConsumerApp user={mockUser} profile={mockProfile} /> : 
+              <Navigate to="/auth/signin" replace />
+          } />
+          <Route path="/merchant/*" element={
+            mockUser && mockProfile ? 
+              <MerchantApp user={mockUser} profile={mockProfile} /> : 
+              <Navigate to="/auth/signin" replace />
+          } />
+          <Route path="/admin/*" element={
+            mockUser && mockProfile ? 
+              <AdminApp user={mockUser} profile={mockProfile} /> : 
+              <Navigate to="/auth/signin" replace />
+          } />
+          
+          {/* Redirect to appropriate portal based on role */}
+          <Route path="/dashboard" element={
+            mockProfile ? 
+              <Navigate to={getPortalRoute(mockProfile)} replace /> : 
+              <Navigate to="/auth/signin" replace />
+          } />
         </Routes>
         <Toaster />
       </div>
