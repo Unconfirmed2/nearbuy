@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MapPin, Search, Filter, Star, Clock, Navigation, Menu, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/ProductCard";
 import LocationButton from "@/components/LocationButton";
 import TravelFilter, { TravelFilterValue } from "@/components/TravelFilter";
-import GuestNavbar from "@/components/navigation/GuestNavbar";
+import MainNavigation from "@/components/navigation/MainNavigation";
 import { getBasket, addToBasket, getFavorites } from "@/utils/localStorage";
 
 const Index = () => {
@@ -220,8 +221,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header - Always show GuestNavbar for public page */}
-      <GuestNavbar />
+      {/* Header - Use MainNavigation with UniversalNavbar */}
+      <MainNavigation />
 
       {/* Hero Section with Headline */}
       <section className="px-4 sm:px-6 lg:px-8 py-8">
