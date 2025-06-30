@@ -11,11 +11,32 @@ import Orders from './pages/Orders';
 import Analytics from './pages/Analytics';
 
 interface AdminAppProps {
-  user: User;
-  profile: any;
+  user?: User;
+  profile?: any;
 }
 
 const AdminApp: React.FC<AdminAppProps> = ({ user, profile }) => {
+  // For now, we'll show a login prompt if no user is provided
+  // Later this can be replaced with proper authentication
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Admin Portal</h1>
+          <p className="text-gray-600 mb-4">
+            Please sign in to access the admin portal.
+          </p>
+          <a 
+            href="/auth/signin" 
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Sign In
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   // Check if user has admin role
   if (profile?.role !== 'admin' && profile?.role !== 'moderator') {
     return (
