@@ -29,7 +29,7 @@ interface UserProfile {
 }
 
 export default function App() {
-  const [debugRole, setDebugRole] = useState<'guest' | 'customer' | 'store_owner'>('store_owner');
+  const [debugRole, setDebugRole] = useState<'guest' | 'customer' | 'store_owner'>('customer');
 
   // Mock user and profile for debug mode
   const mockUser = debugRole !== 'guest' ? {

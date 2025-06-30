@@ -35,7 +35,7 @@ const GuestNavbar: React.FC = () => {
             <Link to="/" className="text-gray-700 hover:text-blue-600 transition-colors">
               Home
             </Link>
-            <Link to="/products" className="text-gray-700 hover:text-blue-600 transition-colors">
+            <Link to="/consumer/search" className="text-gray-700 hover:text-blue-600 transition-colors">
               Products
             </Link>
             <Link to="/stores" className="text-gray-700 hover:text-blue-600 transition-colors">
@@ -49,7 +49,7 @@ const GuestNavbar: React.FC = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/auth/signin">
+            <Link to="/consumer/auth">
               <Button variant="ghost">Sign In</Button>
             </Link>
             <DropdownMenu>
@@ -60,7 +60,7 @@ const GuestNavbar: React.FC = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
-                  <Link to="/auth/signup/consumer" className="w-full">Sign Up as Consumer</Link>
+                  <Link to="/consumer/auth" className="w-full">Sign Up as Consumer</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link to="/auth/signup/merchant" className="w-full">Sign Up as Merchant</Link>
@@ -80,17 +80,17 @@ const GuestNavbar: React.FC = () => {
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-8">
                   <Link to="/" className="text-lg font-medium">Home</Link>
-                  <Link to="/products" className="text-lg font-medium">Products</Link>
+                  <Link to="/consumer/search" className="text-lg font-medium">Products</Link>
                   <Link to="/stores" className="text-lg font-medium">Stores</Link>
                   <Link to="/help" className="text-lg font-medium flex items-center">
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Help Center
                   </Link>
                   <div className="border-t pt-4 space-y-2">
-                    <Link to="/auth/signin" className="block">
+                    <Link to="/consumer/auth" className="block">
                       <Button variant="outline" className="w-full">Sign In</Button>
                     </Link>
-                    <Link to="/auth/signup/consumer" className="block">
+                    <Link to="/consumer/auth" className="block">
                       <Button className="w-full bg-blue-600 hover:bg-blue-700">Sign Up as Consumer</Button>
                     </Link>
                     <Link to="/auth/signup/merchant" className="block">
