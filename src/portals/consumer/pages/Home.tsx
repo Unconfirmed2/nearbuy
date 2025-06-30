@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,10 +8,16 @@ import { useNavigate } from 'react-router-dom';
 import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
 import { addToBasket, addToFavorites } from '@/utils/localStorage';
 import { toast } from 'sonner';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Home: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
+  const [isLocationPopoverOpen, setIsLocationPopoverOpen] = useState(false);
   const [travelFilter, setTravelFilter] = useState<TravelFilterValue>({
     mode: 'driving',
     type: 'distance',
@@ -54,19 +59,6 @@ const Home: React.FC = () => {
   
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation(`${position.coords.latitude}, ${position.coords.longitude}`);
-        },
-        (error) => {
-          console.log('Location access denied:', error);
-        }
-      );
-    }
-  }, []);
-
   const handleSearch = () => {
     if (!searchQuery.trim()) {
       toast.error('Please enter a search term');
@@ -75,20 +67,10 @@ const Home: React.FC = () => {
     navigate(`/consumer/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(location)}`);
   };
 
-  const handleGetLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation(`${position.coords.latitude}, ${position.coords.longitude}`);
-          toast.success('Location updated!');
-        },
-        (error) => {
-          toast.error('Unable to get your location');
-        }
-      );
-    } else {
-      toast.error('Geolocation is not supported by this browser');
-    }
+  const handleLocationSelect = (selectedLocation: string) => {
+    setLocation(selectedLocation);
+    setIsLocationPopoverOpen(false);
+    toast.success('Location updated!');
   };
 
   const handleAddToCart = (product: any) => {
@@ -138,29 +120,73 @@ const Home: React.FC = () => {
               </div>
               
               <div className="flex gap-2 items-center">
-                <div className="flex-1 flex gap-2">
-                  <Input
-                    placeholder="Enter location or ZIP code"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="text-gray-900"
-                  />
-                  <Button 
-                    onClick={handleGetLocation}
-                    variant="outline"
-                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  >
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Use My Location
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex justify-center">
-                <TravelFilter 
-                  value={travelFilter}
-                  onChange={setTravelFilter}
-                />
+                <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="flex-1 flex gap-2 items-center">
+                      <div className="relative flex-1">
+                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                        <Input
+                          placeholder="Enter address or ZIP code"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
+                          className="text-gray-900 pl-10 cursor-pointer"
+                          readOnly
+                          onClick={() => setIsLocationPopoverOpen(true)}
+                        />
+                      </div>
+                      <TravelFilter 
+                        value={travelFilter}
+                        onChange={setTravelFilter}
+                      />
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4" align="start">
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-900">Enter your location</h4>
+                      <Input
+                        placeholder="Type your address..."
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="w-full"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && location.trim()) {
+                            handleLocationSelect(location);
+                          }
+                        }}
+                      />
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600">Popular locations:</p>
+                        <div className="space-y-1">
+                          {[
+                            'Downtown',
+                            'Main Street',
+                            'Shopping District',
+                            'University Area'
+                          ].map((popularLocation) => (
+                            <Button
+                              key={popularLocation}
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-left"
+                              onClick={() => handleLocationSelect(popularLocation)}
+                            >
+                              <MapPin className="h-4 w-4 mr-2" />
+                              {popularLocation}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      {location.trim() && (
+                        <Button
+                          onClick={() => handleLocationSelect(location)}
+                          className="w-full"
+                        >
+                          Use "{location}"
+                        </Button>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
