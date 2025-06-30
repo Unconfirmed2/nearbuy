@@ -205,6 +205,63 @@ export type Database = {
           },
         ]
       }
+      merchant_documents: {
+        Row: {
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          merchant_id: string
+          mime_type: string | null
+          uploaded_at: string | null
+          verification_notes: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          merchant_id: string
+          mime_type?: string | null
+          uploaded_at?: string | null
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          merchant_id?: string
+          mime_type?: string | null
+          uploaded_at?: string | null
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_documents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_documents_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           order_id: string
@@ -402,6 +459,11 @@ export type Database = {
           id: string
           name: string | null
           role: string
+          verification_notes: string | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -410,6 +472,11 @@ export type Database = {
           id: string
           name?: string | null
           role?: string
+          verification_notes?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -418,6 +485,11 @@ export type Database = {
           id?: string
           name?: string | null
           role?: string
+          verification_notes?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -652,11 +724,16 @@ export type Database = {
           is_verified: boolean
           location: unknown | null
           logo_url: string | null
+          merchant_id: string
           name: string
           onboarding_status: string | null
           owner_id: string
           phone: string | null
           tax_id: string | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at: string | null
         }
         Insert: {
           address?: string | null
@@ -671,11 +748,16 @@ export type Database = {
           is_verified?: boolean
           location?: unknown | null
           logo_url?: string | null
+          merchant_id: string
           name: string
           onboarding_status?: string | null
           owner_id: string
           phone?: string | null
           tax_id?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at?: string | null
         }
         Update: {
           address?: string | null
@@ -690,13 +772,25 @@ export type Database = {
           is_verified?: boolean
           location?: unknown | null
           logo_url?: string | null
+          merchant_id?: string
           name?: string
           onboarding_status?: string | null
           owner_id?: string
           phone?: string | null
           tax_id?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          verified_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "stores_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "stores_owner_id_fkey"
             columns: ["owner_id"]
@@ -2538,8 +2632,10 @@ export type Database = {
       }
     }
     Enums: {
+      document_type: "business_license" | "tax_id" | "identity" | "other"
       order_status: "pending" | "ready" | "completed" | "cancelled"
       user_role: "customer" | "store_owner" | "admin" | "moderator"
+      verification_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -2663,8 +2759,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      document_type: ["business_license", "tax_id", "identity", "other"],
       order_status: ["pending", "ready", "completed", "cancelled"],
       user_role: ["customer", "store_owner", "admin", "moderator"],
+      verification_status: ["pending", "approved", "rejected"],
     },
   },
 } as const
