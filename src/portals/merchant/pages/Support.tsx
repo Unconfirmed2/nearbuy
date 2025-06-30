@@ -85,13 +85,13 @@ const Support: React.FC = () => {
             <div className="border-b pb-4">
               <h4 className="font-medium mb-2">How do I verify my merchant account?</h4>
               <p className="text-sm text-gray-600">
-                Upload your business documentation in the Settings > Verification section. Our team will review and approve within 1-3 business days.
+                Upload your business documentation in the Settings &gt; Verification section. Our team will review and approve within 1-3 business days.
               </p>
             </div>
             <div className="border-b pb-4">
               <h4 className="font-medium mb-2">How do I add products to my store?</h4>
               <p className="text-sm text-gray-600">
-                Go to Products > Add Product or use our bulk upload feature to import multiple products at once via CSV.
+                Go to Products &gt; Add Product or use our bulk upload feature to import multiple products at once via CSV.
               </p>
             </div>
             <div className="border-b pb-4">
