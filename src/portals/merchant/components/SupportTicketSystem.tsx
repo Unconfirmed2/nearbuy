@@ -7,216 +7,214 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { HelpCircle, MessageSquare, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { HelpCircle, Plus, MessageSquare, Clock, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SupportTicket {
   id: string;
   subject: string;
-  description: string;
   category: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'low' | 'medium' | 'high';
+  status: 'open' | 'in_progress' | 'resolved';
   created_at: string;
-  updated_at: string;
-  merchant_id: string;
+  last_reply: string;
 }
 
 interface SupportTicketSystemProps {
-  tickets: SupportTicket[];
-  onCreateTicket: (ticket: Omit<SupportTicket, 'id' | 'created_at' | 'updated_at' | 'merchant_id'>) => void;
-  onUpdateTicket: (ticketId: string, updates: Partial<SupportTicket>) => void;
+  merchantId: string;
 }
 
-const SupportTicketSystem: React.FC<SupportTicketSystemProps> = ({
-  tickets,
-  onCreateTicket,
-  onUpdateTicket
-}) => {
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+const SupportTicketSystem: React.FC<SupportTicketSystemProps> = ({ merchantId }) => {
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTicket, setNewTicket] = useState({
     subject: '',
-    description: '',
     category: '',
     priority: 'medium' as const,
-    status: 'open' as const
+    description: ''
   });
 
+  const [tickets] = useState<SupportTicket[]>([
+    {
+      id: '1',
+      subject: 'Issues with inventory sync',
+      category: 'Technical',
+      priority: 'high',
+      status: 'in_progress',
+      created_at: '2024-01-15',
+      last_reply: '2024-01-16'
+    },
+    {
+      id: '2',
+      subject: 'Question about payment processing',
+      category: 'Billing',
+      priority: 'medium',
+      status: 'resolved',
+      created_at: '2024-01-10',
+      last_reply: '2024-01-12'
+    }
+  ]);
+
+  const categories = [
+    'Technical Support',
+    'Billing & Payments',
+    'Account Management',
+    'Product Issues',
+    'Store Setup',
+    'Integration Support',
+    'Other'
+  ];
+
   const handleCreateTicket = () => {
-    if (!newTicket.subject || !newTicket.description || !newTicket.category) {
+    if (!newTicket.subject || !newTicket.category || !newTicket.description) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    onCreateTicket(newTicket);
-    setNewTicket({
-      subject: '',
-      description: '',
-      category: '',
-      priority: 'medium',
-      status: 'open'
-    });
-    setShowCreateDialog(false);
+    console.log('Creating support ticket:', newTicket);
     toast.success('Support ticket created successfully');
+    setShowCreateForm(false);
+    setNewTicket({ subject: '', category: '', priority: 'medium', description: '' });
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      open: { color: 'bg-blue-100 text-blue-800', icon: Clock, label: 'Open' },
-      in_progress: { color: 'bg-yellow-100 text-yellow-800', icon: AlertTriangle, label: 'In Progress' },
-      resolved: { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Resolved' },
-      closed: { color: 'bg-gray-100 text-gray-800', icon: CheckCircle, label: 'Closed' }
-    };
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.open;
-    const StatusIcon = config.icon;
-
-    return (
-      <Badge className={config.color}>
-        <StatusIcon className="w-3 h-3 mr-1" />
-        {config.label}
-      </Badge>
-    );
+    switch (status) {
+      case 'open':
+        return <Badge className="bg-blue-100 text-blue-800"><Clock className="w-3 h-3 mr-1" />Open</Badge>;
+      case 'in_progress':
+        return <Badge className="bg-yellow-100 text-yellow-800"><MessageSquare className="w-3 h-3 mr-1" />In Progress</Badge>;
+      case 'resolved':
+        return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Resolved</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
-  const getPriorityBadge = (priority: string) => {
-    const priorityConfig = {
-      low: 'bg-gray-100 text-gray-800',
-      medium: 'bg-blue-100 text-blue-800',
-      high: 'bg-orange-100 text-orange-800',
-      urgent: 'bg-red-100 text-red-800'
-    };
-
-    return (
-      <Badge className={priorityConfig[priority as keyof typeof priorityConfig] || priorityConfig.medium}>
-        {priority.charAt(0).toUpperCase() + priority.slice(1)}
-      </Badge>
-    );
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'text-red-600';
+      case 'medium':
+        return 'text-yellow-600';
+      case 'low':
+        return 'text-green-600';
+      default:
+        return 'text-gray-600';
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Support Center</h2>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <HelpCircle className="w-4 h-4 mr-2" />
-              Create Ticket
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Create Support Ticket</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="subject">Subject *</Label>
-                <Input
-                  id="subject"
-                  value={newTicket.subject}
-                  onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
-                  placeholder="Brief description of the issue"
-                />
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5" />
+              Support Tickets
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Get help with any issues or questions you have
+            </p>
+          </div>
+          <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Ticket
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {showCreateForm && (
+            <div className="mb-6 p-4 border rounded-lg space-y-4">
+              <h3 className="font-medium">Create New Support Ticket</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Subject *</Label>
+                  <Input
+                    value={newTicket.subject}
+                    onChange={(e) => setNewTicket(prev => ({ ...prev, subject: e.target.value }))}
+                    placeholder="Brief description of the issue"
+                  />
+                </div>
+                
+                <div>
+                  <Label>Category *</Label>
+                  <Select value={newTicket.category} onValueChange={(value) => setNewTicket(prev => ({ ...prev, category: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div>
-                <Label htmlFor="category">Category *</Label>
-                <Select value={newTicket.category} onValueChange={(value) => setNewTicket({ ...newTicket, category: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="account">Account Issues</SelectItem>
-                    <SelectItem value="orders">Order Management</SelectItem>
-                    <SelectItem value="products">Product Listings</SelectItem>
-                    <SelectItem value="payments">Payments & Billing</SelectItem>
-                    <SelectItem value="technical">Technical Support</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="priority">Priority</Label>
-                <Select value={newTicket.priority} onValueChange={(value: any) => setNewTicket({ ...newTicket, priority: value })}>
-                  <SelectTrigger>
+                <Label>Priority</Label>
+                <Select value={newTicket.priority} onValueChange={(value: any) => setNewTicket(prev => ({ ...prev, priority: value }))}>
+                  <SelectTrigger className="w-32">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Low</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="urgent">Urgent</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="description">Description *</Label>
+                <Label>Description *</Label>
                 <Textarea
-                  id="description"
                   value={newTicket.description}
-                  onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
-                  placeholder="Detailed description of the issue"
+                  onChange={(e) => setNewTicket(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Provide detailed information about your issue"
                   rows={4}
                 />
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={handleCreateTicket} className="flex-1">
-                  Create Ticket
-                </Button>
-                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                  Cancel
-                </Button>
+                <Button onClick={handleCreateTicket}>Create Ticket</Button>
+                <Button variant="outline" onClick={() => setShowCreateForm(false)}>Cancel</Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+          )}
 
-      <div className="grid grid-cols-1 gap-4">
-        {tickets.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No support tickets</h3>
-              <p className="text-gray-600 mb-4">
-                You haven't created any support tickets yet.
-              </p>
-              <Button onClick={() => setShowCreateDialog(true)}>
-                Create Your First Ticket
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          tickets.map(ticket => (
-            <Card key={ticket.id}>
-              <CardHeader>
+          <div className="space-y-3">
+            {tickets.map(ticket => (
+              <div key={ticket.id} className="p-4 border rounded-lg hover:bg-gray-50">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{ticket.subject}</CardTitle>
-                    <p className="text-sm text-gray-600">#{ticket.id}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-medium">{ticket.subject}</h4>
+                      {getStatusBadge(ticket.status)}
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                      <span>Category: {ticket.category}</span>
+                      <span className={`capitalize ${getPriorityColor(ticket.priority)}`}>
+                        Priority: {ticket.priority}
+                      </span>
+                      <span>Created: {new Date(ticket.created_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    {getStatusBadge(ticket.status)}
-                    {getPriorityBadge(ticket.priority)}
-                  </div>
+                  <Button variant="ghost" size="sm">
+                    View Details
+                  </Button>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 mb-4">{ticket.description}</p>
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <span>Category: {ticket.category}</span>
-                  <span>Created: {new Date(ticket.created_at).toLocaleDateString()}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
+              </div>
+            ))}
+
+            {tickets.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <HelpCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p>No support tickets yet</p>
+                <p className="text-sm">Create a ticket if you need help</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

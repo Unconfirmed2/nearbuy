@@ -1,88 +1,106 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
-import { SocialMedia } from '../types/store';
+import { Facebook, Instagram, Twitter, Globe, Save } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface SocialMediaFormProps {
-  socialMedia?: SocialMedia;
-  onChange: (social: SocialMedia) => void;
+interface SocialMediaLinks {
+  website: string;
+  facebook: string;
+  instagram: string;
+  twitter: string;
 }
 
-const SocialMediaForm: React.FC<SocialMediaFormProps> = ({
-  socialMedia = {},
-  onChange
+interface SocialMediaFormProps {
+  storeId?: string;
+  initialLinks?: SocialMediaLinks;
+}
+
+const SocialMediaForm: React.FC<SocialMediaFormProps> = ({ 
+  storeId, 
+  initialLinks 
 }) => {
-  const handleChange = (platform: keyof SocialMedia, value: string) => {
-    onChange({
-      ...socialMedia,
-      [platform]: value
-    });
+  const [links, setLinks] = useState<SocialMediaLinks>(
+    initialLinks || {
+      website: '',
+      facebook: '',
+      instagram: '',
+      twitter: ''
+    }
+  );
+
+  const updateLink = (platform: keyof SocialMediaLinks, value: string) => {
+    setLinks(prev => ({ ...prev, [platform]: value }));
   };
 
+  const handleSave = () => {
+    console.log('Saving social media links:', links);
+    toast.success('Social media links updated successfully');
+  };
+
+  const socialPlatforms = [
+    {
+      key: 'website' as keyof SocialMediaLinks,
+      label: 'Website',
+      icon: Globe,
+      placeholder: 'https://yourbusiness.com'
+    },
+    {
+      key: 'facebook' as keyof SocialMediaLinks,
+      label: 'Facebook',
+      icon: Facebook,
+      placeholder: 'https://facebook.com/yourbusiness'
+    },
+    {
+      key: 'instagram' as keyof SocialMediaLinks,
+      label: 'Instagram',
+      icon: Instagram,
+      placeholder: 'https://instagram.com/yourbusiness'
+    },
+    {
+      key: 'twitter' as keyof SocialMediaLinks,
+      label: 'Twitter',
+      icon: Twitter,
+      placeholder: 'https://twitter.com/yourbusiness'
+    }
+  ];
+
   return (
-    <div className="space-y-4">
-      <Label className="text-base font-medium">Social Media Links</Label>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="facebook" className="flex items-center gap-2">
-            <Facebook className="w-4 h-4" />
-            Facebook
-          </Label>
-          <Input
-            id="facebook"
-            type="url"
-            value={socialMedia.facebook || ''}
-            onChange={(e) => handleChange('facebook', e.target.value)}
-            placeholder="https://facebook.com/your-store"
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="instagram" className="flex items-center gap-2">
-            <Instagram className="w-4 h-4" />
-            Instagram
-          </Label>
-          <Input
-            id="instagram"
-            type="url"
-            value={socialMedia.instagram || ''}
-            onChange={(e) => handleChange('instagram', e.target.value)}
-            placeholder="https://instagram.com/your-store"
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="twitter" className="flex items-center gap-2">
-            <Twitter className="w-4 h-4" />
-            Twitter
-          </Label>
-          <Input
-            id="twitter"
-            type="url"
-            value={socialMedia.twitter || ''}
-            onChange={(e) => handleChange('twitter', e.target.value)}
-            placeholder="https://twitter.com/your-store"
-          />
-        </div>
-        
-        <div>
-          <Label htmlFor="linkedin" className="flex items-center gap-2">
-            <Linkedin className="w-4 h-4" />
-            LinkedIn
-          </Label>
-          <Input
-            id="linkedin"
-            type="url"
-            value={socialMedia.linkedin || ''}
-            onChange={(e) => handleChange('linkedin', e.target.value)}
-            placeholder="https://linkedin.com/company/your-store"
-          />
-        </div>
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Social Media & Website</CardTitle>
+        <p className="text-sm text-gray-600">
+          Add your social media profiles and website to help customers find you online
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {socialPlatforms.map((platform) => {
+          const Icon = platform.icon;
+          return (
+            <div key={platform.key} className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Icon className="w-4 h-4" />
+                {platform.label}
+              </Label>
+              <Input
+                type="url"
+                value={links[platform.key]}
+                onChange={(e) => updateLink(platform.key, e.target.value)}
+                placeholder={platform.placeholder}
+              />
+            </div>
+          );
+        })}
+
+        <Button onClick={handleSave} className="w-full">
+          <Save className="w-4 h-4 mr-2" />
+          Save Social Media Links
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

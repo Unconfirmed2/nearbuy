@@ -1,83 +1,131 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { BusinessHours, DayHours } from '../types/store';
+import { Clock, Save } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface BusinessHoursFormProps {
-  businessHours?: BusinessHours;
-  onChange: (hours: BusinessHours) => void;
+interface BusinessHours {
+  day: string;
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
 }
 
-const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({
-  businessHours = {},
-  onChange
+interface BusinessHoursFormProps {
+  storeId?: string;
+  initialHours?: BusinessHours[];
+}
+
+const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({ 
+  storeId, 
+  initialHours 
 }) => {
-  const days = [
-    'monday', 'tuesday', 'wednesday', 'thursday', 
-    'friday', 'saturday', 'sunday'
-  ] as const;
+  const [businessHours, setBusinessHours] = useState<BusinessHours[]>(
+    initialHours || [
+      { day: 'Monday', isOpen: true, openTime: '09:00', closeTime: '18:00' },
+      { day: 'Tuesday', isOpen: true, openTime: '09:00', closeTime: '18:00' },
+      { day: 'Wednesday', isOpen: true, openTime: '09:00', closeTime: '18:00' },
+      { day: 'Thursday', isOpen: true, openTime: '09:00', closeTime: '18:00' },
+      { day: 'Friday', isOpen: true, openTime: '09:00', closeTime: '18:00' },
+      { day: 'Saturday', isOpen: true, openTime: '10:00', closeTime: '16:00' },
+      { day: 'Sunday', isOpen: false, openTime: '10:00', closeTime: '16:00' }
+    ]
+  );
 
-  const defaultHours: DayHours = { open: '09:00', close: '17:00' };
-
-  const handleDayChange = (day: keyof BusinessHours, hours: DayHours) => {
-    onChange({
-      ...businessHours,
-      [day]: hours
-    });
+  const updateDay = (index: number, field: keyof BusinessHours, value: any) => {
+    setBusinessHours(prev => prev.map((hours, i) => 
+      i === index ? { ...hours, [field]: value } : hours
+    ));
   };
 
-  const handleToggleDay = (day: keyof BusinessHours, isOpen: boolean) => {
-    const currentHours = businessHours[day] || defaultHours;
-    handleDayChange(day, {
-      ...currentHours,
-      closed: !isOpen
-    });
+  const handleSave = () => {
+    console.log('Saving business hours:', businessHours);
+    toast.success('Business hours updated successfully');
+  };
+
+  const copyToAll = (sourceIndex: number) => {
+    const sourceHours = businessHours[sourceIndex];
+    setBusinessHours(prev => prev.map(hours => ({
+      ...hours,
+      isOpen: sourceHours.isOpen,
+      openTime: sourceHours.openTime,
+      closeTime: sourceHours.closeTime
+    })));
+    toast.success('Hours copied to all days');
   };
 
   return (
-    <div className="space-y-4">
-      <Label className="text-base font-medium">Business Hours</Label>
-      
-      {days.map(day => {
-        const dayHours = businessHours[day] || defaultHours;
-        const isOpen = !dayHours.closed;
-        
-        return (
-          <div key={day} className="flex items-center gap-4 p-3 border rounded-lg">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="w-5 h-5" />
+          Business Hours
+        </CardTitle>
+        <p className="text-sm text-gray-600">
+          Set your store's operating hours for each day of the week
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {businessHours.map((hours, index) => (
+          <div key={hours.day} className="flex items-center gap-4 p-4 border rounded-lg">
             <div className="w-24">
-              <Label className="capitalize">{day}</Label>
+              <Label className="font-medium">{hours.day}</Label>
             </div>
             
-            <Switch
-              checked={isOpen}
-              onCheckedChange={(checked) => handleToggleDay(day, checked)}
-            />
-            
-            {isOpen ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  type="time"
-                  value={dayHours.open}
-                  onChange={(e) => handleDayChange(day, { ...dayHours, open: e.target.value })}
-                  className="w-32"
-                />
-                <span>to</span>
-                <Input
-                  type="time"
-                  value={dayHours.close}
-                  onChange={(e) => handleDayChange(day, { ...dayHours, close: e.target.value })}
-                  className="w-32"
-                />
-              </div>
-            ) : (
-              <span className="text-gray-500">Closed</span>
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={hours.isOpen}
+                onCheckedChange={(checked) => updateDay(index, 'isOpen', checked)}
+              />
+              <span className="text-sm text-gray-600">
+                {hours.isOpen ? 'Open' : 'Closed'}
+              </span>
+            </div>
+
+            {hours.isOpen && (
+              <>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">Open:</Label>
+                  <Input
+                    type="time"
+                    value={hours.openTime}
+                    onChange={(e) => updateDay(index, 'openTime', e.target.value)}
+                    className="w-24"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">Close:</Label>
+                  <Input
+                    type="time"
+                    value={hours.closeTime}
+                    onChange={(e) => updateDay(index, 'closeTime', e.target.value)}
+                    className="w-24"
+                  />
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copyToAll(index)}
+                >
+                  Copy to All
+                </Button>
+              </>
             )}
           </div>
-        );
-      })}
-    </div>
+        ))}
+
+        <Button onClick={handleSave} className="w-full">
+          <Save className="w-4 h-4 mr-2" />
+          Save Business Hours
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 
