@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -164,98 +163,104 @@ const Home: React.FC = () => {
           </Button>
         </div>
 
-        {/* Mobile Location and Filter Section - Only visible on mobile */}
-        <div className="lg:hidden space-y-3">
-          <div className="flex items-center gap-2">
-            <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
-              <PopoverTrigger asChild>
-                <div className="relative flex-1">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                  <Input
-                    placeholder="Set your location"
-                    value={locationValue}
-                    onChange={(e) => setLocationValue(e.target.value)}
-                    className="pl-10 cursor-pointer text-sm"
-                    readOnly
-                    onClick={() => setIsLocationPopoverOpen(true)}
-                  />
-                </div>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-4" align="end">
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Enter your location</h4>
-                  
-                  <Button
-                    onClick={handleUseMyLocation}
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
-                    <Navigation className="h-4 w-4 mr-2" />
-                    Use My Current Location
-                  </Button>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
+        {/* Mobile Location and Filter Section - Visible ONLY on mobile */}
+        <div className="block lg:hidden">
+          <div className="bg-white rounded-lg shadow-md border p-4 space-y-4">
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-900">Location & Filters</h3>
+              
+              <div className="flex items-center gap-2">
+                <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="relative flex-1">
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                      <Input
+                        placeholder="Set your location"
+                        value={locationValue}
+                        onChange={(e) => setLocationValue(e.target.value)}
+                        className="pl-10 cursor-pointer text-sm"
+                        readOnly
+                        onClick={() => setIsLocationPopoverOpen(true)}
+                      />
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-muted-foreground">
-                        Or enter manually
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <Input
-                    placeholder="Type your address..."
-                    value={locationValue}
-                    onChange={(e) => setLocationValue(e.target.value)}
-                    className="w-full"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && locationValue.trim()) {
-                        handleLocationSelect(locationValue);
-                      }
-                    }}
-                  />
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Popular locations:</p>
-                    <div className="space-y-1">
-                      {[
-                        'Downtown',
-                        'Main Street',
-                        'Shopping District',
-                        'University Area'
-                      ].map((popularLocation) => (
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4" align="start">
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-900">Enter your location</h4>
+                      
+                      <Button
+                        onClick={handleUseMyLocation}
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <Navigation className="h-4 w-4 mr-2" />
+                        Use My Current Location
+                      </Button>
+                      
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-white px-2 text-muted-foreground">
+                            Or enter manually
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <Input
+                        placeholder="Type your address..."
+                        value={locationValue}
+                        onChange={(e) => setLocationValue(e.target.value)}
+                        className="w-full"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && locationValue.trim()) {
+                            handleLocationSelect(locationValue);
+                          }
+                        }}
+                      />
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600">Popular locations:</p>
+                        <div className="space-y-1">
+                          {[
+                            'Downtown',
+                            'Main Street',
+                            'Shopping District',
+                            'University Area'
+                          ].map((popularLocation) => (
+                            <Button
+                              key={popularLocation}
+                              variant="ghost"
+                              size="sm"
+                              className="w-full justify-start text-left"
+                              onClick={() => handleLocationSelect(popularLocation)}
+                            >
+                              <MapPin className="h-4 w-4 mr-2" />
+                              {popularLocation}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      {locationValue.trim() && (
                         <Button
-                          key={popularLocation}
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-left"
-                          onClick={() => handleLocationSelect(popularLocation)}
+                          onClick={() => handleLocationSelect(locationValue)}
+                          className="w-full"
                         >
-                          <MapPin className="h-4 w-4 mr-2" />
-                          {popularLocation}
+                          Use "{locationValue}"
                         </Button>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                  {locationValue.trim() && (
-                    <Button
-                      onClick={() => handleLocationSelect(locationValue)}
-                      className="w-full"
-                    >
-                      Use "{locationValue}"
-                    </Button>
-                  )}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="flex justify-center">
-            <TravelFilter 
-              value={travelFilter}
-              onChange={setTravelFilter}
-            />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="flex justify-center">
+                <TravelFilter 
+                  value={travelFilter}
+                  onChange={setTravelFilter}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
