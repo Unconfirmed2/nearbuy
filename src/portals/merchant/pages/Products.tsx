@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -71,6 +72,16 @@ const Products: React.FC = () => {
     } catch (error) {
       toast.error('Failed to delete product');
       console.error('Product deletion error:', error);
+    }
+  };
+
+  const handleToggleStatus = async (productId: string, isActive: boolean) => {
+    try {
+      await updateProduct(productId, { is_active: isActive });
+      toast.success(`Product ${isActive ? 'activated' : 'deactivated'} successfully`);
+    } catch (error) {
+      toast.error('Failed to update product status');
+      console.error('Product status update error:', error);
     }
   };
 
@@ -189,6 +200,7 @@ const Products: React.FC = () => {
                   onEdit={handleEditProduct}
                   onDelete={handleDeleteProduct}
                   onDuplicate={handleDuplicateProduct}
+                  onToggleStatus={handleToggleStatus}
                 />
               ))}
             </div>
@@ -218,7 +230,6 @@ const Products: React.FC = () => {
         }}
         onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
         product={editingProduct}
-        stores={stores}
       />
 
       <DuplicateProductDialog

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,11 +83,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <OrderNotifications
-        orders={orders}
-        lastOrderCount={lastOrderCount}
-        onOrderCountChange={setLastOrderCount}
-      />
+      <OrderNotifications merchantId="debug-merchant-id" />
 
       <div className="flex justify-between items-center">
         <div>
