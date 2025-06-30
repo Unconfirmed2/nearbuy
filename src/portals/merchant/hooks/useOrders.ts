@@ -4,12 +4,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Order } from '../types/order';
 
-export const useOrders = (searchTerm: string, statusFilter: string) => {
+interface OrdersStats {
+  total_orders: number;
+  pending_orders: number;
+  ready_orders: number;
+  total_revenue: number;
+  today_orders: number;
+  cancelled_orders: number;
+}
+
+interface OrderWithDetails extends Order {
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  store_name: string;
+  items_count: number;
+}
+
+export const useOrders = (merchantId: string, searchTerm?: string, statusFilter?: string) => {
   const queryClient = useQueryClient();
 
   const ordersQuery = useQuery({
-    queryKey: ['merchant-orders', searchTerm, statusFilter],
-    queryFn: async (): Promise<Order[]> => {
+    queryKey: ['merchant-orders', merchantId, searchTerm, statusFilter],
+    queryFn: async (): Promise<OrderWithDetails[]> => {
       console.log('Fetching orders...');
       
       let query = supabase
@@ -26,7 +43,7 @@ export const useOrders = (searchTerm: string, statusFilter: string) => {
         `)
         .order('created_at', { ascending: false });
 
-      if (statusFilter !== 'all') {
+      if (statusFilter && statusFilter !== 'all') {
         query = query.eq('status', statusFilter);
       }
 
@@ -41,18 +58,41 @@ export const useOrders = (searchTerm: string, statusFilter: string) => {
       
       const ordersData = (data as any[]) || [];
       
+      // Transform data to match expected interface
+      const transformedOrders: OrderWithDetails[] = ordersData.map((order: any) => ({
+        ...order,
+        order_number: order.id.slice(0, 8).toUpperCase(),
+        customer_name: order.profiles?.name || 'Unknown Customer',
+        customer_email: order.profiles?.email || '',
+        store_name: order.stores?.name || 'Unknown Store',
+        items_count: order.order_items?.length || 0
+      }));
+
       if (searchTerm) {
-        const filtered = ordersData.filter((order: any) => 
-          order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          order.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        const filtered = transformedOrders.filter((order: OrderWithDetails) => 
+          order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          order.customer_email.toLowerCase().includes(searchTerm.toLowerCase())
         );
         return filtered;
       }
 
-      return ordersData;
+      return transformedOrders;
     },
   });
+
+  // Generate mock stats for now
+  const stats: OrdersStats = {
+    total_orders: ordersQuery.data?.length || 0,
+    pending_orders: ordersQuery.data?.filter(o => o.status === 'pending').length || 0,
+    ready_orders: ordersQuery.data?.filter(o => o.status === 'ready_for_pickup').length || 0,
+    total_revenue: ordersQuery.data?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0,
+    today_orders: ordersQuery.data?.filter(o => {
+      const today = new Date().toDateString();
+      return new Date(o.created_at).toDateString() === today;
+    }).length || 0,
+    cancelled_orders: ordersQuery.data?.filter(o => o.status === 'cancelled').length || 0
+  };
 
   const updateOrderStatusMutation = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
@@ -81,7 +121,10 @@ export const useOrders = (searchTerm: string, statusFilter: string) => {
   return {
     orders: ordersQuery.data || [],
     isLoading: ordersQuery.isLoading,
+    loading: ordersQuery.isLoading,
     error: ordersQuery.error,
-    updateOrderStatus: updateOrderStatusMutation.mutate,
+    stats,
+    updateOrderStatus: (orderId: string, status: string) => 
+      updateOrderStatusMutation.mutate({ orderId, status }),
   };
 };

@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Clock } from 'lucide-react';
 
 interface BusinessHours {
-  [key: string]: {
-    isOpen: boolean;
-    openTime: string;
-    closeTime: string;
-  };
+  monday: { isOpen: boolean; openTime: string; closeTime: string };
+  tuesday: { isOpen: boolean; openTime: string; closeTime: string };
+  wednesday: { isOpen: boolean; openTime: string; closeTime: string };
+  thursday: { isOpen: boolean; openTime: string; closeTime: string };
+  friday: { isOpen: boolean; openTime: string; closeTime: string };
+  saturday: { isOpen: boolean; openTime: string; closeTime: string };
+  sunday: { isOpen: boolean; openTime: string; closeTime: string };
 }
 
 interface BusinessHoursFormProps {
@@ -41,7 +43,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({ hours, onChange }
     return { value: time, label: displayTime };
   });
 
-  const handleDayToggle = (day: string, isOpen: boolean) => {
+  const handleDayToggle = (day: keyof BusinessHours, isOpen: boolean) => {
     onChange({
       ...hours,
       [day]: {
@@ -51,7 +53,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({ hours, onChange }
     });
   };
 
-  const handleTimeChange = (day: string, type: 'openTime' | 'closeTime', value: string) => {
+  const handleTimeChange = (day: keyof BusinessHours, type: 'openTime' | 'closeTime', value: string) => {
     onChange({
       ...hours,
       [day]: {
@@ -77,15 +79,15 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({ hours, onChange }
             </div>
             
             <Switch
-              checked={hours[day.key]?.isOpen || false}
-              onCheckedChange={(checked) => handleDayToggle(day.key, checked)}
+              checked={hours[day.key as keyof BusinessHours]?.isOpen || false}
+              onCheckedChange={(checked) => handleDayToggle(day.key as keyof BusinessHours, checked)}
             />
             
-            {hours[day.key]?.isOpen && (
+            {hours[day.key as keyof BusinessHours]?.isOpen && (
               <div className="flex items-center space-x-2 flex-1">
                 <Select
-                  value={hours[day.key]?.openTime || '09:00'}
-                  onValueChange={(value) => handleTimeChange(day.key, 'openTime', value)}
+                  value={hours[day.key as keyof BusinessHours]?.openTime || '09:00'}
+                  onValueChange={(value) => handleTimeChange(day.key as keyof BusinessHours, 'openTime', value)}
                 >
                   <SelectTrigger className="w-32">
                     <SelectValue />
@@ -102,8 +104,8 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({ hours, onChange }
                 <span className="text-gray-500">to</span>
                 
                 <Select
-                  value={hours[day.key]?.closeTime || '17:00'}
-                  onValueChange={(value) => handleTimeChange(day.key, 'closeTime', value)}
+                  value={hours[day.key as keyof BusinessHours]?.closeTime || '17:00'}
+                  onValueChange={(value) => handleTimeChange(day.key as keyof BusinessHours, 'closeTime', value)}
                 >
                   <SelectTrigger className="w-32">
                     <SelectValue />
@@ -119,7 +121,7 @@ const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({ hours, onChange }
               </div>
             )}
             
-            {!hours[day.key]?.isOpen && (
+            {!hours[day.key as keyof BusinessHours]?.isOpen && (
               <span className="text-gray-500 flex-1">Closed</span>
             )}
           </div>

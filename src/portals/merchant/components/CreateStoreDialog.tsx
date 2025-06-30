@@ -16,6 +16,16 @@ interface CreateStoreDialogProps {
   loading?: boolean;
 }
 
+interface LocalBusinessHours {
+  monday: { isOpen: boolean; openTime: string; closeTime: string };
+  tuesday: { isOpen: boolean; openTime: string; closeTime: string };
+  wednesday: { isOpen: boolean; openTime: string; closeTime: string };
+  thursday: { isOpen: boolean; openTime: string; closeTime: string };
+  friday: { isOpen: boolean; openTime: string; closeTime: string };
+  saturday: { isOpen: boolean; openTime: string; closeTime: string };
+  sunday: { isOpen: boolean; openTime: string; closeTime: string };
+}
+
 const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
   open,
   onClose,
@@ -36,7 +46,7 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
     logo: null as File | null
   });
 
-  const [businessHours, setBusinessHours] = useState({
+  const [businessHours, setBusinessHours] = useState<LocalBusinessHours>({
     monday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
     tuesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
     wednesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },

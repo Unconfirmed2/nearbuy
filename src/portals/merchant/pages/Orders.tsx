@@ -18,7 +18,7 @@ const Orders: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
 
-  const { orders, loading, stats, updateOrderStatus } = useOrders('debug-merchant-id');
+  const { orders, loading, stats, updateOrderStatus } = useOrders('debug-merchant-id', searchTerm, statusFilter);
   const { stores } = useStores('debug-merchant-id');
 
   const filteredOrders = orders.filter(order => {
@@ -40,10 +40,9 @@ const Orders: React.FC = () => {
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
-      await updateOrderStatus(orderId, newStatus);
-      toast.success('Order status updated successfully');
+      updateOrderStatus(orderId, newStatus);
     } catch (error) {
-      toast.error('Failed to update order status');
+      console.error('Failed to update order status:', error);
     }
   };
 

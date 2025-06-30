@@ -16,9 +16,16 @@ const Stores: React.FC = () => {
 
   const { stores, loading, createStore } = useStores('debug-merchant-id');
 
-  const filteredStores = stores.filter(store =>
+  // Transform stores to match StoreCard interface
+  const transformedStores = stores.map(store => ({
+    ...store,
+    is_active: store.is_active ?? true,
+    is_verified: store.is_verified ?? false
+  }));
+
+  const filteredStores = transformedStores.filter(store =>
     store.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    store.address.toLowerCase().includes(searchTerm.toLowerCase())
+    (store.address && store.address.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleCreateStore = async (storeData: any) => {

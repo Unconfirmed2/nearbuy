@@ -84,7 +84,8 @@ const StoreCard: React.FC<StoreCardProps> = ({
     if (!store.business_hours) return 'Hours not set';
     
     const now = new Date();
-    const dayOfWeek = now.toLocaleDateString('en-US', { weekday: 'lowercase' });
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayOfWeek = dayNames[now.getDay()];
     const currentTime = now.toTimeString().slice(0, 5);
     
     const todayHours = store.business_hours[dayOfWeek];
