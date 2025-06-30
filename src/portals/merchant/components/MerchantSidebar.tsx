@@ -1,16 +1,21 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
   Store, 
   Package, 
   ShoppingCart, 
-  BarChart3 
+  BarChart3, 
+  Settings,
+  Megaphone
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-const MerchantSidebar: React.FC = () => {
+interface MerchantSidebarProps {
+  className?: string;
+}
+
+const MerchantSidebar: React.FC<MerchantSidebarProps> = ({ className }) => {
   const location = useLocation();
 
   const navigation = [
@@ -19,6 +24,8 @@ const MerchantSidebar: React.FC = () => {
     { name: 'Products', href: '/merchant/products', icon: Package },
     { name: 'Orders', href: '/merchant/orders', icon: ShoppingCart },
     { name: 'Analytics', href: '/merchant/analytics', icon: BarChart3 },
+    { name: 'Marketing', href: '/merchant/marketing', icon: Megaphone },
+    { name: 'Settings', href: '/merchant/settings', icon: Settings },
   ];
 
   return (
