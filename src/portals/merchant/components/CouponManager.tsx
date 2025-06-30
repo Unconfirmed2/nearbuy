@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,7 +56,7 @@ const CouponManager: React.FC<CouponManagerProps> = ({ merchantId, storeId }) =>
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newCoupon, setNewCoupon] = useState({
     code: '',
-    discount_type: 'percentage' as const,
+    discount_type: 'percentage' as 'percentage' | 'fixed',
     discount_value: 0,
     min_order_amount: '',
     max_uses: '',

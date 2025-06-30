@@ -26,7 +26,7 @@ const Marketing: React.FC = () => {
         </TabsList>
 
         <TabsContent value="promotions">
-          <PromotionsManager merchantId="debug-merchant-id" />
+          <PromotionsManager storeId="debug-store-id" products={[]} />
         </TabsContent>
 
         <TabsContent value="coupons">
