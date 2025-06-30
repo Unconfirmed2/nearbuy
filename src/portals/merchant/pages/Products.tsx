@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,13 +30,18 @@ const Products: React.FC = () => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.sku.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
     const matchesStore = selectedStore === 'all' || product.store_id === selectedStore;
     
     return matchesSearch && matchesCategory && matchesStore;
   });
 
-  const categories = Array.from(new Set(products.map(p => p.category))).filter(Boolean);
+  // Extract unique category IDs from products and create a simple string array
+  const categoryIds = Array.from(new Set(
+    products
+      .map(p => p.category_id)
+      .filter(Boolean)
+  ));
 
   const handleCreateProduct = async (productData: any) => {
     try {
@@ -161,7 +165,7 @@ const Products: React.FC = () => {
                 />
               </div>
               <ProductFilters
-                categories={categories}
+                categories={categoryIds}
                 stores={stores}
                 selectedCategory={selectedCategory}
                 selectedStore={selectedStore}
