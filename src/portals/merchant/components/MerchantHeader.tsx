@@ -19,7 +19,17 @@ import {
   HelpCircle,
   Store,
   CreditCard,
-  Shield
+  Shield,
+  ChevronDown,
+  Package,
+  BarChart3,
+  FileText,
+  Users,
+  Star,
+  Megaphone,
+  Heart,
+  History,
+  ShoppingCart
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useNavigate } from 'react-router-dom';
@@ -144,63 +154,143 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
           </PopoverContent>
         </Popover>
 
-        {/* User Menu */}
+        {/* Enhanced User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="flex items-center gap-2 px-3 py-2 h-auto">
+              <div className="text-right">
+                <div className="text-xs text-gray-500">Hello, {profile?.name || 'Merchant'}</div>
+                <div className="text-sm font-medium text-gray-900 flex items-center">
+                  Account & Business <ChevronDown className="ml-1 h-3 w-3" />
+                </div>
+              </div>
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                 <UserIcon className="h-4 w-4 text-blue-600" />
               </div>
-              <span className="font-medium">{profile?.name || 'Merchant'}</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div>
-                <p className="font-medium">{profile?.name || 'Merchant'}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+          <DropdownMenuContent align="end" className="w-80 p-0">
+            {/* Sign In Section */}
+            <div className="p-4 bg-blue-50 border-b">
+              <div className="text-sm font-medium text-gray-900">Signed in as</div>
+              <div className="text-xs text-gray-600">{user?.email}</div>
+            </div>
+
+            <div className="flex">
+              {/* Your Business Column */}
+              <div className="flex-1 p-4 border-r">
+                <DropdownMenuLabel className="text-sm font-semibold text-gray-900 px-0 pb-2">
+                  Your Business
+                </DropdownMenuLabel>
+                <div className="space-y-1">
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/stores')}
+                  >
+                    <Store className="h-4 w-4 mr-2" />
+                    Manage Stores
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/products')}
+                  >
+                    <Package className="h-4 w-4 mr-2" />
+                    Products
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/orders')}
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Orders
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/analytics')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analytics
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/marketing')}
+                  >
+                    <Megaphone className="h-4 w-4 mr-2" />
+                    Marketing
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/reviews')}
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Reviews
+                  </DropdownMenuItem>
+                </div>
               </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+
+              {/* Your Account Column */}
+              <div className="flex-1 p-4">
+                <DropdownMenuLabel className="text-sm font-semibold text-gray-900 px-0 pb-2">
+                  Your Account
+                </DropdownMenuLabel>
+                <div className="space-y-1">
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/settings')}
+                  >
+                    <UserIcon className="h-4 w-4 mr-2" />
+                    Account Settings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/settings')}
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Billing & Payments
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/settings')}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Preferences
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/settings')}
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Security
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/integrations')}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Integrations
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant/support')}
+                  >
+                    <HelpCircle className="h-4 w-4 mr-2" />
+                    Help & Support
+                  </DropdownMenuItem>
+                </div>
+              </div>
+            </div>
             
-            <DropdownMenuItem onClick={() => navigate('/merchant/settings')}>
-              <UserIcon className="h-4 w-4 mr-2" />
-              Profile Settings
-            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-0" />
             
-            <DropdownMenuItem onClick={() => navigate('/merchant/stores')}>
-              <Store className="h-4 w-4 mr-2" />
-              Store Management
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem onClick={() => navigate('/merchant/settings')}>
-              <CreditCard className="h-4 w-4 mr-2" />
-              Billing & Payments
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem onClick={() => navigate('/merchant/settings')}>
-              <Settings className="h-4 w-4 mr-2" />
-              Account Settings
-            </DropdownMenuItem>
-            
-            <DropdownMenuSeparator />
-            
-            <DropdownMenuItem onClick={() => navigate('/merchant/support')}>
-              <HelpCircle className="h-4 w-4 mr-2" />
-              Help & Support
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem onClick={() => navigate('/merchant/settings')}>
-              <Shield className="h-4 w-4 mr-2" />
-              Security
-            </DropdownMenuItem>
-            
-            <DropdownMenuSeparator />
-            
-            <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </DropdownMenuItem>
+            <div className="p-2">
+              <DropdownMenuItem 
+                onClick={handleSignOut} 
+                className="text-red-600 focus:text-red-600 cursor-pointer"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </DropdownMenuItem>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
