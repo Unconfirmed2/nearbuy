@@ -184,6 +184,7 @@ export const useProducts = (merchantId?: string) => {
       const newProduct: Product = {
         id: `prod-${Date.now()}`,
         ...productData,
+        is_active: true,
         variants: productData.variants?.map((v, i) => ({
           ...v,
           id: `var-${Date.now()}-${i}`,

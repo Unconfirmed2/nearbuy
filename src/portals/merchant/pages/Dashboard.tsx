@@ -24,7 +24,7 @@ import AnalyticsCard from '../components/AnalyticsCard';
 import RevenueChart from '../components/RevenueChart';
 
 const Dashboard: React.FC = () => {
-  const { orders, loading: ordersLoading } = useOrders('debug-merchant-id');
+  const { orders, isLoading: ordersLoading } = useOrders('debug-merchant-id');
   const { analytics, loading: analyticsLoading } = useAnalytics('debug-merchant-id');
   const { stores } = useStores('debug-merchant-id');
   const { products } = useProducts('debug-merchant-id');

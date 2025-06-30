@@ -21,6 +21,10 @@ const RevenueChart: React.FC<RevenueChartProps> = ({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  const customTooltipFormatter = (value: any, name: any) => {
+    return [formatCurrency(Number(value)), 'Revenue'];
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -45,7 +49,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({
                 />
                 <Tooltip 
                   labelFormatter={formatDate}
-                  formatter={[formatCurrency, 'Revenue']}
+                  formatter={customTooltipFormatter}
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #e2e8f0',
@@ -77,7 +81,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({
                 />
                 <Tooltip 
                   labelFormatter={formatDate}
-                  formatter={[formatCurrency, 'Revenue']}
+                  formatter={customTooltipFormatter}
                   contentStyle={{
                     backgroundColor: 'white',
                     border: '1px solid #e2e8f0',
