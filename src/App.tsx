@@ -60,6 +60,18 @@ export default function App() {
     }
   };
 
+  // Get dashboard route based on debug role
+  const getDashboardRoute = () => {
+    switch (debugRole) {
+      case 'store_owner':
+        return '/merchant';
+      case 'customer':
+        return '/consumer';
+      default:
+        return '/';
+    }
+  };
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
@@ -88,12 +100,8 @@ export default function App() {
           <Route path="/merchant/*" element={<MerchantApp user={mockUser} profile={mockProfile} />} />
           <Route path="/admin/*" element={<AdminApp user={mockUser} profile={mockProfile} />} />
           
-          {/* Redirect to appropriate portal based on role */}
-          <Route path="/dashboard" element={
-            mockProfile ? 
-              <Navigate to={getPortalRoute(mockProfile)} replace /> : 
-              <Navigate to="/" replace />
-          } />
+          {/* Dashboard route - redirect based on current debug role */}
+          <Route path="/dashboard" element={<Navigate to={getDashboardRoute()} replace />} />
         </Routes>
         <Toaster />
       </div>
