@@ -2,139 +2,165 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Clock, MapPin } from 'lucide-react';
-
-interface PickupSlot {
-  id: string;
-  date: string;
-  time: string;
-  available: boolean;
-  capacity: number;
-  booked: number;
-}
+import { Badge } from '@/components/ui/badge';
+import { Clock, Calendar, Users, Settings } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PickupSchedulingProps {
-  orderId: string;
   storeId: string;
-  currentPickupTime?: string;
-  onSchedulePickup: (dateTime: string) => void;
 }
 
-const PickupScheduling: React.FC<PickupSchedulingProps> = ({
-  orderId,
-  storeId,
-  currentPickupTime,
-  onSchedulePickup
-}) => {
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
+const PickupScheduling: React.FC<PickupSchedulingProps> = ({ storeId }) => {
+  const [pickupEnabled, setPickupEnabled] = useState(true);
+  const [timeSlotInterval, setTimeSlotInterval] = useState('30');
+  const [maxOrdersPerSlot, setMaxOrdersPerSlot] = useState('5');
+  const [advanceBookingDays, setAdvanceBookingDays] = useState('7');
 
-  // Mock pickup slots - in real app, fetch from API
-  const availableSlots: PickupSlot[] = [
-    { id: '1', date: '2024-01-15', time: '10:00', available: true, capacity: 5, booked: 2 },
-    { id: '2', date: '2024-01-15', time: '11:00', available: true, capacity: 5, booked: 1 },
-    { id: '3', date: '2024-01-15', time: '14:00', available: true, capacity: 5, booked: 3 },
-    { id: '4', date: '2024-01-16', time: '09:00', available: true, capacity: 5, booked: 0 },
-    { id: '5', date: '2024-01-16', time: '15:00', available: false, capacity: 5, booked: 5 },
+  const timeSlots = [
+    { time: '9:00 AM', orders: 3, capacity: 5 },
+    { time: '9:30 AM', orders: 5, capacity: 5 },
+    { time: '10:00 AM', orders: 2, capacity: 5 },
+    { time: '10:30 AM', orders: 1, capacity: 5 },
+    { time: '11:00 AM', orders: 4, capacity: 5 },
   ];
 
-  const handleSchedule = () => {
-    if (selectedDate && selectedTime) {
-      const dateTime = `${selectedDate}T${selectedTime}:00`;
-      onSchedulePickup(dateTime);
-    }
+  const handleSaveSettings = () => {
+    console.log('Saving pickup scheduling settings:', {
+      pickupEnabled,
+      timeSlotInterval,
+      maxOrdersPerSlot,
+      advanceBookingDays
+    });
+    toast.success('Pickup scheduling settings saved');
   };
 
-  const getAvailableDates = () => {
-    const dates = [...new Set(availableSlots.map(slot => slot.date))];
-    return dates.map(date => ({
-      value: date,
-      label: new Date(date).toLocaleDateString()
-    }));
-  };
-
-  const getAvailableTimes = () => {
-    if (!selectedDate) return [];
-    return availableSlots
-      .filter(slot => slot.date === selectedDate && slot.available)
-      .map(slot => ({
-        value: slot.time,
-        label: `${slot.time} (${slot.capacity - slot.booked} slots available)`
-      }));
+  const getSlotStatus = (orders: number, capacity: number) => {
+    const percentage = (orders / capacity) * 100;
+    if (percentage >= 100) return { color: 'bg-red-100 text-red-800', label: 'Full' };
+    if (percentage >= 80) return { color: 'bg-yellow-100 text-yellow-800', label: 'Almost Full' };
+    return { color: 'bg-green-100 text-green-800', label: 'Available' };
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Schedule Pickup
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {currentPickupTime && (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2 text-blue-800">
-              <Clock className="w-4 h-4" />
-              <span className="font-medium">Current pickup time:</span>
+    <div className="space-y-6">
+      {/* Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Pickup Scheduling Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-base font-medium">Enable Pickup Scheduling</Label>
+              <p className="text-sm text-gray-600">Allow customers to book specific pickup times</p>
             </div>
-            <p className="text-blue-700 mt-1">
-              {new Date(currentPickupTime).toLocaleString()}
-            </p>
-          </div>
-        )}
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Pickup Date</Label>
-            <Select value={selectedDate} onValueChange={setSelectedDate}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select date" />
-              </SelectTrigger>
-              <SelectContent>
-                {getAvailableDates().map(date => (
-                  <SelectItem key={date.value} value={date.value}>
-                    {date.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Switch
+              checked={pickupEnabled}
+              onCheckedChange={setPickupEnabled}
+            />
           </div>
 
-          <div>
-            <Label>Pickup Time</Label>
-            <Select value={selectedTime} onValueChange={setSelectedTime} disabled={!selectedDate}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select time" />
-              </SelectTrigger>
-              <SelectContent>
-                {getAvailableTimes().map(time => (
-                  <SelectItem key={time.value} value={time.value}>
-                    {time.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+          {pickupEnabled && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Time Slot Interval</Label>
+                  <Select value={timeSlotInterval} onValueChange={setTimeSlotInterval}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="60">1 hour</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <MapPin className="w-4 h-4" />
-          <span>Pickup at store location</span>
-        </div>
+                <div>
+                  <Label>Max Orders per Slot</Label>
+                  <Select value={maxOrdersPerSlot} onValueChange={setMaxOrdersPerSlot}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3">3 orders</SelectItem>
+                      <SelectItem value="5">5 orders</SelectItem>
+                      <SelectItem value="10">10 orders</SelectItem>
+                      <SelectItem value="unlimited">Unlimited</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        <Button 
-          onClick={handleSchedule} 
-          disabled={!selectedDate || !selectedTime}
-          className="w-full"
-        >
-          {currentPickupTime ? 'Reschedule Pickup' : 'Schedule Pickup'}
-        </Button>
-      </CardContent>
-    </Card>
+                <div>
+                  <Label>Advance Booking</Label>
+                  <Select value={advanceBookingDays} onValueChange={setAdvanceBookingDays}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 day ahead</SelectItem>
+                      <SelectItem value="3">3 days ahead</SelectItem>
+                      <SelectItem value="7">1 week ahead</SelectItem>
+                      <SelectItem value="14">2 weeks ahead</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Button onClick={handleSaveSettings}>
+                Save Settings
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Today's Schedule */}
+      {pickupEnabled && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Today's Pickup Schedule
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {timeSlots.map((slot, index) => {
+                const status = getSlotStatus(slot.orders, slot.capacity);
+                return (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Clock className="w-4 h-4 text-gray-500" />
+                      <span className="font-medium">{slot.time}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-600">
+                          {slot.orders}/{slot.capacity}
+                        </span>
+                      </div>
+                      <Badge className={status.color}>
+                        {status.label}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

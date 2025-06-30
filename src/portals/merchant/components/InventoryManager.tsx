@@ -4,197 +4,271 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Package, AlertTriangle, Edit, Save, X } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Package, AlertTriangle, TrendingDown, Search, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface InventoryItem {
   id: string;
   product_name: string;
   sku: string;
-  quantity: number;
-  price: number;
-  low_stock_threshold: number;
   store_name: string;
+  current_stock: number;
+  min_stock_level: number;
+  max_stock_level: number;
+  price: number;
+  last_updated: string;
 }
 
 interface InventoryManagerProps {
-  merchantId: string;
+  storeId?: string;
 }
 
-const InventoryManager: React.FC<InventoryManagerProps> = ({ merchantId }) => {
+const InventoryManager: React.FC<InventoryManagerProps> = ({ storeId }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<{ [key: string]: number }>({});
+
   const [inventory, setInventory] = useState<InventoryItem[]>([
     {
-      id: '1',
-      product_name: 'Premium Coffee Beans',
-      sku: 'COFFEE-001',
-      quantity: 15,
-      price: 12.99,
-      low_stock_threshold: 10,
-      store_name: 'Downtown Cafe'
+      id: 'inv-1',
+      product_name: 'Premium Skinny Jeans',
+      sku: 'PSJ-001',
+      store_name: 'Downtown Store',
+      current_stock: 5,
+      min_stock_level: 10,
+      max_stock_level: 100,
+      price: 89.99,
+      last_updated: new Date().toISOString()
     },
     {
-      id: '2',
-      product_name: 'Organic Green Tea',
-      sku: 'TEA-002',
-      quantity: 5,
-      price: 8.99,
-      low_stock_threshold: 8,
-      store_name: 'Downtown Cafe'
+      id: 'inv-2',
+      product_name: 'Classic T-Shirt',
+      sku: 'CTS-002',
+      store_name: 'Downtown Store',
+      current_stock: 25,
+      min_stock_level: 15,
+      max_stock_level: 200,
+      price: 24.99,
+      last_updated: new Date().toISOString()
+    },
+    {
+      id: 'inv-3',
+      product_name: 'Denim Jacket',
+      sku: 'DJ-003',
+      store_name: 'Mall Location',
+      current_stock: 2,
+      min_stock_level: 5,
+      max_stock_level: 50,
+      price: 129.99,
+      last_updated: new Date().toISOString()
     }
   ]);
 
-  const [editingItem, setEditingItem] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<{quantity: number; price: number}>({
-    quantity: 0,
-    price: 0
-  });
+  const filteredInventory = inventory.filter(item =>
+    item.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const isLowStock = (item: InventoryItem) => {
-    return item.quantity <= item.low_stock_threshold;
+  const lowStockItems = inventory.filter(item => item.current_stock <= item.min_stock_level);
+
+  const getStockStatus = (item: InventoryItem) => {
+    if (item.current_stock === 0) {
+      return { color: 'bg-red-100 text-red-800', label: 'Out of Stock' };
+    } else if (item.current_stock <= item.min_stock_level) {
+      return { color: 'bg-yellow-100 text-yellow-800', label: 'Low Stock' };
+    } else if (item.current_stock >= item.max_stock_level * 0.8) {
+      return { color: 'bg-blue-100 text-blue-800', label: 'High Stock' };
+    }
+    return { color: 'bg-green-100 text-green-800', label: 'In Stock' };
   };
 
-  const handleEdit = (item: InventoryItem) => {
-    setEditingItem(item.id);
-    setEditValues({
-      quantity: item.quantity,
-      price: item.price
-    });
-  };
-
-  const handleSave = (itemId: string) => {
+  const handleEdit = (itemId: string, field: string, value: number) => {
     setInventory(prev => prev.map(item => 
       item.id === itemId 
-        ? { ...item, quantity: editValues.quantity, price: editValues.price }
+        ? { ...item, [field]: value, last_updated: new Date().toISOString() }
         : item
     ));
     setEditingItem(null);
+    setEditValues({});
     toast.success('Inventory updated successfully');
   };
 
-  const handleCancel = () => {
-    setEditingItem(null);
-    setEditValues({ quantity: 0, price: 0 });
+  const startEditing = (itemId: string, currentValue: number) => {
+    setEditingItem(itemId);
+    setEditValues({ [itemId]: currentValue });
   };
 
-  const lowStockItems = inventory.filter(isLowStock);
+  const handleBulkStockUpdate = () => {
+    toast.info('Bulk stock update functionality coming soon');
+  };
 
   return (
     <div className="space-y-6">
+      {/* Low Stock Alert */}
       {lowStockItems.length > 0 && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-800">
-              <AlertTriangle className="w-5 h-5" />
-              Low Stock Alerts ({lowStockItems.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {lowStockItems.map(item => (
-                <div key={item.id} className="flex items-center justify-between p-2 bg-white rounded">
-                  <span className="font-medium">{item.product_name}</span>
-                  <Badge variant="destructive">
-                    {item.quantity} left (threshold: {item.low_stock_threshold})
-                  </Badge>
-                </div>
-              ))}
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="flex items-center justify-between">
+              <span>
+                {lowStockItems.length} product{lowStockItems.length > 1 ? 's' : ''} running low on stock
+              </span>
+              <Button variant="outline" size="sm">
+                View Low Stock Items
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Products</p>
+                <p className="text-2xl font-bold">{inventory.length}</p>
+              </div>
+              <Package className="w-8 h-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
-      )}
 
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Low Stock</p>
+                <p className="text-2xl font-bold text-yellow-600">{lowStockItems.length}</p>
+              </div>
+              <AlertTriangle className="w-8 h-8 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Out of Stock</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {inventory.filter(item => item.current_stock === 0).length}
+                </p>
+              </div>
+              <TrendingDown className="w-8 h-8 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Value</p>
+                <p className="text-2xl font-bold">
+                  ${inventory.reduce((sum, item) => sum + (item.current_stock * item.price), 0).toFixed(2)}
+                </p>
+              </div>
+              <Package className="w-8 h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Inventory Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Inventory Management
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Inventory Management</CardTitle>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
+              <Button variant="outline" onClick={handleBulkStockUpdate}>
+                Bulk Update
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {inventory.map(item => (
-              <div key={item.id} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <h4 className="font-medium">{item.product_name}</h4>
-                        <p className="text-sm text-gray-600">SKU: {item.sku}</p>
-                        <p className="text-sm text-gray-600">Store: {item.store_name}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    {editingItem === item.id ? (
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <label className="text-xs text-gray-600">Quantity</label>
-                          <Input
-                            type="number"
-                            value={editValues.quantity}
-                            onChange={(e) => setEditValues(prev => ({ ...prev, quantity: parseInt(e.target.value) || 0 }))}
-                            className="w-20"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-600">Price ($)</label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={editValues.price}
-                            onChange={(e) => setEditValues(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                            className="w-24"
-                          />
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            onClick={() => handleSave(item.id)}
-                          >
-                            <Save className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleCancel}
-                          >
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <div className="font-medium">Qty: {item.quantity}</div>
-                          <div className="text-sm text-gray-600">${item.price}</div>
-                        </div>
-                        <Badge 
-                          variant={isLowStock(item) ? "destructive" : "default"}
-                        >
-                          {isLowStock(item) ? 'Low Stock' : 'In Stock'}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3">Product</th>
+                  <th className="text-left p-3">SKU</th>
+                  <th className="text-left p-3">Store</th>
+                  <th className="text-left p-3">Current Stock</th>
+                  <th className="text-left p-3">Min/Max</th>
+                  <th className="text-left p-3">Status</th>
+                  <th className="text-left p-3">Value</th>
+                  <th className="text-left p-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredInventory.map(item => {
+                  const status = getStockStatus(item);
+                  return (
+                    <tr key={item.id} className="border-b">
+                      <td className="p-3 font-medium">{item.product_name}</td>
+                      <td className="p-3 text-gray-600">{item.sku}</td>
+                      <td className="p-3 text-gray-600">{item.store_name}</td>
+                      <td className="p-3">
+                        {editingItem === item.id ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              value={editValues[item.id] || item.current_stock}
+                              onChange={(e) => setEditValues(prev => ({
+                                ...prev,
+                                [item.id]: parseInt(e.target.value) || 0
+                              }))}
+                              className="w-20"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => handleEdit(item.id, 'current_stock', editValues[item.id])}
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="font-medium">{item.current_stock}</span>
+                        )}
+                      </td>
+                      <td className="p-3 text-gray-600">
+                        {item.min_stock_level} / {item.max_stock_level}
+                      </td>
+                      <td className="p-3">
+                        <Badge className={status.color}>
+                          {status.label}
                         </Badge>
+                      </td>
+                      <td className="p-3">
+                        ${(item.current_stock * item.price).toFixed(2)}
+                      </td>
+                      <td className="p-3">
                         <Button
+                          variant="ghost"
                           size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(item)}
+                          onClick={() => startEditing(item.id, item.current_stock)}
                         >
-                          <Edit className="w-3 h-3" />
+                          <Edit className="w-4 h-4" />
                         </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {inventory.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                <p>No inventory items found</p>
-                <p className="text-sm">Add products to your stores to manage inventory</p>
-              </div>
-            )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>

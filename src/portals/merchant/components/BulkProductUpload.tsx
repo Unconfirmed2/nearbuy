@@ -1,222 +1,230 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Download, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface ValidationError {
+  row: number;
+  field: string;
+  message: string;
+}
+
 interface BulkProductUploadProps {
-  merchantId: string;
+  storeId: string;
+  onUploadComplete?: (results: any) => void;
 }
 
-interface UploadResult {
-  filename: string;
-  totalRows: number;
-  successCount: number;
-  errorCount: number;
-  errors: Array<{
-    row: number;
-    field: string;
-    message: string;
-  }>;
-}
-
-const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ merchantId }) => {
-  const [isUploading, setIsUploading] = useState(false);
+const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ storeId, onUploadComplete }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [uploadResults, setUploadResults] = useState<{
+    successful: number;
+    failed: number;
+    total: number;
+  } | null>(null);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.name.endsWith('.csv')) {
-      toast.error('Please select a CSV file');
+      toast.error('Please upload a CSV file');
       return;
     }
 
     setIsUploading(true);
     setUploadProgress(0);
-    setUploadResult(null);
+    setValidationErrors([]);
+    setUploadResults(null);
 
-    // Simulate upload progress
-    const progressInterval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          return 100;
+    try {
+      // Simulate file processing
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const csv = e.target?.result as string;
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',');
+        
+        // Validate headers
+        const requiredHeaders = ['name', 'description', 'price', 'category', 'sku'];
+        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        
+        if (missingHeaders.length > 0) {
+          toast.error(`Missing required headers: ${missingHeaders.join(', ')}`);
+          setIsUploading(false);
+          return;
         }
-        return prev + 10;
-      });
-    }, 200);
 
-    // Simulate processing delay
-    setTimeout(() => {
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-      setIsUploading(false);
-      
-      // Mock upload result
-      const mockResult: UploadResult = {
-        filename: file.name,
-        totalRows: 50,
-        successCount: 47,
-        errorCount: 3,
-        errors: [
-          { row: 15, field: 'price', message: 'Invalid price format' },
-          { row: 23, field: 'category', message: 'Category not found' },
-          { row: 31, field: 'name', message: 'Product name is required' }
-        ]
+        // Simulate processing with progress
+        const totalRows = lines.length - 1;
+        let processedRows = 0;
+        let successfulRows = 0;
+        let errors: ValidationError[] = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const row = lines[i].split(',');
+          
+          // Simulate validation
+          if (Math.random() > 0.9) { // 10% error rate for demo
+            errors.push({
+              row: i,
+              field: 'price',
+              message: 'Invalid price format'
+            });
+          } else {
+            successfulRows++;
+          }
+
+          processedRows++;
+          setUploadProgress((processedRows / totalRows) * 100);
+          
+          // Simulate processing delay
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        setValidationErrors(errors);
+        setUploadResults({
+          successful: successfulRows,
+          failed: errors.length,
+          total: totalRows
+        });
+
+        if (errors.length === 0) {
+          toast.success(`Successfully uploaded ${successfulRows} products`);
+        } else {
+          toast.warning(`Uploaded ${successfulRows} products with ${errors.length} errors`);
+        }
+
+        onUploadComplete?.({
+          successful: successfulRows,
+          failed: errors.length,
+          errors
+        });
       };
-      
-      setUploadResult(mockResult);
-      
-      if (mockResult.errorCount === 0) {
-        toast.success(`Successfully uploaded ${mockResult.successCount} products`);
-      } else {
-        toast.warning(`Uploaded ${mockResult.successCount} products with ${mockResult.errorCount} errors`);
-      }
-    }, 2500);
 
-    // Reset file input
-    event.target.value = '';
-  };
+      reader.readAsText(file);
+    } catch (error) {
+      toast.error('Error processing file');
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [storeId, onUploadComplete]);
 
   const downloadTemplate = () => {
-    const csvContent = `name,description,brand,category,price,sku,quantity,images
-"Premium Coffee Beans","High-quality arabica coffee beans","Coffee Co","Beverages",12.99,"COFFEE-001",50,"https://example.com/coffee.jpg"
-"Organic Green Tea","Certified organic green tea leaves","Tea Masters","Beverages",8.99,"TEA-002",30,"https://example.com/tea.jpg"`;
+    const csvContent = `name,description,price,category,sku,brand,inventory_count,images
+"Premium Skinny Jeans","High-quality denim jeans","89.99","Clothing","SKU-001","BrandName","50","image1.jpg,image2.jpg"
+"Classic T-Shirt","Comfortable cotton t-shirt","24.99","Clothing","SKU-002","BrandName","100","image3.jpg"`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'product-upload-template.csv';
-    document.body.appendChild(a);
+    a.download = 'product_upload_template.csv';
     a.click();
-    document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
     
-    toast.success('Template downloaded successfully');
+    toast.success('Template downloaded');
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5" />
-            Bulk Product Upload
-          </CardTitle>
-          <p className="text-sm text-gray-600">
-            Upload multiple products at once using a CSV file
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
-            <div className="text-center">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">Upload CSV File</h3>
-              <p className="text-gray-600 mb-4">
-                Select a CSV file with your product data
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="outline" onClick={downloadTemplate}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Template
-                </Button>
-                <label htmlFor="csv-upload">
-                  <Button asChild disabled={isUploading}>
-                    <span>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Choose CSV File
-                    </span>
-                  </Button>
-                </label>
-                <input
-                  id="csv-upload"
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </div>
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="w-5 h-5" />
+          Bulk Product Upload
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Template Download */}
+        <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div>
+            <h4 className="font-medium">Download CSV Template</h4>
+            <p className="text-sm text-gray-600">
+              Use our template to ensure proper formatting
+            </p>
+          </div>
+          <Button variant="outline" onClick={downloadTemplate}>
+            <Download className="w-4 h-4 mr-2" />
+            Download Template
+          </Button>
+        </div>
+
+        {/* File Upload */}
+        <div className="space-y-4">
+          <div>
+            <Input
+              type="file"
+              accept=".csv"
+              onChange={handleFileUpload}
+              disabled={isUploading}
+              className="cursor-pointer"
+            />
           </div>
 
           {isUploading && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span>Processing CSV file...</span>
-                <span>{uploadProgress}%</span>
+                <span>Processing products...</span>
+                <span>{Math.round(uploadProgress)}%</span>
               </div>
               <Progress value={uploadProgress} />
             </div>
           )}
+        </div>
 
-          {uploadResult && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {uploadResult.errorCount === 0 ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5 text-yellow-600" />
-                  )}
-                  Upload Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">{uploadResult.totalRows}</div>
-                      <div className="text-sm text-gray-600">Total Rows</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-green-600">{uploadResult.successCount}</div>
-                      <div className="text-sm text-gray-600">Successful</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-red-600">{uploadResult.errorCount}</div>
-                      <div className="text-sm text-gray-600">Errors</div>
-                    </div>
-                  </div>
+        {/* Upload Results */}
+        {uploadResults && (
+          <Alert>
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              Upload completed: {uploadResults.successful} successful, {uploadResults.failed} failed 
+              out of {uploadResults.total} total products.
+            </AlertDescription>
+          </Alert>
+        )}
 
-                  {uploadResult.errors.length > 0 && (
-                    <div>
-                      <h4 className="font-medium mb-2 flex items-center gap-2">
-                        <XCircle className="w-4 h-4 text-red-600" />
-                        Errors Found
-                      </h4>
-                      <div className="space-y-2 max-h-32 overflow-y-auto">
-                        {uploadResult.errors.map((error, index) => (
-                          <div key={index} className="text-sm p-2 bg-red-50 rounded">
-                            <span className="font-medium">Row {error.row}:</span> {error.message} ({error.field})
-                          </div>
-                        ))}
-                      </div>
+        {/* Validation Errors */}
+        {validationErrors.length > 0 && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="font-medium">Validation Errors ({validationErrors.length}):</p>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {validationErrors.slice(0, 10).map((error, index) => (
+                    <div key={index} className="text-sm">
+                      Row {error.row}: {error.field} - {error.message}
                     </div>
+                  ))}
+                  {validationErrors.length > 10 && (
+                    <p className="text-sm">... and {validationErrors.length - 10} more errors</p>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-medium mb-2">CSV Format Requirements:</h4>
-            <ul className="text-sm text-gray-700 space-y-1">
-              <li>• Required fields: name, price, category</li>
-              <li>• Optional fields: description, brand, sku, quantity, images</li>
-              <li>• Use comma-separated values</li>
-              <li>• Wrap text containing commas in quotes</li>
-              <li>• Image URLs should be publicly accessible</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        {/* Instructions */}
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h4 className="font-medium text-blue-900 mb-2">Upload Instructions:</h4>
+          <ul className="text-sm text-blue-800 space-y-1">
+            <li>• Use the CSV template provided above</li>
+            <li>• Ensure all required fields are filled (name, price, category, SKU)</li>
+            <li>• Images should be comma-separated filenames</li>
+            <li>• Price should be in decimal format (e.g., 19.99)</li>
+            <li>• Maximum 1000 products per upload</li>
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

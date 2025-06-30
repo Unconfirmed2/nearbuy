@@ -1,14 +1,16 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ShoppingCart, Clock, Bell } from 'lucide-react';
 import { useOrders } from '../hooks/useOrders';
 import { useStores } from '../hooks/useStores';
 import OrdersFilters from '../components/OrdersFilters';
 import OrdersSummaryCards from '../components/OrdersSummaryCards';
 import OrdersTable from '../components/OrdersTable';
 import OrderDetailsModal from '../components/OrderDetailsModal';
+import OrderNotifications from '../components/OrderNotifications';
+import PickupScheduling from '../components/PickupScheduling';
 import { toast } from 'sonner';
 
 const Orders: React.FC = () => {
@@ -92,48 +94,66 @@ const Orders: React.FC = () => {
         )}
       </div>
 
-      <OrdersSummaryCards stats={stats} />
+      <Tabs defaultValue="orders" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="orders">Order Management</TabsTrigger>
+          <TabsTrigger value="pickup">Pickup Scheduling</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Management</CardTitle>
-          <OrdersFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            storeFilter={storeFilter}
-            onStoreChange={setStoreFilter}
-            stores={stores}
-            onExport={handleExport}
-          />
-        </CardHeader>
-        <CardContent>
-          {filteredOrders.length === 0 ? (
-            <div className="text-center py-12">
-              <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {searchTerm || statusFilter !== 'all' || storeFilter !== 'all' 
-                  ? 'No orders match your filters'
-                  : 'No orders yet'
-                }
-              </h3>
-              <p className="text-gray-600">
-                {searchTerm || statusFilter !== 'all' || storeFilter !== 'all'
-                  ? 'Try adjusting your search criteria.'
-                  : 'Orders will appear here when customers make purchases.'
-                }
-              </p>
-            </div>
-          ) : (
-            <OrdersTable
-              orders={filteredOrders}
-              onViewDetails={handleViewDetails}
-              onUpdateStatus={handleUpdateStatus}
-            />
-          )}
-        </CardContent>
-      </Card>
+        <TabsContent value="orders" className="space-y-6">
+          <OrdersSummaryCards stats={stats} />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Order Management</CardTitle>
+              <OrdersFilters
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                storeFilter={storeFilter}
+                onStoreChange={setStoreFilter}
+                stores={stores}
+                onExport={handleExport}
+              />
+            </CardHeader>
+            <CardContent>
+              {filteredOrders.length === 0 ? (
+                <div className="text-center py-12">
+                  <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {searchTerm || statusFilter !== 'all' || storeFilter !== 'all' 
+                      ? 'No orders match your filters'
+                      : 'No orders yet'
+                    }
+                  </h3>
+                  <p className="text-gray-600">
+                    {searchTerm || statusFilter !== 'all' || storeFilter !== 'all'
+                      ? 'Try adjusting your search criteria.'
+                      : 'Orders will appear here when customers make purchases.'
+                    }
+                  </p>
+                </div>
+              ) : (
+                <OrdersTable
+                  orders={filteredOrders}
+                  onViewDetails={handleViewDetails}
+                  onUpdateStatus={handleUpdateStatus}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pickup">
+          <PickupScheduling storeId="debug-store-id" />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <OrderNotifications merchantId="debug-merchant-id" />
+        </TabsContent>
+      </Tabs>
 
       <OrderDetailsModal
         open={showOrderDetails}
