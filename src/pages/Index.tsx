@@ -199,6 +199,10 @@ const Index = () => {
     }
   };
 
+  const handleLocationChange = (location: {lat: number, lng: number} | null) => {
+    setUserLocation(location);
+  };
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -235,7 +239,7 @@ const Index = () => {
               <div className="flex items-center space-x-2">
                 <span className="text-base font-medium text-gray-700">Nearby</span>
                 <TravelFilter value={travelFilter} onChange={setTravelFilter} />
-                <LocationButton userLocation={userLocation} />
+                <LocationButton userLocation={userLocation} onLocationChange={handleLocationChange} />
               </div>
               {basket.length > 0 && (
                 <Badge variant="secondary" className="bg-blue-100 text-blue-800">
