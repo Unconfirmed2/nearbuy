@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Search, Eye, Clock, CheckCircle, XCircle, Package } from 'lucide-react';
 import { toast } from 'sonner';
 import OrderDetailsModal from '../components/OrderDetailsModal';
@@ -54,7 +54,7 @@ const Orders: React.FC = () => {
         .from('orders')
         .select(`
           *,
-          profiles!inner (name, email),
+          profiles!orders_user_id_fkey (name, email),
           stores (name),
           order_items (
             quantity,
@@ -78,17 +78,19 @@ const Orders: React.FC = () => {
 
       console.log('Orders fetched:', data);
       
-      // Filter by search term if provided
+      // Filter by search term if provided and ensure data is typed correctly
+      const ordersData = data as any[] || [];
+      
       if (searchTerm) {
-        const filtered = data?.filter(order => 
+        const filtered = ordersData.filter((order: any) => 
           order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           order.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase())
         );
-        return filtered || [];
+        return filtered;
       }
 
-      return data || [];
+      return ordersData;
     },
   });
 
@@ -192,7 +194,7 @@ const Orders: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {orders.filter(order => order.status === 'pending').length}
+              {orders.filter((order: any) => order.status === 'pending').length}
             </div>
           </CardContent>
         </Card>
@@ -202,7 +204,7 @@ const Orders: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {orders.filter(order => order.status === 'ready').length}
+              {orders.filter((order: any) => order.status === 'ready').length}
             </div>
           </CardContent>
         </Card>
@@ -212,7 +214,7 @@ const Orders: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(orders.reduce((sum, order) => sum + (order.total_amount || 0), 0))}
+              {formatCurrency(orders.reduce((sum: number, order: any) => sum + (order.total_amount || 0), 0))}
             </div>
           </CardContent>
         </Card>
@@ -267,7 +269,7 @@ const Orders: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                orders.map((order) => (
+                orders.map((order: any) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-mono text-sm">
                       #{order.id.slice(0, 8)}
