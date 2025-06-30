@@ -29,7 +29,7 @@ interface UserProfile {
 }
 
 export default function App() {
-  const [debugRole, setDebugRole] = useState<'guest' | 'customer' | 'store_owner'>('guest');
+  const [debugRole, setDebugRole] = useState<'guest' | 'customer' | 'store_owner'>('store_owner');
 
   // Mock user and profile for debug mode
   const mockUser = debugRole !== 'guest' ? {
@@ -62,12 +62,16 @@ export default function App() {
 
   // Get dashboard route based on debug role
   const getDashboardRoute = () => {
+    console.log('Dashboard route - current debug role:', debugRole);
     switch (debugRole) {
       case 'store_owner':
+        console.log('Redirecting to merchant dashboard');
         return '/merchant';
       case 'customer':
+        console.log('Redirecting to consumer dashboard');
         return '/consumer';
       default:
+        console.log('Redirecting to main page');
         return '/';
     }
   };
