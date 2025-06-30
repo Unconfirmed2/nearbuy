@@ -8,7 +8,8 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
+  DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
@@ -24,7 +25,13 @@ import {
   Menu,
   Home,
   Route,
-  Store
+  Store,
+  ChevronDown,
+  Settings,
+  Star,
+  History,
+  Gift,
+  Shield
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -120,7 +127,13 @@ const ConsumerNavbar: React.FC<ConsumerNavbarProps> = ({ user: propUser, profile
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="rounded-full">
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2 px-3 py-2 h-auto">
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500">Hello, {profile?.name || 'Customer'}</div>
+                      <div className="text-sm font-medium text-gray-900 flex items-center">
+                        Account & Lists <ChevronDown className="ml-1 h-3 w-3" />
+                      </div>
+                    </div>
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={profile?.avatar_url} />
                       <AvatarFallback>
@@ -129,28 +142,128 @@ const ConsumerNavbar: React.FC<ConsumerNavbarProps> = ({ user: propUser, profile
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => navigate('/consumer/profile')}>
-                    <UserIcon className="h-4 w-4 mr-2" />
-                    Profile Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/consumer/addresses')}>
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Saved Addresses
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/consumer/payment-methods')}>
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Payment Methods
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/consumer/orders')}>
-                    <Package className="h-4 w-4 mr-2" />
-                    Order History
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-80 p-0">
+                  {/* Sign In Section */}
+                  <div className="p-4 bg-blue-50 border-b">
+                    <div className="text-sm font-medium text-gray-900">Signed in as</div>
+                    <div className="text-xs text-gray-600">{user?.email}</div>
+                  </div>
+
+                  <div className="flex">
+                    {/* Your Account Column */}
+                    <div className="flex-1 p-4 border-r">
+                      <DropdownMenuLabel className="text-sm font-semibold text-gray-900 px-0 pb-2">
+                        Your Account
+                      </DropdownMenuLabel>
+                      <div className="space-y-1">
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/profile')}
+                        >
+                          <UserIcon className="h-4 w-4 mr-2" />
+                          Your Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/orders')}
+                        >
+                          <Package className="h-4 w-4 mr-2" />
+                          Your Orders
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/addresses')}
+                        >
+                          <MapPin className="h-4 w-4 mr-2" />
+                          Your Addresses
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/payment-methods')}
+                        >
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Payment Methods
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/profile')}
+                        >
+                          <Settings className="h-4 w-4 mr-2" />
+                          Account Settings
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/profile')}
+                        >
+                          <Shield className="h-4 w-4 mr-2" />
+                          Security Settings
+                        </DropdownMenuItem>
+                      </div>
+                    </div>
+
+                    {/* Your Lists Column */}
+                    <div className="flex-1 p-4">
+                      <DropdownMenuLabel className="text-sm font-semibold text-gray-900 px-0 pb-2">
+                        Your Lists
+                      </DropdownMenuLabel>
+                      <div className="space-y-1">
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/favorites')}
+                        >
+                          <Heart className="h-4 w-4 mr-2" />
+                          Your Wish List
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/cart')}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Shopping Cart
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/orders')}
+                        >
+                          <History className="h-4 w-4 mr-2" />
+                          Buy Again
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/favorites')}
+                        >
+                          <Gift className="h-4 w-4 mr-2" />
+                          Gift Ideas
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/orders')}
+                        >
+                          <Star className="h-4 w-4 mr-2" />
+                          Your Reviews
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/support')}
+                        >
+                          <HelpCircle className="h-4 w-4 mr-2" />
+                          Customer Service
+                        </DropdownMenuItem>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <DropdownMenuSeparator className="my-0" />
+                  
+                  <div className="p-2">
+                    <DropdownMenuItem 
+                      onClick={handleSignOut} 
+                      className="text-red-600 focus:text-red-600 cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
