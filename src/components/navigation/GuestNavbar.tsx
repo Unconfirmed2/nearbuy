@@ -21,7 +21,7 @@ const GuestNavbar: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/consumer" className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-sm">NB</span>
             </div>
@@ -32,16 +32,16 @@ const GuestNavbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-blue-600 transition-colors">
+            <Link to="/consumer" className="text-gray-700 hover:text-blue-600 transition-colors">
               Home
             </Link>
             <Link to="/consumer/search" className="text-gray-700 hover:text-blue-600 transition-colors">
               Products
             </Link>
-            <Link to="/stores" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Stores
+            <Link to="/consumer/route-planner" className="text-gray-700 hover:text-blue-600 transition-colors">
+              Route Planner
             </Link>
-            <Link to="/help" className="text-gray-700 hover:text-blue-600 transition-colors flex items-center">
+            <Link to="/consumer/support" className="text-gray-700 hover:text-blue-600 transition-colors flex items-center">
               <HelpCircle className="h-4 w-4 mr-1" />
               Help Center
             </Link>
@@ -79,10 +79,10 @@ const GuestNavbar: React.FC = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-8">
-                  <Link to="/" className="text-lg font-medium">Home</Link>
+                  <Link to="/consumer" className="text-lg font-medium">Home</Link>
                   <Link to="/consumer/search" className="text-lg font-medium">Products</Link>
-                  <Link to="/stores" className="text-lg font-medium">Stores</Link>
-                  <Link to="/help" className="text-lg font-medium flex items-center">
+                  <Link to="/consumer/route-planner" className="text-lg font-medium">Route Planner</Link>
+                  <Link to="/consumer/support" className="text-lg font-medium flex items-center">
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Help Center
                   </Link>

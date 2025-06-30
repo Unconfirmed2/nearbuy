@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
@@ -58,8 +57,8 @@ export default function App() {
         console.log('Redirecting to consumer dashboard');
         return <Navigate to="/consumer" replace />;
       default:
-        console.log('Redirecting to main page');
-        return <Navigate to="/" replace />;
+        console.log('Redirecting to consumer by default');
+        return <Navigate to="/consumer" replace />;
     }
   };
 
@@ -75,8 +74,11 @@ export default function App() {
         </div>
 
         <Routes>
-          {/* Public routes - accessible without authentication */}
-          <Route path="/" element={<Index />} />
+          {/* Root redirect to consumer portal */}
+          <Route path="/" element={<Navigate to="/consumer" replace />} />
+          
+          {/* Keep original landing page for reference but don't link to it */}
+          <Route path="/original-landing" element={<Index />} />
           
           {/* Auth routes */}
           <Route path="/auth" element={<AuthLayout />}>

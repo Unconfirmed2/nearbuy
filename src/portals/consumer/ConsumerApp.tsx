@@ -41,13 +41,18 @@ const ConsumerApp: React.FC<ConsumerAppProps> = ({ user: propUser, profile: prop
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
   }
 
-  // If no user and not in debug mode, show auth
+  // If no user and not in debug mode, show auth for protected routes
   if (!user && !propUser) {
     return (
       <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/search" element={<ProductSearch />} />
+        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/route-planner" element={<RoutePlanner />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-        <Route path="*" element={<Navigate to="/auth" replace />} />
+        <Route path="*" element={<Navigate to="/consumer/auth" replace />} />
       </Routes>
     );
   }
@@ -55,21 +60,21 @@ const ConsumerApp: React.FC<ConsumerAppProps> = ({ user: propUser, profile: prop
   return (
     <ConsumerLayout user={user} profile={profile}>
       <Routes>
-        <Route index element={<Home />} />
-        <Route path="search" element={<ProductSearch />} />
-        <Route path="product/:id" element={<ProductDetails />} />
-        <Route path="cart" element={<Cart />} />
-        <Route path="checkout" element={<Checkout />} />
-        <Route path="order-confirmation" element={<OrderConfirmation />} />
-        <Route path="route-planner" element={<RoutePlanner />} />
-        <Route path="profile" element={<Profile user={user} profile={profile} />} />
-        <Route path="addresses" element={<Addresses />} />
-        <Route path="payment-methods" element={<PaymentMethods />} />
-        <Route path="orders" element={<OrderHistory />} />
-        <Route path="favorites" element={<Favorites />} />
-        <Route path="support" element={<Support />} />
-        <Route path="auth" element={<Auth />} />
-        <Route path="auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/search" element={<ProductSearch />} />
+        <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        <Route path="/route-planner" element={<RoutePlanner />} />
+        <Route path="/profile" element={<Profile user={user} profile={profile} />} />
+        <Route path="/addresses" element={<Addresses />} />
+        <Route path="/payment-methods" element={<PaymentMethods />} />
+        <Route path="/orders" element={<OrderHistory />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
       </Routes>
     </ConsumerLayout>
   );
