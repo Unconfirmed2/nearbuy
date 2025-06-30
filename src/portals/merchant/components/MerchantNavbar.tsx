@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,7 @@ import {
   Shield
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { toast } from 'sonner';
 
 interface MerchantNavbarProps {
   user: User;
@@ -29,6 +31,7 @@ interface MerchantNavbarProps {
 }
 
 const MerchantNavbar: React.FC<MerchantNavbarProps> = ({ user, profile }) => {
+  const navigate = useNavigate();
   const [notifications] = useState([
     {
       id: '1',
@@ -69,6 +72,12 @@ const MerchantNavbar: React.FC<MerchantNavbarProps> = ({ user, profile }) => {
       default:
         return '📢';
     }
+  };
+
+  const handleSignOut = async () => {
+    // For now, just show a toast and navigate to consumer portal
+    toast.success('Signed out successfully');
+    navigate('/consumer');
   };
 
   return (
@@ -148,41 +157,41 @@ const MerchantNavbar: React.FC<MerchantNavbarProps> = ({ user, profile }) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/merchant/settings')}>
               <UserIcon className="h-4 w-4 mr-2" />
               Profile Settings
             </DropdownMenuItem>
             
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/merchant/stores')}>
               <Store className="h-4 w-4 mr-2" />
               Store Management
             </DropdownMenuItem>
             
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/merchant/settings')}>
               <CreditCard className="h-4 w-4 mr-2" />
               Billing & Payments
             </DropdownMenuItem>
             
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/merchant/settings')}>
               <Settings className="h-4 w-4 mr-2" />
               Account Settings
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/merchant/support')}>
               <HelpCircle className="h-4 w-4 mr-2" />
               Help & Support
             </DropdownMenuItem>
             
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/merchant/settings')}>
               <Shield className="h-4 w-4 mr-2" />
               Security
             </DropdownMenuItem>
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem className="text-red-600 focus:text-red-600">
+            <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </DropdownMenuItem>
