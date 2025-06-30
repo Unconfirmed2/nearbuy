@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,11 +52,16 @@ const SupportTicketSystem: React.FC<SupportTicketSystemProps> = ({
   );
 
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newTicket, setNewTicket] = useState({
+  const [newTicket, setNewTicket] = useState<{
+    subject: string;
+    description: string;
+    category: string;
+    priority: 'low' | 'medium' | 'high';
+  }>({
     subject: '',
     description: '',
     category: 'general',
-    priority: 'medium' as const
+    priority: 'medium'
   });
 
   const handleCreateTicket = () => {
