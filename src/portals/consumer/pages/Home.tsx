@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,8 +115,7 @@ const Home: React.FC = () => {
     addToFavorites({
       productId: product.id,
       productName: product.name,
-      image: product.image,
-      addedAt: new Date().toISOString()
+      image: product.image
     });
     toast.success('Added to favorites!');
   };
