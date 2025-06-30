@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
@@ -9,13 +10,30 @@ import SignUp from './pages/auth/SignUp';
 import ConsumerSignUp from './pages/auth/ConsumerSignUp';
 import MerchantSignUp from './pages/auth/MerchantSignUp';
 
-// Public pages
-import Index from './pages/Index';
+// Consumer pages - now at root level
+import Home from './portals/consumer/pages/Home';
+import ProductSearch from './portals/consumer/pages/ProductSearch';
+import ProductDetails from './portals/consumer/pages/ProductDetails';
+import Cart from './portals/consumer/pages/Cart';
+import Profile from './portals/consumer/pages/Profile';
+import OrderHistory from './portals/consumer/pages/OrderHistory';
+import Favorites from './portals/consumer/pages/Favorites';
+import Auth from './portals/consumer/pages/Auth';
+import ForgotPassword from './portals/consumer/pages/ForgotPassword';
+import Addresses from './portals/consumer/pages/Addresses';
+import PaymentMethods from './portals/consumer/pages/PaymentMethods';
+import RoutePlanner from './portals/consumer/pages/RoutePlanner';
+import Support from './portals/consumer/pages/Support';
+import Checkout from './portals/consumer/pages/Checkout';
+import OrderConfirmation from './portals/consumer/pages/OrderConfirmation';
 
 // Portal components
-import ConsumerApp from './portals/consumer/ConsumerApp';
 import MerchantApp from './portals/merchant/MerchantApp';
 import AdminApp from './portals/admin/AdminApp';
+
+// Layout
+import ConsumerLayout from './portals/consumer/components/ConsumerLayout';
+import { useAuth } from './portals/consumer/hooks/useAuth';
 
 // Types
 interface UserProfile {
@@ -27,16 +45,27 @@ interface UserProfile {
 }
 
 export default function App() {
+  const { user, loading } = useAuth();
+  
+  const profile = user ? { 
+    id: user.id, 
+    name: user.user_metadata?.name, 
+    email: user.email,
+    role: 'customer' 
+  } : null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
         <Routes>
-          {/* Root redirect to consumer portal (landing page) */}
-          <Route path="/" element={<Navigate to="/consumer" replace />} />
-          
-          {/* Keep original landing page for reference but don't link to it */}
-          <Route path="/original-landing" element={<Index />} />
-          
           {/* Auth routes */}
           <Route path="/auth" element={<AuthLayout />}>
             <Route path="signin" element={<SignIn />} />
@@ -45,8 +74,86 @@ export default function App() {
             <Route path="signup/merchant" element={<MerchantSignUp />} />
           </Route>
 
+          {/* Consumer routes at root level */}
+          <Route path="/" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <Home />
+            </ConsumerLayout>
+          } />
+          <Route path="/search" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <ProductSearch />
+            </ConsumerLayout>
+          } />
+          <Route path="/product/:id" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <ProductDetails />
+            </ConsumerLayout>
+          } />
+          <Route path="/cart" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <Cart />
+            </ConsumerLayout>
+          } />
+          <Route path="/route-planner" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <RoutePlanner />
+            </ConsumerLayout>
+          } />
+          <Route path="/favorites" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <Favorites />
+            </ConsumerLayout>
+          } />
+          <Route path="/support" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <Support />
+            </ConsumerLayout>
+          } />
+          <Route path="/auth-consumer" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <Auth />
+            </ConsumerLayout>
+          } />
+          <Route path="/auth/forgot-password" element={
+            <ConsumerLayout user={user} profile={profile}>
+              <ForgotPassword />
+            </ConsumerLayout>
+          } />
+          
+          {/* Protected routes - require authentication */}
+          <Route path="/profile" element={
+            <ConsumerLayout user={user} profile={profile}>
+              {user ? <Profile user={user} profile={profile} /> : <Navigate to="/auth-consumer" replace />}
+            </ConsumerLayout>
+          } />
+          <Route path="/addresses" element={
+            <ConsumerLayout user={user} profile={profile}>
+              {user ? <Addresses /> : <Navigate to="/auth-consumer" replace />}
+            </ConsumerLayout>
+          } />
+          <Route path="/payment-methods" element={
+            <ConsumerLayout user={user} profile={profile}>
+              {user ? <PaymentMethods /> : <Navigate to="/auth-consumer" replace />}
+            </ConsumerLayout>
+          } />
+          <Route path="/orders" element={
+            <ConsumerLayout user={user} profile={profile}>
+              {user ? <OrderHistory /> : <Navigate to="/auth-consumer" replace />}
+            </ConsumerLayout>
+          } />
+          <Route path="/checkout" element={
+            <ConsumerLayout user={user} profile={profile}>
+              {user ? <Checkout /> : <Navigate to="/auth-consumer" replace />}
+            </ConsumerLayout>
+          } />
+          <Route path="/order-confirmation" element={
+            <ConsumerLayout user={user} profile={profile}>
+              {user ? <OrderConfirmation /> : <Navigate to="/auth-consumer" replace />}
+            </ConsumerLayout>
+          } />
+
           {/* Portal routes */}
-          <Route path="/consumer/*" element={<ConsumerApp />} />
           <Route path="/merchant/*" element={<MerchantApp />} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>

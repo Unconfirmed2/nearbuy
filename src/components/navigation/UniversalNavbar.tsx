@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -75,11 +74,11 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
   const handleSignOut = async () => {
     await signOut();
     toast.success('Signed out successfully');
-    navigate('/consumer/auth');
+    navigate('/auth-consumer');
   };
 
   const handleAuthAction = () => {
-    navigate('/consumer/auth');
+    navigate('/auth-consumer');
   };
 
   const handleSearch = () => {
@@ -87,7 +86,7 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
       toast.error('Please enter a search term');
       return;
     }
-    navigate(`/consumer/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(locationValue)}`);
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(locationValue)}`);
   };
 
   const handleLocationSelect = (selectedLocation: string) => {
@@ -123,7 +122,7 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/consumer" className="flex items-center space-x-3 shrink-0">
+          <Link to="/" className="flex items-center space-x-3 shrink-0">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-sm">NB</span>
             </div>
@@ -243,13 +242,13 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
           
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/consumer/favorites">
+            <Link to="/favorites">
               <Button variant="ghost" size="sm">
                 <Heart className="h-4 w-4" />
               </Button>
             </Link>
             
-            <Link to="/consumer/cart">
+            <Link to="/cart">
               <Button variant="ghost" size="sm" className="relative">
                 <ShoppingCart className="h-4 w-4" />
                 {itemCount > 0 && (
@@ -292,49 +291,49 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                       <div className="space-y-1">
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/profile')}
+                          onClick={() => navigate('/profile')}
                         >
                           <UserIcon className="h-4 w-4 mr-2" />
                           Your Profile
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/orders')}
+                          onClick={() => navigate('/orders')}
                         >
                           <Package className="h-4 w-4 mr-2" />
                           Your Orders
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/addresses')}
+                          onClick={() => navigate('/addresses')}
                         >
                           <MapPin className="h-4 w-4 mr-2" />
                           Your Addresses
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/payment-methods')}
+                          onClick={() => navigate('/payment-methods')}
                         >
                           <CreditCard className="h-4 w-4 mr-2" />
                           Payment Methods
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/route-planner')}
+                          onClick={() => navigate('/route-planner')}
                         >
                           <Route className="h-4 w-4 mr-2" />
                           Route Planner
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/support')}
+                          onClick={() => navigate('/support')}
                         >
                           <HelpCircle className="h-4 w-4 mr-2" />
                           Support
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/profile')}
+                          onClick={() => navigate('/profile')}
                         >
                           <Settings className="h-4 w-4 mr-2" />
                           Account Settings
@@ -349,35 +348,35 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                       <div className="space-y-1">
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/favorites')}
+                          onClick={() => navigate('/favorites')}
                         >
                           <Heart className="h-4 w-4 mr-2" />
                           Your Wish List
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/cart')}
+                          onClick={() => navigate('/cart')}
                         >
                           <ShoppingCart className="h-4 w-4 mr-2" />
                           Shopping Cart
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/orders')}
+                          onClick={() => navigate('/orders')}
                         >
                           <History className="h-4 w-4 mr-2" />
                           Buy Again
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/favorites')}
+                          onClick={() => navigate('/favorites')}
                         >
                           <Gift className="h-4 w-4 mr-2" />
                           Gift Ideas
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/orders')}
+                          onClick={() => navigate('/orders')}
                         >
                           <Star className="h-4 w-4 mr-2" />
                           Your Reviews
@@ -428,28 +427,28 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                       <div className="space-y-1">
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/auth')}
+                          onClick={() => navigate('/auth-consumer')}
                         >
                           <UserIcon className="h-4 w-4 mr-2" />
                           Sign In
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/auth')}
+                          onClick={() => navigate('/auth-consumer')}
                         >
                           <UserIcon className="h-4 w-4 mr-2" />
                           Create Account
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/route-planner')}
+                          onClick={() => navigate('/route-planner')}
                         >
                           <Route className="h-4 w-4 mr-2" />
                           Route Planner
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/support')}
+                          onClick={() => navigate('/support')}
                         >
                           <HelpCircle className="h-4 w-4 mr-2" />
                           Support
@@ -464,7 +463,7 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                       <div className="space-y-1">
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/cart')}
+                          onClick={() => navigate('/cart')}
                         >
                           <ShoppingCart className="h-4 w-4 mr-2" />
                           Shopping Cart
@@ -498,7 +497,7 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
 
           {/* Mobile Menu */}
           <div className="md:hidden flex items-center space-x-2">
-            <Link to="/consumer/cart">
+            <Link to="/cart">
               <Button variant="ghost" size="sm" className="relative">
                 <ShoppingCart className="h-4 w-4" />
                 {itemCount > 0 && (
@@ -534,17 +533,17 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                     </Button>
                   </div>
 
-                  <Link to="/consumer/favorites" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                  <Link to="/favorites" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                     <Heart className="h-5 w-5" />
                     <span className="text-lg font-medium">Favorites</span>
                   </Link>
 
-                  <Link to="/consumer/route-planner" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                  <Link to="/route-planner" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                     <Route className="h-5 w-5" />
                     <span className="text-lg font-medium">Route Planner</span>
                   </Link>
 
-                  <Link to="/consumer/support" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                  <Link to="/support" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                     <HelpCircle className="h-5 w-5" />
                     <span className="text-lg font-medium">Support</span>
                   </Link>
@@ -557,11 +556,11 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                   {user ? (
                     <>
                       <div className="border-t pt-4 space-y-2">
-                        <Link to="/consumer/profile" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        <Link to="/profile" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                           <UserIcon className="h-5 w-5" />
                           <span className="text-lg font-medium">Profile</span>
                         </Link>
-                        <Link to="/consumer/orders" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                        <Link to="/orders" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                           <Package className="h-5 w-5" />
                           <span className="text-lg font-medium">Orders</span>
                         </Link>
