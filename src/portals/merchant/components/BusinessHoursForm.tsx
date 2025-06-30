@@ -1,95 +1,131 @@
 
-import React from 'react';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { BusinessHours, DayHours } from '../types/store';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Clock } from 'lucide-react';
+
+interface BusinessHours {
+  [key: string]: {
+    isOpen: boolean;
+    openTime: string;
+    closeTime: string;
+  };
+}
 
 interface BusinessHoursFormProps {
-  businessHours: BusinessHours;
+  hours: BusinessHours;
   onChange: (hours: BusinessHours) => void;
 }
 
-const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({ businessHours, onChange }) => {
+const BusinessHoursForm: React.FC<BusinessHoursFormProps> = ({ hours, onChange }) => {
   const days = [
-    'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
-  ] as const;
+    { key: 'monday', label: 'Monday' },
+    { key: 'tuesday', label: 'Tuesday' },
+    { key: 'wednesday', label: 'Wednesday' },
+    { key: 'thursday', label: 'Thursday' },
+    { key: 'friday', label: 'Friday' },
+    { key: 'saturday', label: 'Saturday' },
+    { key: 'sunday', label: 'Sunday' }
+  ];
 
-  const handleDayChange = (day: keyof BusinessHours, dayHours: DayHours | undefined) => {
+  const timeSlots = Array.from({ length: 24 * 4 }, (_, i) => {
+    const hour = Math.floor(i / 4);
+    const minute = (i % 4) * 15;
+    const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    const displayTime = new Date(`2000-01-01T${time}`).toLocaleTimeString([], { 
+      hour: 'numeric', 
+      minute: '2-digit' 
+    });
+    return { value: time, label: displayTime };
+  });
+
+  const handleDayToggle = (day: string, isOpen: boolean) => {
     onChange({
-      ...businessHours,
-      [day]: dayHours
+      ...hours,
+      [day]: {
+        ...hours[day],
+        isOpen
+      }
     });
   };
 
-  const handleTimeChange = (day: keyof BusinessHours, field: 'open' | 'close', value: string) => {
-    const currentDay = businessHours[day] || { open: '09:00', close: '17:00' };
-    handleDayChange(day, {
-      ...currentDay,
-      [field]: value,
-      closed: false
+  const handleTimeChange = (day: string, type: 'openTime' | 'closeTime', value: string) => {
+    onChange({
+      ...hours,
+      [day]: {
+        ...hours[day],
+        [type]: value
+      }
     });
-  };
-
-  const handleClosedToggle = (day: keyof BusinessHours, closed: boolean) => {
-    if (closed) {
-      handleDayChange(day, { open: '', close: '', closed: true });
-    } else {
-      handleDayChange(day, { open: '09:00', close: '17:00', closed: false });
-    }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="text-sm text-gray-600 mb-4">
-        Set your store's operating hours for each day of the week.
-      </div>
-      
-      {days.map(day => {
-        const dayHours = businessHours[day];
-        const isClosed = dayHours?.closed || false;
-        
-        return (
-          <div key={day} className="flex items-center gap-4 p-3 border rounded-lg">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="w-5 h-5" />
+          Business Hours
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {days.map(day => (
+          <div key={day.key} className="flex items-center space-x-4 p-3 border rounded-lg">
             <div className="w-20">
-              <Label className="capitalize font-medium">{day}</Label>
+              <Label className="font-medium">{day.label}</Label>
             </div>
             
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={isClosed}
-                onCheckedChange={(checked) => handleClosedToggle(day, checked as boolean)}
-              />
-              <Label className="text-sm">Closed</Label>
-            </div>
+            <Switch
+              checked={hours[day.key]?.isOpen || false}
+              onCheckedChange={(checked) => handleDayToggle(day.key, checked)}
+            />
             
-            {!isClosed && (
-              <div className="flex items-center gap-2 flex-1">
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">Open:</Label>
-                  <Input
-                    type="time"
-                    value={dayHours?.open || '09:00'}
-                    onChange={(e) => handleTimeChange(day, 'open', e.target.value)}
-                    className="w-24"
-                  />
-                </div>
+            {hours[day.key]?.isOpen && (
+              <div className="flex items-center space-x-2 flex-1">
+                <Select
+                  value={hours[day.key]?.openTime || '09:00'}
+                  onValueChange={(value) => handleTimeChange(day.key, 'openTime', value)}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map(slot => (
+                      <SelectItem key={slot.value} value={slot.value}>
+                        {slot.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">Close:</Label>
-                  <Input
-                    type="time"
-                    value={dayHours?.close || '17:00'}
-                    onChange={(e) => handleTimeChange(day, 'close', e.target.value)}
-                    className="w-24"
-                  />
-                </div>
+                <span className="text-gray-500">to</span>
+                
+                <Select
+                  value={hours[day.key]?.closeTime || '17:00'}
+                  onValueChange={(value) => handleTimeChange(day.key, 'closeTime', value)}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map(slot => (
+                      <SelectItem key={slot.value} value={slot.value}>
+                        {slot.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
+            
+            {!hours[day.key]?.isOpen && (
+              <span className="text-gray-500 flex-1">Closed</span>
+            )}
           </div>
-        );
-      })}
-    </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 };
 

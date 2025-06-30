@@ -1,108 +1,163 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
-import { Order } from '../types/order';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Eye, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import OrderStatusBadge from './OrderStatusBadge';
+
+interface Order {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_email: string;
+  store_name: string;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  pickup_time?: string;
+  items_count: number;
+}
 
 interface OrdersTableProps {
   orders: Order[];
-  onViewOrder: (order: Order) => void;
-  onStatusChange: (orderId: string, status: string) => void;
+  onViewDetails: (order: Order) => void;
+  onUpdateStatus: (orderId: string, status: string) => void;
 }
 
 const OrdersTable: React.FC<OrdersTableProps> = ({
   orders,
-  onViewOrder,
-  onStatusChange,
+  onViewDetails,
+  onUpdateStatus
 }) => {
+  const getNextStatus = (currentStatus: string) => {
+    switch (currentStatus) {
+      case 'pending':
+        return 'confirmed';
+      case 'confirmed':
+        return 'ready_for_pickup';
+      case 'ready_for_pickup':
+        return 'picked_up';
+      default:
+        return null;
+    }
+  };
+
+  const getStatusAction = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'Confirm Order';
+      case 'confirmed':
+        return 'Mark Ready';
+      case 'ready_for_pickup':
+        return 'Mark Picked Up';
+      default:
+        return null;
+    }
+  };
+
   return (
-    <Card>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Order ID</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Pickup Time</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                  No orders found
-                </TableCell>
-              </TableRow>
-            ) : (
-              orders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-mono text-sm">
-                    #{order.id.slice(0, 8)}
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{order.profiles?.name || 'Unknown'}</div>
-                      <div className="text-sm text-gray-500">{order.profiles?.email || 'No email'}</div>
+    <div className="border rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Order</TableHead>
+            <TableHead>Customer</TableHead>
+            <TableHead>Store</TableHead>
+            <TableHead>Items</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {orders.map((order) => (
+            <TableRow key={order.id}>
+              <TableCell>
+                <div>
+                  <div className="font-medium">#{order.order_number}</div>
+                  {order.pickup_time && (
+                    <div className="text-xs text-gray-500">
+                      Pickup: {new Date(order.pickup_time).toLocaleString()}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {order.order_items?.length || 0} item{(order.order_items?.length || 0) !== 1 ? 's' : ''}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {formatCurrency(order.total_amount || 0)}
-                  </TableCell>
-                  <TableCell>
-                    <OrderStatusBadge status={order.status} />
-                  </TableCell>
-                  <TableCell>
-                    {order.pickup_time ? 
-                      new Date(order.pickup_time).toLocaleString() : 
-                      'Not scheduled'
-                    }
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onViewOrder(order)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div>
+                  <div className="font-medium">{order.customer_name}</div>
+                  <div className="text-sm text-gray-500">{order.customer_email}</div>
+                </div>
+              </TableCell>
+              <TableCell>{order.store_name}</TableCell>
+              <TableCell>
+                <Badge variant="outline">{order.items_count} items</Badge>
+              </TableCell>
+              <TableCell>${order.total_amount.toFixed(2)}</TableCell>
+              <TableCell>
+                <OrderStatusBadge status={order.status} />
+              </TableCell>
+              <TableCell>
+                {new Date(order.created_at).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onViewDetails(order)}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="w-4 h-4" />
                       </Button>
-                      <Select
-                        value={order.status}
-                        onValueChange={(status) => onStatusChange(order.id, status)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="ready">Ready</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onViewDetails(order)}>
+                        View Details
+                      </DropdownMenuItem>
+                      {getNextStatus(order.status) && (
+                        <DropdownMenuItem
+                          onClick={() => onUpdateStatus(order.id, getNextStatus(order.status)!)}
+                        >
+                          {getStatusAction(order.status)}
+                        </DropdownMenuItem>
+                      )}
+                      {order.status !== 'cancelled' && (
+                        <DropdownMenuItem
+                          onClick={() => onUpdateStatus(order.id, 'cancelled')}
+                          className="text-red-600"
+                        >
+                          Cancel Order
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 

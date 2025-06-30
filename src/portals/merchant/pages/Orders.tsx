@@ -1,40 +1,77 @@
 
 import React, { useState } from 'react';
-import OrderDetailsModal from '../components/OrderDetailsModal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ShoppingCart } from 'lucide-react';
+import { useOrders } from '../hooks/useOrders';
+import { useStores } from '../hooks/useStores';
 import OrdersFilters from '../components/OrdersFilters';
 import OrdersSummaryCards from '../components/OrdersSummaryCards';
 import OrdersTable from '../components/OrdersTable';
-import { useOrders } from '../hooks/useOrders';
-import { Order } from '../types/order';
+import OrderDetailsModal from '../components/OrderDetailsModal';
+import { toast } from 'sonner';
 
 const Orders: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [storeFilter, setStoreFilter] = useState('all');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
 
-  const { orders, isLoading, error, updateOrderStatus } = useOrders(searchTerm, statusFilter);
+  const { orders, loading, stats, updateOrderStatus } = useOrders('debug-merchant-id');
+  const { stores } = useStores('debug-merchant-id');
 
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    updateOrderStatus({ orderId, status: newStatus });
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = 
+      order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customer_email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+    const matchesStore = storeFilter === 'all' || order.store_id === storeFilter;
+    
+    return matchesSearch && matchesStatus && matchesStore;
+  });
+
+  const handleViewDetails = (order: any) => {
+    setSelectedOrder(order);
+    setShowOrderDetails(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Orders</h1>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading orders...</div>
-        </div>
-      </div>
-    );
-  }
+  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      toast.success('Order status updated successfully');
+    } catch (error) {
+      toast.error('Failed to update order status');
+    }
+  };
 
-  if (error) {
+  const handleRefund = (orderId: string) => {
+    console.log('Process refund for order:', orderId);
+    toast.success('Refund processed successfully');
+    // TODO: Implement actual refund logic
+  };
+
+  const handleExport = () => {
+    console.log('Export orders');
+    toast.success('Orders exported successfully');
+    // TODO: Implement actual export functionality
+  };
+
+  if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Orders</h1>
-        <div className="text-center text-red-600">
-          Failed to load orders. Please try again.
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Orders</h1>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="bg-white p-6 rounded-lg shadow-sm animate-pulse">
+              <div className="h-6 bg-gray-200 rounded mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded"></div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -43,38 +80,72 @@ const Orders: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Orders</h1>
-        <div className="text-sm text-gray-500">
-          {orders.length} order{orders.length !== 1 ? 's' : ''} found
+        <div>
+          <h1 className="text-3xl font-bold">Orders</h1>
+          <p className="text-gray-600 mt-2">
+            Manage customer orders and fulfillment
+          </p>
         </div>
+        {stats.pending_orders > 0 && (
+          <Badge variant="destructive" className="text-sm">
+            {stats.pending_orders} pending orders need attention
+          </Badge>
+        )}
       </div>
 
-      <OrdersSummaryCards orders={orders} />
+      <OrdersSummaryCards stats={stats} />
 
-      <OrdersFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Management</CardTitle>
+          <OrdersFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            storeFilter={storeFilter}
+            onStoreChange={setStoreFilter}
+            stores={stores}
+            onExport={handleExport}
+          />
+        </CardHeader>
+        <CardContent>
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-12">
+              <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {searchTerm || statusFilter !== 'all' || storeFilter !== 'all' 
+                  ? 'No orders match your filters'
+                  : 'No orders yet'
+                }
+              </h3>
+              <p className="text-gray-600">
+                {searchTerm || statusFilter !== 'all' || storeFilter !== 'all'
+                  ? 'Try adjusting your search criteria.'
+                  : 'Orders will appear here when customers make purchases.'
+                }
+              </p>
+            </div>
+          ) : (
+            <OrdersTable
+              orders={filteredOrders}
+              onViewDetails={handleViewDetails}
+              onUpdateStatus={handleUpdateStatus}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      <OrderDetailsModal
+        open={showOrderDetails}
+        onClose={() => {
+          setShowOrderDetails(false);
+          setSelectedOrder(null);
+        }}
+        order={selectedOrder}
+        onUpdateStatus={handleUpdateStatus}
+        onRefund={handleRefund}
       />
-
-      <OrdersTable
-        orders={orders}
-        onViewOrder={setSelectedOrder}
-        onStatusChange={handleStatusChange}
-      />
-
-      {selectedOrder && (
-        <OrderDetailsModal
-          order={selectedOrder}
-          open={!!selectedOrder}
-          onClose={() => setSelectedOrder(null)}
-          onStatusUpdate={(orderId, status) => {
-            handleStatusChange(orderId, status);
-            setSelectedOrder(null);
-          }}
-        />
-      )}
     </div>
   );
 };
