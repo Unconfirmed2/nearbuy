@@ -60,25 +60,24 @@ const ConsumerApp: React.FC<ConsumerAppProps> = ({ user: propUser, profile: prop
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
         
         {/* Protected routes - require authentication */}
-        {user ? (
-          <>
-            <Route path="/profile" element={<Profile user={user} profile={profile} />} />
-            <Route path="/addresses" element={<Addresses />} />
-            <Route path="/payment-methods" element={<PaymentMethods />} />
-            <Route path="/orders" element={<OrderHistory />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          </>
-        ) : (
-          <>
-            <Route path="/profile" element={<Navigate to="/consumer/auth" replace />} />
-            <Route path="/addresses" element={<Navigate to="/consumer/auth" replace />} />
-            <Route path="/payment-methods" element={<Navigate to="/consumer/auth" replace />} />
-            <Route path="/orders" element={<Navigate to="/consumer/auth" replace />} />
-            <Route path="/checkout" element={<Navigate to="/consumer/auth" replace />} />
-            <Route path="/order-confirmation" element={<Navigate to="/consumer/auth" replace />} />
-          </>
-        )}
+        <Route path="/profile" element={
+          user ? <Profile user={user} profile={profile} /> : <Navigate to="/consumer/auth" replace />
+        } />
+        <Route path="/addresses" element={
+          user ? <Addresses /> : <Navigate to="/consumer/auth" replace />
+        } />
+        <Route path="/payment-methods" element={
+          user ? <PaymentMethods /> : <Navigate to="/consumer/auth" replace />
+        } />
+        <Route path="/orders" element={
+          user ? <OrderHistory /> : <Navigate to="/consumer/auth" replace />
+        } />
+        <Route path="/checkout" element={
+          user ? <Checkout /> : <Navigate to="/consumer/auth" replace />
+        } />
+        <Route path="/order-confirmation" element={
+          user ? <OrderConfirmation /> : <Navigate to="/consumer/auth" replace />
+        } />
       </Routes>
     </ConsumerLayout>
   );
