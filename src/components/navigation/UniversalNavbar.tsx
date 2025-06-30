@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -122,8 +121,8 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
             </span>
           </Link>
 
-          {/* Location and Travel Filter - Desktop */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Location and Travel Filter - Desktop Only */}
+          <div className="hidden lg:flex items-center gap-2">
             <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
               <PopoverTrigger asChild>
                 <div className="relative">

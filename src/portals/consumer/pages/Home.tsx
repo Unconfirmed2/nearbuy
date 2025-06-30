@@ -4,11 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { MapPin, Clock, Star, Heart, ShoppingCart, Search } from 'lucide-react';
+import { MapPin, Clock, Star, Heart, ShoppingCart, Search, Navigation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { addToBasket, addToFavorites } from '@/utils/localStorage';
 import { toast } from 'sonner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Home: React.FC = () => {
   const [featuredProducts] = useState([
@@ -47,6 +53,15 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState('products');
+  
+  // Mobile location and filter states
+  const [locationValue, setLocationValue] = useState('');
+  const [isLocationPopoverOpen, setIsLocationPopoverOpen] = useState(false);
+  const [travelFilter, setTravelFilter] = useState<TravelFilterValue>({
+    mode: 'driving',
+    type: 'distance',
+    value: 5
+  });
 
   const handleAddToCart = (product: any) => {
     addToBasket({
@@ -75,6 +90,32 @@ const Home: React.FC = () => {
       return;
     }
     navigate(`/search?q=${encodeURIComponent(searchQuery)}&type=${searchType}`);
+  };
+
+  const handleLocationSelect = (selectedLocation: string) => {
+    setLocationValue(selectedLocation);
+    setIsLocationPopoverOpen(false);
+    toast.success('Location updated!');
+  };
+
+  const handleUseMyLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          setLocationValue(locationString);
+          setIsLocationPopoverOpen(false);
+          toast.success('Location updated to your current position!');
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          toast.error('Unable to get your location. Please enter manually.');
+        }
+      );
+    } else {
+      toast.error('Geolocation is not supported by this browser.');
+    }
   };
 
   return (
@@ -121,6 +162,101 @@ const Home: React.FC = () => {
           <Button onClick={handleSearch} className="ml-2">
             Search
           </Button>
+        </div>
+
+        {/* Mobile Location and Filter Section - Only visible on mobile */}
+        <div className="lg:hidden space-y-3">
+          <div className="flex items-center gap-2">
+            <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
+              <PopoverTrigger asChild>
+                <div className="relative flex-1">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Input
+                    placeholder="Set your location"
+                    value={locationValue}
+                    onChange={(e) => setLocationValue(e.target.value)}
+                    className="pl-10 cursor-pointer text-sm"
+                    readOnly
+                    onClick={() => setIsLocationPopoverOpen(true)}
+                  />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4" align="end">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Enter your location</h4>
+                  
+                  <Button
+                    onClick={handleUseMyLocation}
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Use My Current Location
+                  </Button>
+                  
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">
+                        Or enter manually
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <Input
+                    placeholder="Type your address..."
+                    value={locationValue}
+                    onChange={(e) => setLocationValue(e.target.value)}
+                    className="w-full"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && locationValue.trim()) {
+                        handleLocationSelect(locationValue);
+                      }
+                    }}
+                  />
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Popular locations:</p>
+                    <div className="space-y-1">
+                      {[
+                        'Downtown',
+                        'Main Street',
+                        'Shopping District',
+                        'University Area'
+                      ].map((popularLocation) => (
+                        <Button
+                          key={popularLocation}
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-left"
+                          onClick={() => handleLocationSelect(popularLocation)}
+                        >
+                          <MapPin className="h-4 w-4 mr-2" />
+                          {popularLocation}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                  {locationValue.trim() && (
+                    <Button
+                      onClick={() => handleLocationSelect(locationValue)}
+                      className="w-full"
+                    >
+                      Use "{locationValue}"
+                    </Button>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          <div className="flex justify-center">
+            <TravelFilter 
+              value={travelFilter}
+              onChange={setTravelFilter}
+            />
+          </div>
         </div>
       </div>
 
