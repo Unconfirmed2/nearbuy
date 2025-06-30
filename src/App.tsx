@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
@@ -74,7 +75,7 @@ export default function App() {
         </div>
 
         <Routes>
-          {/* Root redirect to consumer portal */}
+          {/* Root redirect to consumer portal (landing page) */}
           <Route path="/" element={<Navigate to="/consumer" replace />} />
           
           {/* Keep original landing page for reference but don't link to it */}
@@ -88,9 +89,13 @@ export default function App() {
             <Route path="signup/merchant" element={<MerchantSignUp />} />
           </Route>
 
-          {/* Portal routes - now accessible without authentication in debug mode */}
+          {/* Portal routes - consumer portal is now the main landing experience */}
           <Route path="/consumer/*" element={<ConsumerApp user={mockUser} profile={mockProfile} />} />
+          
+          {/* Merchant portal - accessible without authentication for demo/onboarding */}
           <Route path="/merchant/*" element={<MerchantApp user={mockUser} profile={mockProfile} />} />
+          
+          {/* Admin portal */}
           <Route path="/admin/*" element={<AdminApp user={mockUser} profile={mockProfile} />} />
           
           {/* Dashboard route - redirect based on current debug role */}

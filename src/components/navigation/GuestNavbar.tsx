@@ -6,9 +6,10 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { Menu, ChevronDown, HelpCircle } from 'lucide-react';
+import { Menu, ChevronDown, HelpCircle, Store, User } from 'lucide-react';
 import { 
   Sheet, 
   SheetContent, 
@@ -45,13 +46,32 @@ const GuestNavbar: React.FC = () => {
               <HelpCircle className="h-4 w-4 mr-1" />
               Help Center
             </Link>
+            {/* Merchant Portal Link */}
+            <Link to="/merchant" className="text-gray-700 hover:text-green-600 transition-colors flex items-center">
+              <Store className="h-4 w-4 mr-1" />
+              For Merchants
+            </Link>
           </div>
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link to="/consumer/auth">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>
+                  <Link to="/consumer/auth" className="w-full">Consumer Sign In</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link to="/merchant" className="w-full">Merchant Portal</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button className="bg-blue-600 hover:bg-blue-700">
@@ -62,8 +82,12 @@ const GuestNavbar: React.FC = () => {
                 <DropdownMenuItem>
                   <Link to="/consumer/auth" className="w-full">Sign Up as Consumer</Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Link to="/auth/signup/merchant" className="w-full">Sign Up as Merchant</Link>
+                  <Link to="/merchant" className="w-full flex items-center">
+                    <Store className="h-4 w-4 mr-2" />
+                    Merchant Portal
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -86,15 +110,23 @@ const GuestNavbar: React.FC = () => {
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Help Center
                   </Link>
+                  <Link to="/merchant" className="text-lg font-medium flex items-center text-green-600">
+                    <Store className="h-4 w-4 mr-2" />
+                    For Merchants
+                  </Link>
+                  
                   <div className="border-t pt-4 space-y-2">
                     <Link to="/consumer/auth" className="block">
-                      <Button variant="outline" className="w-full">Sign In</Button>
+                      <Button variant="outline" className="w-full">Consumer Sign In</Button>
                     </Link>
                     <Link to="/consumer/auth" className="block">
                       <Button className="w-full bg-blue-600 hover:bg-blue-700">Sign Up as Consumer</Button>
                     </Link>
-                    <Link to="/auth/signup/merchant" className="block">
-                      <Button variant="outline" className="w-full">Sign Up as Merchant</Button>
+                    <Link to="/merchant" className="block">
+                      <Button variant="outline" className="w-full flex items-center justify-center">
+                        <Store className="h-4 w-4 mr-2" />
+                        Merchant Portal
+                      </Button>
                     </Link>
                   </div>
                 </div>

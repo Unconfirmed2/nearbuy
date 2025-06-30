@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Search, Clock, Star, Heart, ShoppingCart } from 'lucide-react';
+import { MapPin, Search, Clock, Star, Heart, ShoppingCart, Store, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
 import { addToBasket, addToFavorites } from '@/utils/localStorage';
@@ -19,7 +19,6 @@ const Home: React.FC = () => {
     value: 5
   });
   
-  // Reduced number of featured products for better performance
   const [featuredProducts] = useState([
     {
       id: 1,
@@ -56,7 +55,6 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Try to get user's location on load
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -116,52 +114,86 @@ const Home: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Hero Search Section */}
+      {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg">
-        <div className="max-w-2xl mx-auto text-center space-y-6">
-          <h1 className="text-3xl font-bold">Find Products Near You</h1>
-          <p className="text-lg opacity-90">Search local stores and plan your pickup route</p>
-          
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="What are you looking for?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="text-gray-900"
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <Button onClick={handleSearch} className="bg-white text-blue-600 hover:bg-gray-100">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Button>
-            </div>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center space-y-6">
+            <h1 className="text-4xl font-bold">Welcome to NearBuy</h1>
+            <p className="text-xl opacity-90">Discover local products and plan your pickup route</p>
             
-            <div className="flex gap-2 items-center">
-              <div className="flex-1 flex gap-2">
+            {/* Search Section */}
+            <div className="space-y-4 max-w-2xl mx-auto">
+              <div className="flex gap-2">
                 <Input
-                  placeholder="Enter location or ZIP code"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="What are you looking for?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="text-gray-900"
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                <Button 
-                  onClick={handleGetLocation}
-                  variant="outline"
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                >
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Use My Location
+                <Button onClick={handleSearch} className="bg-white text-blue-600 hover:bg-gray-100">
+                  <Search className="h-4 w-4 mr-2" />
+                  Search
                 </Button>
               </div>
+              
+              <div className="flex gap-2 items-center">
+                <div className="flex-1 flex gap-2">
+                  <Input
+                    placeholder="Enter location or ZIP code"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="text-gray-900"
+                  />
+                  <Button 
+                    onClick={handleGetLocation}
+                    variant="outline"
+                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                  >
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Use My Location
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex justify-center">
+                <TravelFilter 
+                  value={travelFilter}
+                  onChange={setTravelFilter}
+                />
+              </div>
             </div>
+          </div>
+
+          {/* Call-to-Action for Different User Types */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardContent className="p-6 text-center">
+                <Users className="h-12 w-12 text-white mx-auto mb-3" />
+                <h3 className="text-xl font-semibold mb-2">For Shoppers</h3>
+                <p className="text-white/80 mb-4">Find local products and plan efficient pickup routes</p>
+                <Button 
+                  onClick={() => navigate('/consumer/search')}
+                  className="bg-white text-blue-600 hover:bg-gray-100"
+                >
+                  Start Shopping
+                </Button>
+              </CardContent>
+            </Card>
             
-            <div className="flex justify-center">
-              <TravelFilter 
-                value={travelFilter}
-                onChange={setTravelFilter}
-              />
-            </div>
+            <Card className="bg-white/10 backdrop-blur-sm border-white/20">
+              <CardContent className="p-6 text-center">
+                <Store className="h-12 w-12 text-white mx-auto mb-3" />
+                <h3 className="text-xl font-semibold mb-2">For Merchants</h3>
+                <p className="text-white/80 mb-4">List your products and reach local customers</p>
+                <Button 
+                  onClick={() => navigate('/merchant')}
+                  className="bg-green-600 text-white hover:bg-green-700"
+                >
+                  Merchant Portal
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
@@ -184,11 +216,11 @@ const Home: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/consumer/orders')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/consumer/support')}>
           <CardContent className="p-6 text-center">
             <Clock className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-            <h3 className="font-semibold">Order History</h3>
-            <p className="text-sm text-gray-600">View past orders and reorder</p>
+            <h3 className="font-semibold">Support</h3>
+            <p className="text-sm text-gray-600">Get help and support</p>
           </CardContent>
         </Card>
       </div>
