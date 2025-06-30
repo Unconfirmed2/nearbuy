@@ -1,30 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Search, Clock, Star, Heart, ShoppingCart, Navigation } from 'lucide-react';
+import { MapPin, Clock, Star, Heart, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
 import { addToBasket, addToFavorites } from '@/utils/localStorage';
 import { toast } from 'sonner';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 const Home: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [location, setLocation] = useState('');
-  const [isLocationPopoverOpen, setIsLocationPopoverOpen] = useState(false);
-  const [travelFilter, setTravelFilter] = useState<TravelFilterValue>({
-    mode: 'driving',
-    type: 'distance',
-    value: 5
-  });
-  
   const [featuredProducts] = useState([
     {
       id: 1,
@@ -60,41 +44,6 @@ const Home: React.FC = () => {
   
   const navigate = useNavigate();
 
-  const handleSearch = () => {
-    if (!searchQuery.trim()) {
-      toast.error('Please enter a search term');
-      return;
-    }
-    navigate(`/consumer/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(location)}`);
-  };
-
-  const handleLocationSelect = (selectedLocation: string) => {
-    setLocation(selectedLocation);
-    setIsLocationPopoverOpen(false);
-    toast.success('Location updated!');
-  };
-
-  const handleUseMyLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          // For now, we'll use coordinates format until we have reverse geocoding
-          const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-          setLocation(locationString);
-          setIsLocationPopoverOpen(false);
-          toast.success('Location updated to your current position!');
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          toast.error('Unable to get your location. Please enter manually.');
-        }
-      );
-    } else {
-      toast.error('Geolocation is not supported by this browser.');
-    }
-  };
-
   const handleAddToCart = (product: any) => {
     addToBasket({
       productId: product.id,
@@ -117,123 +66,12 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 container mx-auto px-4 py-8">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center space-y-6">
-            <h1 className="text-4xl font-bold">Welcome to NearBuy</h1>
-            <p className="text-xl opacity-90">Discover local products and plan your pickup route</p>
-            
-            {/* Search Section */}
-            <div className="space-y-4 max-w-2xl mx-auto">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="What are you looking for?"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="text-gray-900"
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <Button onClick={handleSearch} className="bg-white text-blue-600 hover:bg-gray-100">
-                  <Search className="h-4 w-4 mr-2" />
-                  Search
-                </Button>
-              </div>
-              
-              <div className="flex gap-2 items-center">
-                <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <div className="flex-1 flex gap-2 items-center">
-                      <div className="relative flex-1">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                        <Input
-                          placeholder="Enter address or ZIP code"
-                          value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                          className="text-gray-900 pl-10 cursor-pointer"
-                          readOnly
-                          onClick={() => setIsLocationPopoverOpen(true)}
-                        />
-                      </div>
-                      <TravelFilter 
-                        value={travelFilter}
-                        onChange={setTravelFilter}
-                      />
-                    </div>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-4" align="start">
-                    <div className="space-y-4">
-                      <h4 className="font-medium text-gray-900">Enter your location</h4>
-                      
-                      {/* Use My Location Button */}
-                      <Button
-                        onClick={handleUseMyLocation}
-                        variant="outline"
-                        className="w-full justify-start"
-                      >
-                        <Navigation className="h-4 w-4 mr-2" />
-                        Use My Current Location
-                      </Button>
-                      
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-white px-2 text-muted-foreground">
-                            Or enter manually
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <Input
-                        placeholder="Type your address..."
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="w-full"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter' && location.trim()) {
-                            handleLocationSelect(location);
-                          }
-                        }}
-                      />
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-600">Popular locations:</p>
-                        <div className="space-y-1">
-                          {[
-                            'Downtown',
-                            'Main Street',
-                            'Shopping District',
-                            'University Area'
-                          ].map((popularLocation) => (
-                            <Button
-                              key={popularLocation}
-                              variant="ghost"
-                              size="sm"
-                              className="w-full justify-start text-left"
-                              onClick={() => handleLocationSelect(popularLocation)}
-                            >
-                              <MapPin className="h-4 w-4 mr-2" />
-                              {popularLocation}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                      {location.trim() && (
-                        <Button
-                          onClick={() => handleLocationSelect(location)}
-                          className="w-full"
-                        >
-                          Use "{location}"
-                        </Button>
-                      )}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </div>
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl font-bold mb-4">Find products you want NearBuy</h1>
+          <p className="text-xl opacity-90">Discover local products and plan your pickup route</p>
         </div>
       </div>
 

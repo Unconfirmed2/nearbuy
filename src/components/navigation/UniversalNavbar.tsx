@@ -31,13 +31,21 @@ import {
   Star,
   History,
   Gift,
-  Shield
+  Shield,
+  Navigation
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
 import { getBasket } from '@/utils/localStorage';
 import { toast } from 'sonner';
 import { useAuth } from '@/portals/consumer/hooks/useAuth';
+import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface UniversalNavbarProps {
   user?: User | null;
@@ -55,6 +63,15 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
   const user = propUser;
   const profile = propProfile;
 
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [locationValue, setLocationValue] = React.useState('');
+  const [isLocationPopoverOpen, setIsLocationPopoverOpen] = React.useState(false);
+  const [travelFilter, setTravelFilter] = React.useState<TravelFilterValue>({
+    mode: 'driving',
+    type: 'distance',
+    value: 5
+  });
+
   const handleSignOut = async () => {
     await signOut();
     toast.success('Signed out successfully');
@@ -65,21 +82,48 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
     navigate('/consumer/auth');
   };
 
-  const isActivePath = (path: string) => location.pathname === path;
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      toast.error('Please enter a search term');
+      return;
+    }
+    navigate(`/consumer/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(locationValue)}`);
+  };
 
-  const navigationItems = [
-    { path: '/consumer', label: 'Home', icon: Home },
-    { path: '/consumer/search', label: 'Search', icon: Search },
-    { path: '/consumer/route-planner', label: 'Route Planner', icon: Route },
-    { path: '/consumer/support', label: 'Support', icon: HelpCircle },
-  ];
+  const handleLocationSelect = (selectedLocation: string) => {
+    setLocationValue(selectedLocation);
+    setIsLocationPopoverOpen(false);
+    toast.success('Location updated!');
+  };
+
+  const handleUseMyLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          setLocationValue(locationString);
+          setIsLocationPopoverOpen(false);
+          toast.success('Location updated to your current position!');
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          toast.error('Unable to get your location. Please enter manually.');
+        }
+      );
+    } else {
+      toast.error('Geolocation is not supported by this browser.');
+    }
+  };
+
+  const isActivePath = (path: string) => location.pathname === path;
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/consumer" className="flex items-center space-x-3">
+          <Link to="/consumer" className="flex items-center space-x-3 shrink-0">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-sm">NB</span>
             </div>
@@ -88,22 +132,113 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors ${
-                  isActivePath(item.path)
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
-                }`}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
+          {/* Search and Location - Desktop */}
+          <div className="hidden md:flex items-center flex-1 max-w-2xl mx-6 gap-2">
+            {/* Search Bar */}
+            <div className="relative flex items-center bg-white rounded-lg shadow-sm border p-2 flex-1">
+              <Search className="w-4 h-4 text-gray-400 ml-1" />
+              <Input
+                placeholder="Find products you want NearBuy"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 border-none bg-transparent placeholder:text-gray-400 focus-visible:ring-0"
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Button onClick={handleSearch} size="sm" className="ml-1">
+                Search
+              </Button>
+            </div>
+
+            {/* Location and Travel Filter */}
+            <div className="flex items-center gap-2">
+              <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <Input
+                      placeholder="Location"
+                      value={locationValue}
+                      onChange={(e) => setLocationValue(e.target.value)}
+                      className="w-32 pl-10 cursor-pointer text-sm"
+                      readOnly
+                      onClick={() => setIsLocationPopoverOpen(true)}
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4" align="end">
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-900">Enter your location</h4>
+                    
+                    <Button
+                      onClick={handleUseMyLocation}
+                      variant="outline"
+                      className="w-full justify-start"
+                    >
+                      <Navigation className="h-4 w-4 mr-2" />
+                      Use My Current Location
+                    </Button>
+                    
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-muted-foreground">
+                          Or enter manually
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <Input
+                      placeholder="Type your address..."
+                      value={locationValue}
+                      onChange={(e) => setLocationValue(e.target.value)}
+                      className="w-full"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && locationValue.trim()) {
+                          handleLocationSelect(locationValue);
+                        }
+                      }}
+                    />
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">Popular locations:</p>
+                      <div className="space-y-1">
+                        {[
+                          'Downtown',
+                          'Main Street',
+                          'Shopping District',
+                          'University Area'
+                        ].map((popularLocation) => (
+                          <Button
+                            key={popularLocation}
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-left"
+                            onClick={() => handleLocationSelect(popularLocation)}
+                          >
+                            <MapPin className="h-4 w-4 mr-2" />
+                            {popularLocation}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    {locationValue.trim() && (
+                      <Button
+                        onClick={() => handleLocationSelect(locationValue)}
+                        className="w-full"
+                      >
+                        Use "{locationValue}"
+                      </Button>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <TravelFilter 
+                value={travelFilter}
+                onChange={setTravelFilter}
+              />
+            </div>
           </div>
           
           {/* Desktop Actions */}
@@ -144,14 +279,12 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80 p-0">
-                  {/* Sign In Section */}
                   <div className="p-4 bg-blue-50 border-b">
                     <div className="text-sm font-medium text-gray-900">Signed in as</div>
                     <div className="text-xs text-gray-600">{user?.email}</div>
                   </div>
 
                   <div className="flex">
-                    {/* Your Account Column */}
                     <div className="flex-1 p-4 border-r">
                       <DropdownMenuLabel className="text-sm font-semibold text-gray-900 px-0 pb-2">
                         Your Account
@@ -187,22 +320,28 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/profile')}
+                          onClick={() => navigate('/consumer/route-planner')}
                         >
-                          <Settings className="h-4 w-4 mr-2" />
-                          Account Settings
+                          <Route className="h-4 w-4 mr-2" />
+                          Route Planner
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/support')}
+                        >
+                          <HelpCircle className="h-4 w-4 mr-2" />
+                          Support
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
                           onClick={() => navigate('/consumer/profile')}
                         >
-                          <Shield className="h-4 w-4 mr-2" />
-                          Security Settings
+                          <Settings className="h-4 w-4 mr-2" />
+                          Account Settings
                         </DropdownMenuItem>
                       </div>
                     </div>
 
-                    {/* Your Lists Column */}
                     <div className="flex-1 p-4">
                       <DropdownMenuLabel className="text-sm font-semibold text-gray-900 px-0 pb-2">
                         Your Lists
@@ -243,13 +382,6 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                           <Star className="h-4 w-4 mr-2" />
                           Your Reviews
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/consumer/support')}
-                        >
-                          <HelpCircle className="h-4 w-4 mr-2" />
-                          Customer Service
-                        </DropdownMenuItem>
                       </div>
                     </div>
                   </div>
@@ -283,14 +415,12 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80 p-0">
-                  {/* Sign In Section */}
                   <div className="p-4 bg-blue-50 border-b">
-                    <div className="text-sm font-medium text-gray-900">Welcome to NearBuy</div>
+                    <div className="text-sm font-medium text-gray-900">Find products you want NearBuy</div>
                     <div className="text-xs text-gray-600">Sign in to access your account</div>
                   </div>
 
                   <div className="flex">
-                    {/* Sign In Column */}
                     <div className="flex-1 p-4 border-r">
                       <DropdownMenuLabel className="text-sm font-semibold text-gray-900 px-0 pb-2">
                         Your Account
@@ -312,15 +442,21 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="px-0 py-1 text-sm cursor-pointer"
+                          onClick={() => navigate('/consumer/route-planner')}
+                        >
+                          <Route className="h-4 w-4 mr-2" />
+                          Route Planner
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="px-0 py-1 text-sm cursor-pointer"
                           onClick={() => navigate('/consumer/support')}
                         >
                           <HelpCircle className="h-4 w-4 mr-2" />
-                          Customer Service
+                          Support
                         </DropdownMenuItem>
                       </div>
                     </div>
 
-                    {/* Guest Lists Column */}
                     <div className="flex-1 p-4">
                       <DropdownMenuLabel className="text-sm font-semibold text-gray-900 px-0 pb-2">
                         Your Lists
@@ -381,28 +517,38 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-8">
-                  {/* Navigation Items */}
-                  {navigationItems.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
-                        isActivePath(item.path)
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span className="text-lg font-medium">{item.label}</span>
-                    </Link>
-                  ))}
-                  
+                  {/* Mobile Search */}
+                  <div className="space-y-2">
+                    <div className="relative flex items-center bg-white rounded-lg shadow-sm border p-2">
+                      <Search className="w-4 h-4 text-gray-400 ml-1" />
+                      <Input
+                        placeholder="Find products you want NearBuy"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="flex-1 border-none bg-transparent placeholder:text-gray-400 focus-visible:ring-0"
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                      />
+                    </div>
+                    <Button onClick={handleSearch} className="w-full">
+                      Search
+                    </Button>
+                  </div>
+
                   <Link to="/consumer/favorites" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
                     <Heart className="h-5 w-5" />
                     <span className="text-lg font-medium">Favorites</span>
                   </Link>
 
-                  {/* Merchant Portal Link */}
+                  <Link to="/consumer/route-planner" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                    <Route className="h-5 w-5" />
+                    <span className="text-lg font-medium">Route Planner</span>
+                  </Link>
+
+                  <Link to="/consumer/support" className="flex items-center space-x-3 px-3 py-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-100">
+                    <HelpCircle className="h-5 w-5" />
+                    <span className="text-lg font-medium">Support</span>
+                  </Link>
+
                   <Link to="/merchant" className="flex items-center space-x-3 px-3 py-2 rounded-md text-green-600 hover:text-green-700 hover:bg-green-50">
                     <Store className="h-5 w-5" />
                     <span className="text-lg font-medium">Merchant Portal</span>

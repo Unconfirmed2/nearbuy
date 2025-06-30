@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MapPin, Search, Filter, Star, Clock, Navigation, Menu, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -228,7 +227,7 @@ const Index = () => {
       <section className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="max-w-4xl mx-auto text-center mb-8">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Discover products at nearby stores with our NB score that combines price and proximity for the best deals.
+            Find products you want NearBuy with our NB score that combines price and proximity for the best deals.
           </h2>
         </div>
       </section>
