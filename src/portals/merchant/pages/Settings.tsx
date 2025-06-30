@@ -35,6 +35,16 @@ const Settings: React.FC = () => {
     }
   ]);
 
+  // Mock merchant profile data
+  const mockProfile = {
+    name: 'Debug Merchant',
+    email: 'merchant@example.com',
+    phone: '+1-555-0123',
+    business_name: 'Debug Store',
+    business_description: 'A test store for debugging purposes',
+    business_address: '123 Main St, City, State 12345'
+  };
+
   const handleSaveNotifications = (preferences: any) => {
     setNotificationPreferences(preferences);
     console.log('Notification preferences saved:', preferences);
@@ -79,7 +89,10 @@ const Settings: React.FC = () => {
         </TabsList>
 
         <TabsContent value="general">
-          <MerchantSettings />
+          <MerchantSettings
+            merchantId="debug-merchant-id"
+            profile={mockProfile}
+          />
         </TabsContent>
 
         <TabsContent value="notifications">
