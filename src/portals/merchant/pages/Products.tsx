@@ -1,12 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Package } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Package, Upload } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
 import DuplicateProductDialog from '../components/DuplicateProductDialog';
+import BulkProductUpload from '../components/BulkProductUpload';
+import InventoryManager from '../components/InventoryManager';
 import { toast } from 'sonner';
 
 const Products: React.FC = () => {
@@ -176,47 +180,71 @@ const Products: React.FC = () => {
             Manage your product catalog and inventory
           </p>
         </div>
-        <Button onClick={() => setShowCreateProduct(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Product
-        </Button>
-      </div>
-
-      <ProductFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        categoryFilter={categoryFilter}
-        onCategoryChange={setCategoryFilter}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-      />
-
-      {filteredProducts.length === 0 ? (
-        <div className="text-center py-12">
-          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-          <p className="text-gray-600 mb-6">
-            Add your first product to start selling to customers.
-          </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => {}}>
+            <Upload className="w-4 h-4 mr-2" />
+            Bulk Upload
+          </Button>
           <Button onClick={() => setShowCreateProduct(true)}>
             <Plus className="w-4 h-4 mr-2" />
-            Create Your First Product
+            Add Product
           </Button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map(product => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onEdit={handleEdit}
-              onDuplicate={handleDuplicate}
-              onDelete={handleDelete}
-              onToggleStatus={handleToggleStatus}
-            />
-          ))}
-        </div>
-      )}
+      </div>
+
+      <Tabs defaultValue="products" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="inventory">Inventory</TabsTrigger>
+          <TabsTrigger value="bulk-upload">Bulk Upload</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="products" className="space-y-6">
+          <ProductFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            categoryFilter={categoryFilter}
+            onCategoryChange={setCategoryFilter}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+          />
+
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+              <p className="text-gray-600 mb-6">
+                Add your first product to start selling to customers.
+              </p>
+              <Button onClick={() => setShowCreateProduct(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Product
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredProducts.map(product => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onEdit={handleEdit}
+                  onDuplicate={handleDuplicate}
+                  onDelete={handleDelete}
+                  onToggleStatus={handleToggleStatus}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="inventory">
+          <InventoryManager merchantId="debug-merchant-id" />
+        </TabsContent>
+
+        <TabsContent value="bulk-upload">
+          <BulkProductUpload merchantId="debug-merchant-id" />
+        </TabsContent>
+      </Tabs>
 
       <ProductForm
         open={showCreateProduct}

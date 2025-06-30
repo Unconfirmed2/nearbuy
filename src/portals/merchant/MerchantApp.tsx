@@ -12,6 +12,7 @@ import Marketing from './pages/Marketing';
 import Settings from './pages/Settings';
 import Integrations from './pages/Integrations';
 import Support from './pages/Support';
+import Reviews from './pages/Reviews';
 
 interface MerchantAppProps {
   user?: User | null;
@@ -44,6 +45,7 @@ const MerchantApp: React.FC<MerchantAppProps> = ({ user, profile }) => {
         <Route path="analytics" element={<Analytics />} />
         <Route path="marketing" element={<Marketing />} />
         <Route path="integrations" element={<Integrations />} />
+        <Route path="reviews" element={<Reviews />} />
         <Route path="settings" element={<Settings />} />
         <Route path="support" element={<Support />} />
       </Routes>
