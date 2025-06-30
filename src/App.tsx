@@ -83,32 +83,20 @@ export default function App() {
             <Route path="signup/merchant" element={<MerchantSignUp />} />
           </Route>
 
-          {/* Debug mode routes - accessible without real authentication */}
-          <Route path="/consumer/*" element={
-            mockUser && mockProfile ? 
-              <ConsumerApp user={mockUser} profile={mockProfile} /> : 
-              <Navigate to="/auth/signin" replace />
-          } />
-          <Route path="/merchant/*" element={
-            mockUser && mockProfile ? 
-              <MerchantApp user={mockUser} profile={mockProfile} /> : 
-              <Navigate to="/auth/signin" replace />
-          } />
-          <Route path="/admin/*" element={
-            mockUser && mockProfile ? 
-              <AdminApp user={mockUser} profile={mockProfile} /> : 
-              <Navigate to="/auth/signin" replace />
-          } />
+          {/* Portal routes - now accessible without authentication in debug mode */}
+          <Route path="/consumer/*" element={<ConsumerApp user={mockUser} profile={mockProfile} />} />
+          <Route path="/merchant/*" element={<MerchantApp user={mockUser} profile={mockProfile} />} />
+          <Route path="/admin/*" element={<AdminApp user={mockUser} profile={mockProfile} />} />
           
           {/* Redirect to appropriate portal based on role */}
           <Route path="/dashboard" element={
             mockProfile ? 
               <Navigate to={getPortalRoute(mockProfile)} replace /> : 
-              <Navigate to="/auth/signin" replace />
+              <Navigate to="/" replace />
           } />
         </Routes>
         <Toaster />
       </div>
     </BrowserRouter>
   );
-}
+};

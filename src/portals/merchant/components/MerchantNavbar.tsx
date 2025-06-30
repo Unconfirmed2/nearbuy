@@ -2,7 +2,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
@@ -23,9 +22,9 @@ const MerchantNavbar: React.FC<MerchantNavbarProps> = ({ user, profile }) => {
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    // In debug mode, just navigate to home instead of actual sign out
     toast.success('Signed out successfully');
-    navigate('/auth/signin');
+    navigate('/');
   };
 
   return (

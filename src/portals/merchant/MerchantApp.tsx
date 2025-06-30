@@ -10,13 +10,28 @@ import Orders from './pages/Orders';
 import Analytics from './pages/Analytics';
 
 interface MerchantAppProps {
-  user: User;
-  profile: any;
+  user?: User | null;
+  profile?: any;
 }
 
 const MerchantApp: React.FC<MerchantAppProps> = ({ user, profile }) => {
+  // Provide default mock data if not provided
+  const mockUser = user || {
+    id: 'debug-merchant-id',
+    email: 'merchant@example.com',
+    user_metadata: { role: 'store_owner' }
+  } as any;
+
+  const mockProfile = profile || {
+    id: 'debug-merchant-id',
+    email: 'merchant@example.com',
+    name: 'Debug Merchant',
+    role: 'store_owner',
+    avatar_url: null
+  };
+
   return (
-    <MerchantLayout user={user} profile={profile}>
+    <MerchantLayout user={mockUser} profile={mockProfile}>
       <Routes>
         <Route index element={<Dashboard />} />
         <Route path="stores" element={<Stores />} />
