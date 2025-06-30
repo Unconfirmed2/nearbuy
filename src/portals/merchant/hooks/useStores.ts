@@ -1,25 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-
-interface Store {
-  id: string;
-  name: string;
-  address: string;
-  phone?: string;
-  description?: string;
-  business_name?: string;
-  business_type?: string;
-  tax_id?: string;
-  is_active: boolean;
-  is_verified: boolean;
-  created_at: string;
-  merchant_id: string;
-  business_hours?: any;
-  social_media?: any;
-  latitude?: number;
-  longitude?: number;
-}
+import { Store } from '../types/store';
 
 export const useStores = (merchantId: string) => {
   const [stores, setStores] = useState<Store[]>([]);
@@ -39,33 +21,42 @@ export const useStores = (merchantId: string) => {
           {
             id: 'store-1',
             name: 'Downtown Electronics',
-            address: '123 Main St, Downtown, CA 90210',
-            phone: '+1 (555) 123-4567',
             description: 'Your one-stop shop for electronics and gadgets',
-            business_name: 'Downtown Electronics LLC',
-            business_type: 'Electronics Store',
-            tax_id: '12-3456789',
-            is_active: true,
-            is_verified: true,
-            created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            merchant_id: merchantId,
+            address: '123 Main St',
+            city: 'Downtown',
+            state: 'CA',
+            zip_code: '90210',
             latitude: 34.0522,
-            longitude: -118.2437
+            longitude: -118.2437,
+            phone: '+1 (555) 123-4567',
+            contact_phone: '+1 (555) 123-4567',
+            contact_email: 'store@downtown-electronics.com',
+            status: 'active',
+            is_verified: true,
+            is_active: true,
+            merchant_id: merchantId,
+            created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString()
           },
           {
             id: 'store-2',
             name: 'Westside Books',
-            address: '456 Oak Ave, Westside, CA 90211',
-            phone: '+1 (555) 987-6543',
             description: 'Independent bookstore with rare and new books',
-            business_name: 'Westside Books Inc',
-            business_type: 'Bookstore',
-            is_active: false,
-            is_verified: false,
-            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            merchant_id: merchantId,
+            address: '456 Oak Ave',
+            city: 'Westside',
+            state: 'CA',
+            zip_code: '90211',
             latitude: 34.0522,
-            longitude: -118.2437
+            longitude: -118.2437,
+            phone: '+1 (555) 987-6543',
+            contact_phone: '+1 (555) 987-6543',
+            contact_email: 'info@westside-books.com',
+            status: 'pending_verification',
+            is_verified: false,
+            is_active: false,
+            merchant_id: merchantId,
+            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString()
           }
         ];
         
@@ -91,20 +82,27 @@ export const useStores = (merchantId: string) => {
       const newStore: Store = {
         id: `store-${Date.now()}`,
         name: storeData.name || '',
-        address: storeData.address || '',
-        phone: storeData.phone,
         description: storeData.description,
-        business_name: storeData.business_name,
-        business_type: storeData.business_type,
-        tax_id: storeData.tax_id,
-        is_active: storeData.is_active ?? true,
+        address: storeData.address || '',
+        city: storeData.city || '',
+        state: storeData.state || '',
+        zip_code: storeData.zip_code || '',
+        latitude: storeData.latitude,
+        longitude: storeData.longitude,
+        phone: storeData.phone,
+        email: storeData.email,
+        website: storeData.website,
+        logo_url: storeData.logo_url,
+        contact_phone: storeData.contact_phone,
+        contact_email: storeData.contact_email,
+        status: storeData.status ?? 'pending_verification',
         is_verified: storeData.is_verified ?? false,
-        created_at: new Date().toISOString(),
-        merchant_id: merchantId,
+        is_active: storeData.is_active ?? true,
         business_hours: storeData.business_hours,
         social_media: storeData.social_media,
-        latitude: storeData.latitude,
-        longitude: storeData.longitude
+        merchant_id: merchantId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
       setStores(prev => [...prev, newStore]);
@@ -123,7 +121,7 @@ export const useStores = (merchantId: string) => {
       setStores(prev => 
         prev.map(store => 
           store.id === storeId 
-            ? { ...store, ...updates }
+            ? { ...store, ...updates, updated_at: new Date().toISOString() }
             : store
         )
       );

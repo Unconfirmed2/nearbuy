@@ -1,23 +1,6 @@
 
 import { useState, useEffect } from 'react';
-
-interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  brand?: string;
-  category_id?: string;
-  image_url?: string;
-  price: number;
-  quantity: number;
-  is_active: boolean;
-  merchant_id: string;
-  created_at: string;
-  updated_at: string;
-  sku?: string;
-  tags?: string[];
-  variants?: any[];
-}
+import { Product, InventoryItem } from '../types/product';
 
 export const useProducts = (merchantId: string) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,15 +22,25 @@ export const useProducts = (merchantId: string) => {
             description: 'Latest iPhone with advanced features',
             brand: 'Apple',
             category_id: 'electronics',
-            image_url: '/placeholder.svg',
+            sku: 'IPHONE15PRO-128',
             price: 999.99,
-            quantity: 25,
+            images: ['/placeholder.svg'],
+            tags: ['smartphone', 'apple', 'premium'],
             is_active: true,
-            merchant_id: merchantId,
+            track_inventory: true,
+            store_id: 'store-1',
             created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
             updated_at: new Date().toISOString(),
-            sku: 'IPHONE15PRO-128',
-            tags: ['smartphone', 'apple', 'premium']
+            inventory: [{
+              id: 'inv-1',
+              product_id: 'product-1',
+              store_id: 'store-1',
+              quantity: 25,
+              reserved_quantity: 0,
+              low_stock_threshold: 5,
+              track_quantity: true,
+              updated_at: new Date().toISOString()
+            }]
           },
           {
             id: 'product-2',
@@ -55,15 +48,25 @@ export const useProducts = (merchantId: string) => {
             description: 'Powerful laptop for productivity',
             brand: 'Samsung',
             category_id: 'electronics',
-            image_url: '/placeholder.svg',
+            sku: 'GALAXYBOOK-16-512',
             price: 1299.99,
-            quantity: 8,
+            images: ['/placeholder.svg'],
+            tags: ['laptop', 'samsung', 'productivity'],
             is_active: true,
-            merchant_id: merchantId,
+            track_inventory: true,
+            store_id: 'store-1',
             created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
             updated_at: new Date().toISOString(),
-            sku: 'GALAXYBOOK-16-512',
-            tags: ['laptop', 'samsung', 'productivity']
+            inventory: [{
+              id: 'inv-2',
+              product_id: 'product-2',
+              store_id: 'store-1',
+              quantity: 8,
+              reserved_quantity: 0,
+              low_stock_threshold: 3,
+              track_quantity: true,
+              updated_at: new Date().toISOString()
+            }]
           },
           {
             id: 'product-3',
@@ -71,15 +74,25 @@ export const useProducts = (merchantId: string) => {
             description: 'High-quality wireless earbuds with noise cancellation',
             brand: 'TechBrand',
             category_id: 'electronics',
-            image_url: '/placeholder.svg',
+            sku: 'EARBUDS-WL-BLK',
             price: 199.99,
-            quantity: 50,
+            images: ['/placeholder.svg'],
+            tags: ['earbuds', 'wireless', 'audio'],
             is_active: true,
-            merchant_id: merchantId,
+            track_inventory: true,
+            store_id: 'store-1',
             created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
             updated_at: new Date().toISOString(),
-            sku: 'EARBUDS-WL-BLK',
-            tags: ['earbuds', 'wireless', 'audio']
+            inventory: [{
+              id: 'inv-3',
+              product_id: 'product-3',
+              store_id: 'store-1',
+              quantity: 50,
+              reserved_quantity: 0,
+              low_stock_threshold: 10,
+              track_quantity: true,
+              updated_at: new Date().toISOString()
+            }]
           }
         ];
         
@@ -105,18 +118,19 @@ export const useProducts = (merchantId: string) => {
       const newProduct: Product = {
         id: `product-${Date.now()}`,
         name: productData.name || '',
-        description: productData.description,
-        brand: productData.brand,
-        category_id: productData.category_id,
-        image_url: productData.image_url || '/placeholder.svg',
+        description: productData.description || '',
+        brand: productData.brand || '',
+        category_id: productData.category_id || '',
+        sku: productData.sku || '',
         price: productData.price || 0,
-        quantity: productData.quantity || 0,
+        images: productData.images || ['/placeholder.svg'],
+        tags: productData.tags || [],
         is_active: productData.is_active ?? true,
-        merchant_id: merchantId,
+        track_inventory: productData.track_inventory ?? true,
+        store_id: productData.store_id || 'store-1',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        sku: productData.sku,
-        tags: productData.tags || [],
+        metadata: productData.metadata,
         variants: productData.variants || []
       };
       
