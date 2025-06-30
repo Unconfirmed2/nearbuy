@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { User } from '@supabase/supabase-js';
 import MerchantLayout from './components/MerchantLayout';
 import Dashboard from './pages/Dashboard';
@@ -19,6 +21,16 @@ interface MerchantAppProps {
   profile?: any;
 }
 
+// Create a query client instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 const MerchantApp: React.FC<MerchantAppProps> = ({ user, profile }) => {
   // Provide default mock data if not provided
   const mockUser = user || {
@@ -36,21 +48,23 @@ const MerchantApp: React.FC<MerchantAppProps> = ({ user, profile }) => {
   };
 
   return (
-    <MerchantLayout user={mockUser} profile={mockProfile}>
-      <Routes>
-        <Route index element={<Dashboard />} />
-        <Route path="stores" element={<Stores />} />
-        <Route path="products" element={<Products />} />
-        <Route path="inventory" element={<Inventory />} />
-        <Route path="orders" element={<Orders />} />
-        <Route path="analytics" element={<Analytics />} />
-        <Route path="marketing" element={<Marketing />} />
-        <Route path="integrations" element={<Integrations />} />
-        <Route path="reviews" element={<Reviews />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="support" element={<Support />} />
-      </Routes>
-    </MerchantLayout>
+    <QueryClientProvider client={queryClient}>
+      <MerchantLayout user={mockUser} profile={mockProfile}>
+        <Routes>
+          <Route index element={<Dashboard />} />
+          <Route path="stores" element={<Stores />} />
+          <Route path="products" element={<Products />} />
+          <Route path="inventory" element={<Inventory />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="marketing" element={<Marketing />} />
+          <Route path="integrations" element={<Integrations />} />
+          <Route path="reviews" element={<Reviews />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="support" element={<Support />} />
+        </Routes>
+      </MerchantLayout>
+    </QueryClientProvider>
   );
 };
 

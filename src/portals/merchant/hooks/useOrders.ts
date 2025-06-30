@@ -13,7 +13,7 @@ interface OrdersStats {
   cancelled_orders: number;
 }
 
-export const useOrders = (merchantId: string, searchTerm?: string, statusFilter?: string) => {
+export const useOrders = (merchantId: string, searchTerm: string = '', statusFilter: string = 'all') => {
   const queryClient = useQueryClient();
 
   const ordersQuery = useQuery({

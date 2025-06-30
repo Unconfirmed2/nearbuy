@@ -28,7 +28,7 @@ import CustomerEngagementCard from '../components/CustomerEngagementCard';
 const Dashboard: React.FC = () => {
   const [lastOrderCount, setLastOrderCount] = useState(0);
   
-  const { orders, loading: ordersLoading } = useOrders('', 'all');
+  const { orders, loading: ordersLoading } = useOrders('debug-merchant-id');
   const { analytics, loading: analyticsLoading } = useAnalytics('debug-merchant-id');
   const { stores } = useStores('debug-merchant-id');
   const { products } = useProducts('debug-merchant-id');
