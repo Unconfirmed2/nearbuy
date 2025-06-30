@@ -55,7 +55,7 @@ const Orders: React.FC = () => {
         .from('orders')
         .select(`
           *,
-          profiles!orders_user_id_fkey (name, email),
+          profiles:user_id (name, email),
           stores (name),
           order_items (
             quantity,
