@@ -1,3 +1,4 @@
+
 -- Create a function to handle user profile creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger

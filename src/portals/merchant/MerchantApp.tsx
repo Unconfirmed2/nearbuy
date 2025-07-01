@@ -39,7 +39,7 @@ const MerchantApp: React.FC<MerchantAppProps> = () => {
     id: user.id, 
     name: user.user_metadata?.name, 
     email: user.email,
-    role: 'store_owner' 
+    role: user.user_metadata?.role || 'merchant' // Default to merchant for this portal
   } : null;
 
   if (loading) {
@@ -59,6 +59,27 @@ const MerchantApp: React.FC<MerchantAppProps> = () => {
           <a href="/auth/signup/merchant" className="text-blue-600 hover:text-blue-500">
             Sign up as a merchant
           </a>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has merchant role from their metadata
+  const userRole = user.user_metadata?.role;
+  if (userRole && userRole !== 'merchant') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-6">This portal is only accessible to merchant accounts.</p>
+          <div className="space-x-4">
+            <a href="/" className="text-blue-600 hover:text-blue-500">
+              Go to Consumer Portal
+            </a>
+            <a href="/auth/signup/merchant" className="text-blue-600 hover:text-blue-500">
+              Sign up as Merchant
+            </a>
+          </div>
         </div>
       </div>
     );
