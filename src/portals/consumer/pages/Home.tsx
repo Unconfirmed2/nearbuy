@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +35,19 @@ interface Product {
   category: string;
   stores: Store[];
 }
+
+// Helper function to convert UUID string to a stable positive number
+const uuidToNumber = (uuid: string): number => {
+  // Create a simple hash from the UUID string
+  let hash = 0;
+  for (let i = 0; i < uuid.length; i++) {
+    const char = uuid.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  // Ensure it's positive
+  return Math.abs(hash);
+};
 
 const Home: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -82,9 +94,12 @@ const Home: React.FC = () => {
           const storeCount = Math.floor(Math.random() * 3) + 2;
           const stores: Store[] = [];
           
+          // Convert UUID to number for product ID
+          const productId = uuidToNumber(product.id);
+          
           for (let i = 0; i < storeCount; i++) {
             stores.push({
-              id: index * 10 + i + 1000, // Use a different number scheme to avoid conflicts
+              id: productId * 10 + i + 1000, // Use product-based numbering to avoid conflicts
               seller: `Store ${String.fromCharCode(65 + i)}`,
               price: Math.floor(Math.random() * 50) + 10,
               distance: Math.random() * 5 + 0.5,
@@ -94,7 +109,7 @@ const Home: React.FC = () => {
           }
 
           return {
-            id: Math.abs(product.id.split('-').join('').substring(0, 8).split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)), // Convert UUID to positive number
+            id: productId,
             name: product.name,
             description: product.description || 'No description available',
             image: product.image_url || '/placeholder.svg',
