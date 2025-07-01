@@ -84,7 +84,7 @@ const Home: React.FC = () => {
           
           for (let i = 0; i < storeCount; i++) {
             stores.push({
-              id: index * 10 + i,
+              id: index * 10 + i + 1000, // Use a different number scheme to avoid conflicts
               seller: `Store ${String.fromCharCode(65 + i)}`,
               price: Math.floor(Math.random() * 50) + 10,
               distance: Math.random() * 5 + 0.5,
@@ -94,7 +94,7 @@ const Home: React.FC = () => {
           }
 
           return {
-            id: parseInt(product.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number
+            id: Math.abs(product.id.split('-').join('').substring(0, 8).split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)), // Convert UUID to positive number
             name: product.name,
             description: product.description || 'No description available',
             image: product.image_url || '/placeholder.svg',
