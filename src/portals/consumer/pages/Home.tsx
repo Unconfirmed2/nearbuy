@@ -91,56 +91,66 @@ const Home: React.FC = () => {
         .limit(PRODUCTS_PER_PAGE);
 
       if (error) {
-        console.error('Error fetching products:', error);
         toast.error('Failed to load products');
-        // Set hasMore to false on error to prevent further requests
         setHasMore(false);
         return;
       }
 
-      console.log('Fetched products from Supabase:', products);
+      // Fetch inventory data for products from stores
+      const { data: inventoryData, error: inventoryError } = await supabase
+        .from('inventory')
+        .select(`
+          id,
+          price,
+          quantity,
+          store_id,
+          product_id,
+          stores!inner(
+            id,
+            name,
+            address,
+            description
+          )
+        `)
+        .in('product_id', products?.map(p => p.id) || [])
+        .gt('quantity', 0);
 
-      // Mock addresses for stores
-      const mockAddresses = [
-        '123 Main St, Downtown',
-        '456 Oak Ave, Shopping District',
-        '789 Pine Rd, University Area',
-        '321 Elm St, Midtown',
-        '654 Maple Dr, Eastside'
-      ];
+      if (inventoryError) {
+        toast.error('Failed to load store data');
+        setHasMore(false);
+        return;
+      }
 
-      // Transform data to match expected format and add mock store data
-      const transformedProducts: Product[] = products?.map((product, index) => {
-        // Generate 2-4 mock stores per product
-        const storeCount = Math.floor(Math.random() * 3) + 2;
-        const stores: Store[] = [];
-        
-        // Convert UUID to number for product ID
-        const productId = uuidToNumber(product.id);
-        
-        for (let i = 0; i < storeCount; i++) {
-          stores.push({
-            id: productId * 10 + i + 1000,
-            seller: `Store ${String.fromCharCode(65 + i)}`,
-            price: Math.floor(Math.random() * 50) + 10,
-            distance: Math.random() * 5 + 0.5,
-            rating: 3.5 + Math.random() * 1.5,
-            nbScore: Math.floor(Math.random() * 2) + 4,
-            address: mockAddresses[i % mockAddresses.length]
-          });
+      // Group inventory by product
+      const productInventoryMap = new Map();
+      inventoryData?.forEach(item => {
+        if (!productInventoryMap.has(item.product_id)) {
+          productInventoryMap.set(item.product_id, []);
         }
+        productInventoryMap.get(item.product_id).push({
+          id: uuidToNumber(item.store_id),
+          seller: item.stores.name,
+          price: Number(item.price),
+          distance: Math.random() * 3 + 0.5, // TODO: Calculate real distance
+          rating: 4.0 + Math.random() * 1.0,
+          nbScore: Math.floor(Math.random() * 2) + 4,
+          address: item.stores.address || 'Address not available'
+        });
+      });
 
+      // Transform products with real store data
+      const transformedProducts: Product[] = products?.map((product) => {
+        const stores = productInventoryMap.get(product.id) || [];
+        
         return {
-          id: productId,
+          id: uuidToNumber(product.id),
           name: product.name,
           description: product.description || 'No description available',
           image: product.image_url || '/placeholder.svg',
           category: product.category?.name || 'General',
           stores: stores.sort((a, b) => a.price - b.price)
         };
-      }) || [];
-
-      console.log('Transformed products:', transformedProducts);
+      }).filter(product => product.stores.length > 0) || [];
       
       if (reset || pageNum === 0) {
         setFeaturedProducts(transformedProducts);
