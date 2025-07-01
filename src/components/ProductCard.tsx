@@ -1,4 +1,3 @@
-
 import { Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ interface Store {
   distance: number;
   rating: number;
   nbScore: number;
+  address?: string;
 }
 
 interface Product {

@@ -25,6 +25,7 @@ interface Store {
   distance: number;
   rating: number;
   nbScore: number;
+  address?: string;
 }
 
 interface Product {
@@ -80,7 +81,7 @@ const Home: React.FC = () => {
             brand,
             category:categories(name)
           `)
-          .limit(20); // Increased from 6 to 20 to show more products
+          .limit(20);
 
         if (error) {
           console.error('Error fetching products:', error);
@@ -89,6 +90,15 @@ const Home: React.FC = () => {
         }
 
         console.log('Fetched products from Supabase:', products);
+
+        // Mock addresses for stores
+        const mockAddresses = [
+          '123 Main St, Downtown',
+          '456 Oak Ave, Shopping District',
+          '789 Pine Rd, University Area',
+          '321 Elm St, Midtown',
+          '654 Maple Dr, Eastside'
+        ];
 
         // Transform data to match expected format and add mock store data
         const transformedProducts: Product[] = products?.map((product, index) => {
@@ -101,12 +111,13 @@ const Home: React.FC = () => {
           
           for (let i = 0; i < storeCount; i++) {
             stores.push({
-              id: productId * 10 + i + 1000, // Use product-based numbering to avoid conflicts
+              id: productId * 10 + i + 1000,
               seller: `Store ${String.fromCharCode(65 + i)}`,
               price: Math.floor(Math.random() * 50) + 10,
               distance: Math.random() * 5 + 0.5,
               rating: 3.5 + Math.random() * 1.5,
-              nbScore: Math.floor(Math.random() * 2) + 4
+              nbScore: Math.floor(Math.random() * 2) + 4,
+              address: mockAddresses[i % mockAddresses.length]
             });
           }
 
@@ -116,7 +127,7 @@ const Home: React.FC = () => {
             description: product.description || 'No description available',
             image: product.image_url || '/placeholder.svg',
             category: product.category?.name || 'General',
-            stores: stores.sort((a, b) => a.price - b.price) // Sort by price ascending
+            stores: stores.sort((a, b) => a.price - b.price)
           };
         }) || [];
 
