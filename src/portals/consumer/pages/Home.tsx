@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,40 +15,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { supabase } from '@/integrations/supabase/client';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image_url: string;
+  brand: string;
+  category?: {
+    name: string;
+  };
+}
 
 const Home: React.FC = () => {
-  const [featuredProducts] = useState([
-    {
-      id: 1,
-      name: 'Organic Bananas',
-      price: 2.49,
-      image: '/placeholder.svg',
-      store: 'Fresh Market',
-      distance: '0.8 mi',
-      rating: 4.5,
-      category: 'Produce'
-    },
-    {
-      id: 2,
-      name: 'Artisan Bread',
-      price: 4.99,
-      image: '/placeholder.svg',
-      store: 'Downtown Bakery',
-      distance: '1.2 mi',
-      rating: 4.8,
-      category: 'Bakery'
-    },
-    {
-      id: 3,
-      name: 'Local Honey',
-      price: 12.99,
-      image: '/placeholder.svg',
-      store: 'Farmers Market',
-      distance: '2.1 mi',
-      rating: 4.9,
-      category: 'Pantry'
-    }
-  ]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,6 +44,51 @@ const Home: React.FC = () => {
     type: 'distance',
     value: 5
   });
+
+  // Fetch products from Supabase
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data: products, error } = await supabase
+          .from('products')
+          .select(`
+            id,
+            name,
+            price,
+            image_url,
+            brand,
+            category:categories(name)
+          `)
+          .eq('is_active', true)
+          .limit(6);
+
+        if (error) {
+          console.error('Error fetching products:', error);
+          toast.error('Failed to load products');
+          return;
+        }
+
+        // Transform data to match expected format and add mock store data
+        const transformedProducts = products?.map(product => ({
+          ...product,
+          price: product.price || Math.floor(Math.random() * 100) + 10, // Random price if not set
+          store: 'Local Store', // Mock store name
+          distance: `${(Math.random() * 3 + 0.5).toFixed(1)} mi`, // Mock distance
+          rating: 4.5 + Math.random() * 0.4, // Mock rating between 4.5-4.9
+          category: product.category?.name || 'General'
+        })) || [];
+
+        setFeaturedProducts(transformedProducts);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        toast.error('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleAddToCart = (product: any) => {
     addToBasket({
@@ -78,7 +106,7 @@ const Home: React.FC = () => {
     addToFavorites({
       productId: product.id,
       productName: product.name,
-      image: product.image
+      image: product.image_url
     });
     toast.success('Added to favorites!');
   };
@@ -116,6 +144,33 @@ const Home: React.FC = () => {
       toast.error('Geolocation is not supported by this browser.');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-8 container mx-auto px-4 py-8">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl font-bold mb-4">Find products you want NearBuy</h1>
+            <p className="text-xl opacity-90">Discover local products and plan your pickup route</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <Card key={i} className="group overflow-hidden hover:shadow-lg transition-shadow animate-pulse">
+              <div className="h-48 bg-gray-200"></div>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 container mx-auto px-4 py-8">
@@ -274,67 +329,75 @@ const Home: React.FC = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProducts.map((product) => (
-            <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-48 object-cover"
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-white p-2 h-8 w-8"
-                  onClick={() => handleAddToFavorites(product)}
-                >
-                  <Heart className="w-4 h-4" />
-                </Button>
-                <Badge className="absolute top-2 left-2 bg-blue-600">
-                  {product.category}
-                </Badge>
-              </div>
-              
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="font-medium text-gray-900 line-clamp-2 cursor-pointer" 
-                        onClick={() => navigate(`/product/${product.id}`)}>
-                      {product.name}
-                    </h3>
-                    <p className="text-sm text-gray-500">{product.store}</p>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center text-gray-500">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {product.distance}
-                    </div>
-                    <div className="flex items-center text-yellow-600">
-                      <Star className="w-3 h-3 mr-1 fill-current" />
-                      {product.rating}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-green-600">
-                      ${product.price}
-                    </span>
-                    <Button
-                      onClick={() => handleAddToCart(product)}
-                      size="sm"
-                      className="shrink-0"
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-1" />
-                      Add
-                    </Button>
-                  </div>
+        {featuredProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
+            <p className="text-gray-600">Check back later for new products!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredProducts.map((product) => (
+              <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative">
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-48 object-cover"
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-white p-2 h-8 w-8"
+                    onClick={() => handleAddToFavorites(product)}
+                  >
+                    <Heart className="w-4 h-4" />
+                  </Button>
+                  <Badge className="absolute top-2 left-2 bg-blue-600">
+                    {product.category}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-medium text-gray-900 line-clamp-2 cursor-pointer" 
+                          onClick={() => navigate(`/product/${product.id}`)}>
+                        {product.name}
+                      </h3>
+                      <p className="text-sm text-gray-500">{product.store}</p>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center text-gray-500">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {product.distance}
+                      </div>
+                      <div className="flex items-center text-yellow-600">
+                        <Star className="w-3 h-3 mr-1 fill-current" />
+                        {product.rating?.toFixed(1)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-lg font-bold text-green-600">
+                        ${product.price?.toFixed(2)}
+                      </span>
+                      <Button
+                        onClick={() => handleAddToCart(product)}
+                        size="sm"
+                        className="shrink-0"
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
