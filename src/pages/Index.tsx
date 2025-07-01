@@ -68,10 +68,10 @@ const Index = () => {
     { id: "15", name: "Coffee Table", price: 199.99, image: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400&h=400&fit=crop", distance: 1.9, rating: 4.4, seller: "Modern Living", category: "Furniture", description: "Modern wooden coffee table", brand: "Generic" },
     
     // Sports & Outdoors
-    { id: "16", name: "Yeti Rambler 30oz", price: 39.99, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop", distance: 1.6, rating: 4.7, seller: "Outdoor Gear Co", category: "Sports", description: "Insulated stainless steel tumbler", brand: "Yeti" },
+    { id: "16", name: "Yeti Rambler 30oz", price: 39.99, image: "https://images.unsplash.com/photo-1602143407151-7cc5ac882d5e8?w=400&h=400&fit=crop", distance: 1.6, rating: 4.7, seller: "Outdoor Gear Co", category: "Sports", description: "Insulated stainless steel tumbler", brand: "Yeti" },
     { id: "17", name: "Wilson Tennis Racket", price: 129.99, image: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=400&fit=crop", distance: 2.3, rating: 4.5, seller: "Sports Authority", category: "Sports", description: "Professional tennis racket", brand: "Wilson" },
     { id: "18", name: "Patagonia Fleece Jacket", price: 179.99, image: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?w=400&h=400&fit=crop", distance: 0.6, rating: 4.8, seller: "Outdoor Gear Co", category: "Sports", description: "Warm and lightweight fleece jacket", brand: "Patagonia" },
-    { id: "19", name: "Hydro Flask 32oz", price: 44.95, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop", distance: 3.1, rating: 4.6, seller: "Sports Authority", category: "Sports", description: "Insulated water bottle", brand: "Hydro Flask" },
+    { id: "19", name: "Hydro Flask 32oz", price: 44.95, image: "https://images.unsplash.com/photo-1602143407151-7cc5ac882d5e8?w=400&h=400&fit=crop", distance: 3.1, rating: 4.6, seller: "Sports Authority", category: "Sports", description: "Insulated water bottle", brand: "Hydro Flask" },
     { id: "20", name: "Yoga Mat Premium", price: 79.99, image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop", distance: 1.7, rating: 4.4, seller: "Zen Fitness", category: "Sports", description: "High-quality yoga mat", brand: "Generic" },
     
     // Books & Media
@@ -196,8 +196,8 @@ const Index = () => {
     const product = mockProducts.find(p => p.id === storeId);
     if (product) {
       const newItem = {
-        productId,
-        storeId,
+        productId: parseInt(productId),
+        storeId: parseInt(storeId),
         productName: product.name,
         storeName: product.seller,
         price: product.price
