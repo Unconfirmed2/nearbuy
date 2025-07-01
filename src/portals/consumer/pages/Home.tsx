@@ -139,7 +139,7 @@ const Home: React.FC = () => {
     
     if (product && store) {
       addToBasket({
-        productId: productId.toString(),
+        productId: productId,
         storeId: storeId,
         productName: product.name,
         storeName: store.seller,
@@ -152,7 +152,7 @@ const Home: React.FC = () => {
 
   const handleAddToFavorites = (product: Product) => {
     addToFavorites({
-      productId: product.id.toString(),
+      productId: product.id,
       productName: product.name,
       image: product.image
     });
