@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Store as StoreIcon, Search } from 'lucide-react';
 import { useStores } from '../hooks/useStores';
+import { useAuth } from '../hooks/useAuth';
 import StoreCard from '../components/StoreCard';
 import CreateStoreDialog from '../components/CreateStoreDialog';
 import { toast } from 'sonner';
@@ -13,8 +14,9 @@ const Stores: React.FC = () => {
   const [showCreateStore, setShowCreateStore] = useState(false);
   const [selectedStore, setSelectedStore] = useState<any>(null);
   const [createLoading, setCreateLoading] = useState(false);
+  const { user } = useAuth();
 
-  const { stores, loading, createStore } = useStores('debug-merchant-id');
+  const { stores, loading, createStore } = useStores(user?.id);
 
   // Transform stores to match StoreCard interface
   const transformedStores = stores.map(store => ({

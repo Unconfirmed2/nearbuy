@@ -34,6 +34,7 @@ const MerchantSignUp: React.FC = () => {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/merchant`,
           data: {
             name: contactName,
             role: 'store_owner',

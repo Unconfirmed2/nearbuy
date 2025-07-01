@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Search, Package, Upload, Copy } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { useStores } from '../hooks/useStores';
+import { useAuth } from '../hooks/useAuth';
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
 import ProductFilters from '../components/ProductFilters';
@@ -23,8 +24,9 @@ const Products: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [duplicatingProduct, setDuplicatingProduct] = useState<any>(null);
 
-  const { products, loading, createProduct, updateProduct, deleteProduct } = useProducts('debug-merchant-id');
-  const { stores } = useStores('debug-merchant-id');
+  const { user } = useAuth();
+  const { products, loading, createProduct, updateProduct, deleteProduct } = useProducts(user?.id || '');
+  const { stores } = useStores(user?.id);
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

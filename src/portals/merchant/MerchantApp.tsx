@@ -3,6 +3,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { User } from '@supabase/supabase-js';
+import { useAuth } from './hooks/useAuth';
 import MerchantLayout from './components/MerchantLayout';
 import Dashboard from './pages/Dashboard';
 import Stores from './pages/Stores';
@@ -31,25 +32,41 @@ const queryClient = new QueryClient({
   },
 });
 
-const MerchantApp: React.FC<MerchantAppProps> = ({ user, profile }) => {
-  // Provide default mock data if not provided
-  const mockUser = user || {
-    id: 'debug-merchant-id',
-    email: 'merchant@example.com',
-    user_metadata: { role: 'store_owner' }
-  } as any;
+const MerchantApp: React.FC<MerchantAppProps> = () => {
+  const { user, loading } = useAuth();
+  
+  const profile = user ? { 
+    id: user.id, 
+    name: user.user_metadata?.name, 
+    email: user.email,
+    role: 'store_owner' 
+  } : null;
 
-  const mockProfile = profile || {
-    id: 'debug-merchant-id',
-    email: 'merchant@example.com',
-    name: 'Debug Merchant',
-    role: 'store_owner',
-    avatar_url: null
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-6">You must be logged in as a merchant to access this portal.</p>
+          <a href="/auth/signup/merchant" className="text-blue-600 hover:text-blue-500">
+            Sign up as a merchant
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MerchantLayout user={mockUser} profile={mockProfile}>
+      <MerchantLayout user={user} profile={profile}>
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="stores" element={<Stores />} />
