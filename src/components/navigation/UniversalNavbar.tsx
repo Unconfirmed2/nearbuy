@@ -48,10 +48,9 @@ import {
 interface UniversalNavbarProps {
   user?: User | null;
   profile?: any;
-  debugMode?: boolean;
 }
 
-const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profile: propProfile, debugMode = false }) => {
+const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profile: propProfile }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();

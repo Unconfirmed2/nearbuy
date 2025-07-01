@@ -25,17 +25,15 @@ interface ConsumerAppProps {
   profile?: any;
 }
 
-const ConsumerApp: React.FC<ConsumerAppProps> = ({ user: propUser, profile: propProfile }) => {
-  const { user: authUser, loading } = useAuth();
+const ConsumerApp: React.FC<ConsumerAppProps> = () => {
+  const { user, loading } = useAuth();
   
-  // Use authentication hook user if available, otherwise use props (for debug mode)
-  const user = authUser || propUser;
-  const profile = propProfile || (authUser ? { 
-    id: authUser.id, 
-    name: authUser.user_metadata?.name, 
-    email: authUser.email,
+  const profile = user ? { 
+    id: user.id, 
+    name: user.user_metadata?.name, 
+    email: user.email,
     role: 'customer' 
-  } : null);
+  } : null;
 
   if (loading) {
     return (

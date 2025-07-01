@@ -6,11 +6,10 @@ import UniversalNavbar from './UniversalNavbar';
 interface MainNavigationProps {
   user?: User | null;
   profile?: any;
-  debugMode?: boolean;
 }
 
-const MainNavigation: React.FC<MainNavigationProps> = ({ user, profile, debugMode = false }) => {
-  return <UniversalNavbar user={user} profile={profile} debugMode={debugMode} />;
+const MainNavigation: React.FC<MainNavigationProps> = ({ user, profile }) => {
+  return <UniversalNavbar user={user} profile={profile} />;
 };
 
 export default MainNavigation;
