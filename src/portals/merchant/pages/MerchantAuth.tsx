@@ -7,35 +7,62 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Store, Mail, Lock, User, Phone, MapPin, Building2 } from 'lucide-react';
+import { Store, Mail, Lock, User, Phone, MapPin, Building2, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 
 const MerchantAuth: React.FC = () => {
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('signin');
   const navigate = useNavigate();
 
   // Sign In Form State
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
 
   // Sign Up Form State  
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [contactName, setContactName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Password validation
+  const getPasswordValidation = (password: string) => {
+    return {
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    };
+  };
+
+  const passwordValidation = getPasswordValidation(signUpPassword);
+  const isPasswordValid = Object.values(passwordValidation).every(Boolean);
+  const doPasswordsMatch = signUpPassword === confirmPassword && confirmPassword.length > 0;
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      console.log('Attempting to sign in with email:', signInEmail);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: signInEmail,
         password: signInPassword,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+
+      console.log('Sign in successful:', data);
 
       // Check if user has merchant role
       const { data: userData, error: userError } = await supabase
@@ -60,7 +87,11 @@ const MerchantAuth: React.FC = () => {
       // Navigation will happen automatically via useAuth
     } catch (error: any) {
       console.error('Sign in error:', error);
-      toast.error(error.message);
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password');
+      } else {
+        toast.error(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -68,6 +99,18 @@ const MerchantAuth: React.FC = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form
+    if (!isPasswordValid) {
+      toast.error('Please meet all password requirements');
+      return;
+    }
+    
+    if (!doPasswordsMatch) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -79,6 +122,20 @@ const MerchantAuth: React.FC = () => {
         address,
         role: 'merchant'
       });
+
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', signUpEmail)
+        .single();
+
+      if (existingUser) {
+        toast.error('An account with this email already exists. Please sign in instead.');
+        setActiveTab('signin');
+        setSignInEmail(signUpEmail);
+        return;
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email: signUpEmail,
@@ -96,18 +153,29 @@ const MerchantAuth: React.FC = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign up error:', error);
+        throw error;
+      }
 
       console.log('Merchant signup successful:', data);
       
       if (data.user && !data.session) {
         toast.success('Please check your email to verify your account before signing in.');
+        setActiveTab('signin');
+        setSignInEmail(signUpEmail);
       } else {
         toast.success('Merchant account created successfully!');
       }
     } catch (error: any) {
       console.error('Sign up error:', error);
-      toast.error(error.message);
+      if (error.message.includes('User already registered')) {
+        toast.error('An account with this email already exists. Please sign in instead.');
+        setActiveTab('signin');
+        setSignInEmail(signUpEmail);
+      } else {
+        toast.error(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -128,7 +196,7 @@ const MerchantAuth: React.FC = () => {
 
         <Card>
           <CardHeader>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -151,7 +219,7 @@ const MerchantAuth: React.FC = () => {
           </CardHeader>
           
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
@@ -176,13 +244,20 @@ const MerchantAuth: React.FC = () => {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
                         id="signin-password"
-                        type="password"
+                        type={showSignInPassword ? "text" : "password"}
                         placeholder="Enter your password"
                         value={signInPassword}
                         onChange={(e) => setSignInPassword(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 pr-10"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignInPassword(!showSignInPassword)}
+                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                      >
+                        {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
                   </div>
                   
@@ -250,15 +325,120 @@ const MerchantAuth: React.FC = () => {
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
                         id="signup-password"
-                        type="password"
+                        type={showSignUpPassword ? "text" : "password"}
                         placeholder="Create a strong password"
                         value={signUpPassword}
                         onChange={(e) => setSignUpPassword(e.target.value)}
-                        className="pl-10"
-                        minLength={6}
+                        className="pl-10 pr-10"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                      >
+                        {showSignUpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
                     </div>
+                    
+                    {/* Password Requirements */}
+                    {signUpPassword.length > 0 && (
+                      <div className="mt-2 p-3 bg-gray-50 rounded-md">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Password Requirements:</p>
+                        <div className="space-y-1">
+                          <div className="flex items-center text-xs">
+                            {passwordValidation.minLength ? (
+                              <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                            ) : (
+                              <XCircle className="h-3 w-3 text-red-500 mr-1" />
+                            )}
+                            <span className={passwordValidation.minLength ? 'text-green-700' : 'text-red-700'}>
+                              At least 8 characters
+                            </span>
+                          </div>
+                          <div className="flex items-center text-xs">
+                            {passwordValidation.hasUppercase ? (
+                              <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                            ) : (
+                              <XCircle className="h-3 w-3 text-red-500 mr-1" />
+                            )}
+                            <span className={passwordValidation.hasUppercase ? 'text-green-700' : 'text-red-700'}>
+                              One uppercase letter
+                            </span>
+                          </div>
+                          <div className="flex items-center text-xs">
+                            {passwordValidation.hasLowercase ? (
+                              <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                            ) : (
+                              <XCircle className="h-3 w-3 text-red-500 mr-1" />
+                            )}
+                            <span className={passwordValidation.hasLowercase ? 'text-green-700' : 'text-red-700'}>
+                              One lowercase letter
+                            </span>
+                          </div>
+                          <div className="flex items-center text-xs">
+                            {passwordValidation.hasNumber ? (
+                              <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                            ) : (
+                              <XCircle className="h-3 w-3 text-red-500 mr-1" />
+                            )}
+                            <span className={passwordValidation.hasNumber ? 'text-green-700' : 'text-red-700'}>
+                              One number
+                            </span>
+                          </div>
+                          <div className="flex items-center text-xs">
+                            {passwordValidation.hasSpecial ? (
+                              <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                            ) : (
+                              <XCircle className="h-3 w-3 text-red-500 mr-1" />
+                            )}
+                            <span className={passwordValidation.hasSpecial ? 'text-green-700' : 'text-red-700'}>
+                              One special character
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="confirm-password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="pl-10 pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    
+                    {/* Password Match Indicator */}
+                    {confirmPassword.length > 0 && (
+                      <div className="flex items-center text-xs mt-1">
+                        {doPasswordsMatch ? (
+                          <>
+                            <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
+                            <span className="text-green-700">Passwords match</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-3 w-3 text-red-500 mr-1" />
+                            <span className="text-red-700">Passwords do not match</span>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -293,7 +473,11 @@ const MerchantAuth: React.FC = () => {
                     </div>
                   </div>
                   
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={loading || !isPasswordValid || !doPasswordsMatch}
+                  >
                     {loading ? 'Creating Account...' : 'Create Merchant Account'}
                   </Button>
                 </form>
