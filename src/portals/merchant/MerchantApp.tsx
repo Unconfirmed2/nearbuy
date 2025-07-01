@@ -35,6 +35,11 @@ const queryClient = new QueryClient({
 const MerchantApp: React.FC<MerchantAppProps> = () => {
   const { user, loading } = useAuth();
   
+  // Add debugging
+  console.log('MerchantApp - User:', user);
+  console.log('MerchantApp - User metadata:', user?.user_metadata);
+  console.log('MerchantApp - User role:', user?.user_metadata?.role);
+
   const profile = user ? { 
     id: user.id, 
     name: user.user_metadata?.name, 
@@ -66,12 +71,15 @@ const MerchantApp: React.FC<MerchantAppProps> = () => {
 
   // Check if user has merchant role from their metadata
   const userRole = user.user_metadata?.role;
+  console.log('MerchantApp - Checking user role:', userRole);
+  
   if (userRole && userRole !== 'merchant') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
           <p className="text-gray-600 mb-6">This portal is only accessible to merchant accounts.</p>
+          <p className="text-sm text-gray-500 mb-6">Your current role: {userRole}</p>
           <div className="space-x-4">
             <a href="/" className="text-blue-600 hover:text-blue-500">
               Go to Consumer Portal

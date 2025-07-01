@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,14 +29,23 @@ const MerchantSignUp: React.FC = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('Signing up merchant with data:', {
+        email,
+        name: contactName,
+        role: 'merchant',
+        business_name: businessName,
+        phone,
+        address,
+      });
+
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/merchant`,
           data: {
             name: contactName,
-            role: 'merchant', // Changed from 'store_owner' to 'merchant'
+            role: 'merchant',
             business_name: businessName,
             phone,
             address,
@@ -45,11 +53,16 @@ const MerchantSignUp: React.FC = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Signup error:', error);
+        throw error;
+      }
 
+      console.log('Signup successful:', data);
       toast.success('Merchant account created successfully! Please check your email to verify your account.');
       navigate('/auth/signin');
     } catch (error: any) {
+      console.error('Signup failed:', error);
       toast.error(error.message);
     } finally {
       setLoading(false);
