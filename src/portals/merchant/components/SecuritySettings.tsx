@@ -8,14 +8,18 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Key, Smartphone, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '../hooks/useAuth';
+import DeleteAccountDialog from '@/components/DeleteAccountDialog';
 
 interface SecuritySettingsProps {
   merchantId: string;
 }
 
 const SecuritySettings: React.FC<SecuritySettingsProps> = ({ merchantId }) => {
+  const { user } = useAuth();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -163,15 +167,24 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ merchantId }) => {
           <div className="bg-red-50 p-4 rounded-lg">
             <h4 className="font-medium text-red-800 mb-2">Delete Account</h4>
             <p className="text-sm text-red-700 mb-4">
-              Once you delete your account, there is no going back. All your stores, products, and data will be permanently deleted.
+              Once you delete your account, there is no going back. All your stores, products, orders, and business data will be permanently deleted.
             </p>
-            <Button variant="destructive" onClick={handleDeleteAccount}>
+            <Button 
+              variant="destructive" 
+              onClick={() => setShowDeleteDialog(true)}
+            >
               <Trash2 className="w-4 h-4 mr-2" />
-              Request Account Deletion
+              Delete Account
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <DeleteAccountDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        userEmail={user?.email || ''}
+      />
     </div>
   );
 };
