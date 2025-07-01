@@ -70,15 +70,17 @@ const DeleteAccountDialog: React.FC<DeleteAccountDialogProps> = ({
         return;
       }
 
-      // Delete the user account using auth.admin
-      const { error: deleteError } = await supabase.auth.signOut();
+      // Delete user data using our custom function
+      const { error: deleteError } = await supabase.rpc('delete_user_account');
 
       if (deleteError) {
-        throw new Error('Failed to delete account. Please contact support.');
+        throw new Error('Failed to delete account data: ' + deleteError.message);
       }
 
-      toast.success('Account deleted successfully');
+      // Sign out the user
       await supabase.auth.signOut();
+      
+      toast.success('Account deleted successfully');
       navigate('/');
       
     } catch (error: any) {

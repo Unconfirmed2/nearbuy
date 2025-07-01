@@ -1066,6 +1066,10 @@ export type Database = {
         Args: { "": unknown } | { "": unknown }
         Returns: string
       }
+      delete_user_account: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
         Returns: string
