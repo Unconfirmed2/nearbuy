@@ -17,6 +17,7 @@ interface Store {
 interface Product {
   id: number;
   name: string;
+  description: string;
   image: string;
   category: string;
   stores: Store[];
@@ -57,11 +58,11 @@ const StoreSelectionModal = ({ isOpen, onClose, product, onAddToBasket }: StoreS
                   <div className="flex items-center space-x-3 text-xs text-gray-600">
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-3 h-3" />
-                      <span>{store.distance}mi/{Math.round(store.distance * 16)}min</span>
+                      <span>{store.distance.toFixed(1)}mi/{Math.round(store.distance * 16)}min</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      <span>{store.rating}</span>
+                      <span>{store.rating.toFixed(1)}</span>
                     </div>
                   </div>
                 </div>

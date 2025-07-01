@@ -16,17 +16,25 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { supabase } from '@/integrations/supabase/client';
+import ProductCard from '@/components/ProductCard';
+import StoreSelectionModal from '@/components/StoreSelectionModal';
+
+interface Store {
+  id: number;
+  seller: string;
+  price: number;
+  distance: number;
+  rating: number;
+  nbScore: number;
+}
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
-  price: number;
-  image_url: string;
-  brand: string;
+  description: string;
+  image: string;
   category: string;
-  store: string;
-  distance: string;
-  rating: number;
+  stores: Store[];
 }
 
 const Home: React.FC = () => {
@@ -55,6 +63,7 @@ const Home: React.FC = () => {
           .select(`
             id,
             name,
+            description,
             image_url,
             brand,
             category:categories(name)
@@ -67,18 +76,32 @@ const Home: React.FC = () => {
           return;
         }
 
-        // Transform data to match expected format and add mock data
-        const transformedProducts: Product[] = products?.map(product => ({
-          id: product.id,
-          name: product.name,
-          image_url: product.image_url || '/placeholder.svg',
-          brand: product.brand || 'Unknown Brand',
-          price: Math.floor(Math.random() * 100) + 10, // Mock price
-          store: 'Local Store', // Mock store name
-          distance: `${(Math.random() * 3 + 0.5).toFixed(1)} mi`, // Mock distance
-          rating: 4.5 + Math.random() * 0.4, // Mock rating between 4.5-4.9
-          category: product.category?.name || 'General'
-        })) || [];
+        // Transform data to match expected format and add mock store data
+        const transformedProducts: Product[] = products?.map((product, index) => {
+          // Generate 2-4 mock stores per product
+          const storeCount = Math.floor(Math.random() * 3) + 2;
+          const stores: Store[] = [];
+          
+          for (let i = 0; i < storeCount; i++) {
+            stores.push({
+              id: index * 10 + i,
+              seller: `Store ${String.fromCharCode(65 + i)}`,
+              price: Math.floor(Math.random() * 50) + 10,
+              distance: Math.random() * 5 + 0.5,
+              rating: 3.5 + Math.random() * 1.5,
+              nbScore: Math.floor(Math.random() * 2) + 4
+            });
+          }
+
+          return {
+            id: parseInt(product.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number
+            name: product.name,
+            description: product.description || 'No description available',
+            image: product.image_url || '/placeholder.svg',
+            category: product.category?.name || 'General',
+            stores: stores.sort((a, b) => a.price - b.price) // Sort by price ascending
+          };
+        }) || [];
 
         setFeaturedProducts(transformedProducts);
       } catch (error) {
@@ -92,23 +115,28 @@ const Home: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const handleAddToCart = (product: Product) => {
-    addToBasket({
-      productId: product.id,
-      storeId: 1,
-      productName: product.name,
-      storeName: product.store,
-      price: product.price,
-      quantity: 1
-    });
-    toast.success('Added to cart!');
+  const handleAddToBasket = (productId: number, storeId: number) => {
+    const product = featuredProducts.find(p => p.id === productId);
+    const store = product?.stores.find(s => s.id === storeId);
+    
+    if (product && store) {
+      addToBasket({
+        productId: product.id.toString(),
+        storeId: storeId,
+        productName: product.name,
+        storeName: store.seller,
+        price: store.price,
+        quantity: 1
+      });
+      toast.success('Added to cart!');
+    }
   };
 
   const handleAddToFavorites = (product: Product) => {
     addToFavorites({
-      productId: product.id,
+      productId: product.id.toString(),
       productName: product.name,
-      image: product.image_url
+      image: product.image
     });
     toast.success('Added to favorites!');
   };
@@ -338,65 +366,13 @@ const Home: React.FC = () => {
             <p className="text-gray-600">Check back later for new products!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {featuredProducts.map((product) => (
-              <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-white p-2 h-8 w-8"
-                    onClick={() => handleAddToFavorites(product)}
-                  >
-                    <Heart className="w-4 h-4" />
-                  </Button>
-                  <Badge className="absolute top-2 left-2 bg-blue-600">
-                    {product.category}
-                  </Badge>
-                </div>
-                
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <h3 className="font-medium text-gray-900 line-clamp-2 cursor-pointer" 
-                          onClick={() => navigate(`/product/${product.id}`)}>
-                        {product.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">{product.store}</p>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center text-gray-500">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {product.distance}
-                      </div>
-                      <div className="flex items-center text-yellow-600">
-                        <Star className="w-3 h-3 mr-1 fill-current" />
-                        {product.rating.toFixed(1)}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-green-600">
-                        ${product.price.toFixed(2)}
-                      </span>
-                      <Button
-                        onClick={() => handleAddToCart(product)}
-                        size="sm"
-                        className="shrink-0"
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-1" />
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <ProductCard
+                key={product.id}
+                product={product}
+                onAddToBasket={handleAddToBasket}
+              />
             ))}
           </div>
         )}

@@ -17,6 +17,7 @@ interface Store {
 interface Product {
   id: number;
   name: string;
+  description: string;
   image: string;
   category: string;
   stores: Store[];
@@ -59,6 +60,10 @@ const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
             <h3 className="font-medium text-gray-900 text-sm line-clamp-2">
               {product.name}
             </h3>
+            
+            <p className="text-xs text-gray-600 line-clamp-2">
+              {product.description}
+            </p>
             
             <div className="text-xs text-gray-500">
               From ${bestPriceStore.price} • {product.stores.length} store{product.stores.length !== 1 ? 's' : ''}
