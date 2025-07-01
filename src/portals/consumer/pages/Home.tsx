@@ -80,13 +80,15 @@ const Home: React.FC = () => {
             brand,
             category:categories(name)
           `)
-          .limit(6);
+          .limit(20); // Increased from 6 to 20 to show more products
 
         if (error) {
           console.error('Error fetching products:', error);
           toast.error('Failed to load products');
           return;
         }
+
+        console.log('Fetched products from Supabase:', products);
 
         // Transform data to match expected format and add mock store data
         const transformedProducts: Product[] = products?.map((product, index) => {
@@ -118,6 +120,7 @@ const Home: React.FC = () => {
           };
         }) || [];
 
+        console.log('Transformed products:', transformedProducts);
         setFeaturedProducts(transformedProducts);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -136,7 +139,7 @@ const Home: React.FC = () => {
     
     if (product && store) {
       addToBasket({
-        productId: product.id.toString(),
+        productId: productId.toString(),
         storeId: storeId,
         productName: product.name,
         storeName: store.seller,
