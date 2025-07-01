@@ -6,41 +6,41 @@ import { useState } from "react";
 import StoreSelectionModal from "./StoreSelectionModal";
 
 interface Store {
-  id: number;
-  seller: string;
+  id: string;
+  name: string;
   price: number;
   distance: number;
   rating: number;
   nbScore: number;
+  address: string;
 }
 
 interface Product {
-  id: number;
+  id: string;
   name: string;
+  description: string;
   image: string;
+  brand: string;
   category: string;
   stores: Store[];
+  minPrice: number;
 }
 
 interface ProductCardProps {
   product: Product;
-  onAddToBasket: (productId: number, storeId: number) => void;
+  onAddToBasket?: (productId: string, storeId: string) => void;
 }
 
 const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const bestPriceStore = product.stores.reduce((best, current) => 
-    current.price < best.price ? current : best
-  );
-
   return (
     <>
       <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 shadow-lg">
         <div className="relative">
           <img
-            src={product.image}
+            src={product.image || "/placeholder.svg"}
             alt={product.name}
             className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -56,12 +56,20 @@ const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
         
         <CardContent className="p-3">
           <div className="space-y-3">
-            <h3 className="font-medium text-gray-900 text-sm line-clamp-2">
-              {product.name}
-            </h3>
+            <div>
+              <h3 className="font-medium text-gray-900 text-sm line-clamp-2 mb-1">
+                {product.name}
+              </h3>
+              <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                {product.description}
+              </p>
+              <p className="text-xs text-gray-400">
+                {product.brand}
+              </p>
+            </div>
             
             <div className="text-xs text-gray-500">
-              From ${bestPriceStore.price} • {product.stores.length} store{product.stores.length !== 1 ? 's' : ''}
+              From ${product.minPrice.toFixed(2)} • {product.stores.length} store{product.stores.length !== 1 ? 's' : ''}
             </div>
             
             <Button
