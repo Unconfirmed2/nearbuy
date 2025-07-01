@@ -4,7 +4,9 @@ import { Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { User } from '@supabase/supabase-js';
 import { useAuth } from './hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import MerchantLayout from './components/MerchantLayout';
+import MerchantAuth from './pages/MerchantAuth';
 import Dashboard from './pages/Dashboard';
 import Stores from './pages/Stores';
 import Products from './pages/Products';
@@ -34,20 +36,41 @@ const queryClient = new QueryClient({
 
 const MerchantApp: React.FC<MerchantAppProps> = () => {
   const { user, loading } = useAuth();
-  
-  // Add debugging
-  console.log('MerchantApp - User:', user);
-  console.log('MerchantApp - User metadata:', user?.user_metadata);
-  console.log('MerchantApp - User role:', user?.user_metadata?.role);
+  const [userProfile, setUserProfile] = React.useState<any>(null);
+  const [profileLoading, setProfileLoading] = React.useState(true);
 
-  const profile = user ? { 
-    id: user.id, 
-    name: user.user_metadata?.name, 
-    email: user.email,
-    role: user.user_metadata?.role || 'merchant' // Default to merchant for this portal
-  } : null;
+  // Fetch user profile from database when user is available
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) {
+        setProfileLoading(false);
+        return;
+      }
 
-  if (loading) {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching user profile:', error);
+        } else {
+          setUserProfile(data);
+          console.log('User profile from database:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
+  if (loading || profileLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
@@ -55,43 +78,24 @@ const MerchantApp: React.FC<MerchantAppProps> = () => {
     );
   }
 
+  // If no user, show merchant auth page
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">You must be logged in as a merchant to access this portal.</p>
-          <a href="/auth/signup/merchant" className="text-blue-600 hover:text-blue-500">
-            Sign up as a merchant
-          </a>
-        </div>
-      </div>
-    );
+    return <MerchantAuth />;
   }
 
-  // Check if user has merchant role from their metadata
-  const userRole = user.user_metadata?.role;
-  console.log('MerchantApp - Checking user role:', userRole);
-  
-  if (userRole && userRole !== 'merchant') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">This portal is only accessible to merchant accounts.</p>
-          <p className="text-sm text-gray-500 mb-6">Your current role: {userRole}</p>
-          <div className="space-x-4">
-            <a href="/" className="text-blue-600 hover:text-blue-500">
-              Go to Consumer Portal
-            </a>
-            <a href="/auth/signup/merchant" className="text-blue-600 hover:text-blue-500">
-              Sign up as Merchant
-            </a>
-          </div>
-        </div>
-      </div>
-    );
+  // If user exists but no profile in database, or profile role is not merchant, show auth page
+  if (!userProfile || userProfile.role !== 'merchant') {
+    console.log('User profile role:', userProfile?.role);
+    return <MerchantAuth />;
   }
+
+  const profile = {
+    id: user.id,
+    name: userProfile.name || user.user_metadata?.name,
+    email: userProfile.email || user.email,
+    role: userProfile.role,
+    avatar_url: userProfile.avatar_url
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
