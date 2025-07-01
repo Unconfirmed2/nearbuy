@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ProductCard from '@/components/ProductCard';
 import { toast } from 'sonner';
 import { addToBasket } from '@/utils/localStorage';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 interface Store {
   id: number;
@@ -42,6 +42,8 @@ const uuidToNumber = (uuid: string): number => {
   return Math.abs(hash);
 };
 
+const PRODUCTS_PER_PAGE = 20;
+
 const ProductSearch: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -53,17 +55,21 @@ const ProductSearch: React.FC = () => {
   });
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
 
-  // Fetch products from Supabase
-  const fetchProducts = async (query: string) => {
+  // Fetch products from Supabase with pagination
+  const fetchProducts = useCallback(async (query: string, pageNum: number = 0, reset: boolean = false) => {
     if (!query.trim()) {
       setProducts([]);
+      setHasMore(false);
       return;
     }
 
     try {
-      setLoading(true);
-      const { data: products, error } = await supabase
+      if (pageNum === 0) setLoading(true);
+      
+      const { data: products, error, count } = await supabase
         .from('products')
         .select(`
           id,
@@ -72,9 +78,10 @@ const ProductSearch: React.FC = () => {
           image_url,
           brand,
           category:categories(name)
-        `)
+        `, { count: 'exact' })
         .or(`name.ilike.%${query}%,description.ilike.%${query}%,brand.ilike.%${query}%`)
-        .limit(50);
+        .range(pageNum * PRODUCTS_PER_PAGE, (pageNum + 1) * PRODUCTS_PER_PAGE - 1)
+        .limit(PRODUCTS_PER_PAGE);
 
       if (error) {
         console.error('Error fetching products:', error);
@@ -120,14 +127,35 @@ const ProductSearch: React.FC = () => {
         };
       }) || [];
 
-      setProducts(transformedProducts);
+      if (reset || pageNum === 0) {
+        setProducts(transformedProducts);
+      } else {
+        setProducts(prev => [...prev, ...transformedProducts]);
+      }
+      
+      // Check if we have more products to load
+      const totalLoaded = (pageNum + 1) * PRODUCTS_PER_PAGE;
+      setHasMore(count ? totalLoaded < count : transformedProducts.length === PRODUCTS_PER_PAGE);
+      
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to search products');
     } finally {
-      setLoading(false);
+      if (pageNum === 0) setLoading(false);
     }
-  };
+  }, []);
+
+  const loadMore = useCallback(() => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(searchQuery, nextPage);
+  }, [page, searchQuery, fetchProducts]);
+
+  useInfiniteScroll({
+    hasMore,
+    isLoading: loading,
+    onLoadMore: loadMore
+  });
 
   useEffect(() => {
     const query = searchParams.get('q') || '';
@@ -136,9 +164,10 @@ const ProductSearch: React.FC = () => {
     setSearchType(type);
     
     if (query && type === 'products') {
-      fetchProducts(query);
+      setPage(0);
+      fetchProducts(query, 0, true);
     }
-  }, [searchParams]);
+  }, [searchParams, fetchProducts]);
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
@@ -152,7 +181,8 @@ const ProductSearch: React.FC = () => {
     setSearchParams(newParams);
     
     if (searchType === 'products') {
-      fetchProducts(searchQuery);
+      setPage(0);
+      fetchProducts(searchQuery, 0, true);
     }
   };
 
@@ -229,7 +259,7 @@ const ProductSearch: React.FC = () => {
           {searchType === 'products' ? 'Products' : 'Stores'} Found
         </h2>
         
-        {loading ? (
+        {loading && products.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <Card key={i} className="group overflow-hidden hover:shadow-lg transition-shadow animate-pulse">
@@ -248,7 +278,7 @@ const ProductSearch: React.FC = () => {
           products.length > 0 ? (
             <>
               <p className="text-gray-600 mb-4">
-                Found {products.length} result{products.length !== 1 ? 's' : ''} for "{searchQuery}"
+                Found {products.length}{hasMore ? '+' : ''} result{products.length !== 1 ? 's' : ''} for "{searchQuery}"
               </p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {products.map((product) => (
@@ -259,6 +289,19 @@ const ProductSearch: React.FC = () => {
                   />
                 ))}
               </div>
+              
+              {/* Loading indicator for infinite scroll */}
+              {hasMore && (
+                <div className="flex justify-center mt-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+              
+              {!hasMore && products.length > 0 && (
+                <div className="text-center mt-8 text-gray-500">
+                  <p>No more results found for "{searchQuery}"</p>
+                </div>
+              )}
             </>
           ) : (
             <div className="text-center py-12">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import ProductCard from '@/components/ProductCard';
 import StoreSelectionModal from '@/components/StoreSelectionModal';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 interface Store {
   id: number;
@@ -50,9 +51,13 @@ const uuidToNumber = (uuid: string): number => {
   return Math.abs(hash);
 };
 
+const PRODUCTS_PER_PAGE = 20;
+
 const Home: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
   
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,81 +72,107 @@ const Home: React.FC = () => {
     value: 5
   });
 
-  // Fetch products from Supabase
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data: products, error } = await supabase
-          .from('products')
-          .select(`
-            id,
-            name,
-            description,
-            image_url,
-            brand,
-            category:categories(name)
-          `)
-          .limit(20);
+  // Fetch products from Supabase with pagination
+  const fetchProducts = useCallback(async (pageNum: number = 0, reset: boolean = false) => {
+    try {
+      if (pageNum === 0) setLoading(true);
+      
+      const { data: products, error, count } = await supabase
+        .from('products')
+        .select(`
+          id,
+          name,
+          description,
+          image_url,
+          brand,
+          category:categories(name)
+        `, { count: 'exact' })
+        .range(pageNum * PRODUCTS_PER_PAGE, (pageNum + 1) * PRODUCTS_PER_PAGE - 1)
+        .limit(PRODUCTS_PER_PAGE);
 
-        if (error) {
-          console.error('Error fetching products:', error);
-          toast.error('Failed to load products');
-          return;
-        }
-
-        console.log('Fetched products from Supabase:', products);
-
-        // Mock addresses for stores
-        const mockAddresses = [
-          '123 Main St, Downtown',
-          '456 Oak Ave, Shopping District',
-          '789 Pine Rd, University Area',
-          '321 Elm St, Midtown',
-          '654 Maple Dr, Eastside'
-        ];
-
-        // Transform data to match expected format and add mock store data
-        const transformedProducts: Product[] = products?.map((product, index) => {
-          // Generate 2-4 mock stores per product
-          const storeCount = Math.floor(Math.random() * 3) + 2;
-          const stores: Store[] = [];
-          
-          // Convert UUID to number for product ID
-          const productId = uuidToNumber(product.id);
-          
-          for (let i = 0; i < storeCount; i++) {
-            stores.push({
-              id: productId * 10 + i + 1000,
-              seller: `Store ${String.fromCharCode(65 + i)}`,
-              price: Math.floor(Math.random() * 50) + 10,
-              distance: Math.random() * 5 + 0.5,
-              rating: 3.5 + Math.random() * 1.5,
-              nbScore: Math.floor(Math.random() * 2) + 4,
-              address: mockAddresses[i % mockAddresses.length]
-            });
-          }
-
-          return {
-            id: productId,
-            name: product.name,
-            description: product.description || 'No description available',
-            image: product.image_url || '/placeholder.svg',
-            category: product.category?.name || 'General',
-            stores: stores.sort((a, b) => a.price - b.price)
-          };
-        }) || [];
-
-        console.log('Transformed products:', transformedProducts);
-        setFeaturedProducts(transformedProducts);
-      } catch (error) {
+      if (error) {
         console.error('Error fetching products:', error);
         toast.error('Failed to load products');
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
 
-    fetchProducts();
+      console.log('Fetched products from Supabase:', products);
+
+      // Mock addresses for stores
+      const mockAddresses = [
+        '123 Main St, Downtown',
+        '456 Oak Ave, Shopping District',
+        '789 Pine Rd, University Area',
+        '321 Elm St, Midtown',
+        '654 Maple Dr, Eastside'
+      ];
+
+      // Transform data to match expected format and add mock store data
+      const transformedProducts: Product[] = products?.map((product, index) => {
+        // Generate 2-4 mock stores per product
+        const storeCount = Math.floor(Math.random() * 3) + 2;
+        const stores: Store[] = [];
+        
+        // Convert UUID to number for product ID
+        const productId = uuidToNumber(product.id);
+        
+        for (let i = 0; i < storeCount; i++) {
+          stores.push({
+            id: productId * 10 + i + 1000,
+            seller: `Store ${String.fromCharCode(65 + i)}`,
+            price: Math.floor(Math.random() * 50) + 10,
+            distance: Math.random() * 5 + 0.5,
+            rating: 3.5 + Math.random() * 1.5,
+            nbScore: Math.floor(Math.random() * 2) + 4,
+            address: mockAddresses[i % mockAddresses.length]
+          });
+        }
+
+        return {
+          id: productId,
+          name: product.name,
+          description: product.description || 'No description available',
+          image: product.image_url || '/placeholder.svg',
+          category: product.category?.name || 'General',
+          stores: stores.sort((a, b) => a.price - b.price)
+        };
+      }) || [];
+
+      console.log('Transformed products:', transformedProducts);
+      
+      if (reset || pageNum === 0) {
+        setFeaturedProducts(transformedProducts);
+      } else {
+        setFeaturedProducts(prev => [...prev, ...transformedProducts]);
+      }
+      
+      // Check if we have more products to load
+      const totalLoaded = (pageNum + 1) * PRODUCTS_PER_PAGE;
+      setHasMore(count ? totalLoaded < count : transformedProducts.length === PRODUCTS_PER_PAGE);
+      
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      if (pageNum === 0) setLoading(false);
+    }
+  }, []);
+
+  const loadMore = useCallback(() => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage);
+  }, [page, fetchProducts]);
+
+  useInfiniteScroll({
+    hasMore,
+    isLoading: loading,
+    onLoadMore: loadMore
+  });
+
+  useEffect(() => {
+    fetchProducts(0, true);
+    setPage(0);
   }, []);
 
   const handleAddToBasket = (productId: number, storeId: number) => {
@@ -204,7 +235,7 @@ const Home: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && featuredProducts.length === 0) {
     return (
       <div className="space-y-8 container mx-auto px-4 py-8">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg">
@@ -388,22 +419,37 @@ const Home: React.FC = () => {
           </Button>
         </div>
         
-        {featuredProducts.length === 0 ? (
+        {featuredProducts.length === 0 && !loading ? (
           <div className="text-center py-12">
             <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
             <p className="text-gray-600">Check back later for new products!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {featuredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToBasket={handleAddToBasket}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {featuredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToBasket={handleAddToBasket}
+                />
+              ))}
+            </div>
+            
+            {/* Loading indicator for infinite scroll */}
+            {hasMore && (
+              <div className="flex justify-center mt-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            )}
+            
+            {!hasMore && featuredProducts.length > 0 && (
+              <div className="text-center mt-8 text-gray-500">
+                <p>You've seen all available products!</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
