@@ -86,6 +86,7 @@ const ProductSearch: React.FC = () => {
       if (error) {
         console.error('Error fetching products:', error);
         toast.error('Failed to search products');
+        setHasMore(false);
         return;
       }
 
@@ -135,21 +136,30 @@ const ProductSearch: React.FC = () => {
       
       // Check if we have more products to load
       const totalLoaded = (pageNum + 1) * PRODUCTS_PER_PAGE;
-      setHasMore(count ? totalLoaded < count : transformedProducts.length === PRODUCTS_PER_PAGE);
+      const hasMoreProducts = count ? totalLoaded < count : transformedProducts.length === PRODUCTS_PER_PAGE;
+      setHasMore(hasMoreProducts);
+      
+      // If no products returned, we've reached the end
+      if (!products || products.length === 0) {
+        setHasMore(false);
+      }
       
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to search products');
+      setHasMore(false);
     } finally {
       if (pageNum === 0) setLoading(false);
     }
   }, []);
 
   const loadMore = useCallback(() => {
+    if (!hasMore || loading) return;
+    
     const nextPage = page + 1;
     setPage(nextPage);
     fetchProducts(searchQuery, nextPage);
-  }, [page, searchQuery, fetchProducts]);
+  }, [page, searchQuery, hasMore, loading, fetchProducts]);
 
   useInfiniteScroll({
     hasMore,

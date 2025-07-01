@@ -30,15 +30,20 @@ export const useInfiniteScroll = ({
   }, [hasMore, isLoading, isFetching, threshold]);
 
   useEffect(() => {
-    if (!isFetching) return;
+    if (!isFetching || !hasMore) return;
     
     const fetchMore = async () => {
-      await onLoadMore();
-      setIsFetching(false);
+      try {
+        await onLoadMore();
+      } catch (error) {
+        console.error('Error loading more data:', error);
+      } finally {
+        setIsFetching(false);
+      }
     };
 
     fetchMore();
-  }, [isFetching, onLoadMore]);
+  }, [isFetching, onLoadMore, hasMore]);
 
   return { isFetching };
 };

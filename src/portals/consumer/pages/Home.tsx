@@ -93,6 +93,8 @@ const Home: React.FC = () => {
       if (error) {
         console.error('Error fetching products:', error);
         toast.error('Failed to load products');
+        // Set hasMore to false on error to prevent further requests
+        setHasMore(false);
         return;
       }
 
@@ -148,21 +150,30 @@ const Home: React.FC = () => {
       
       // Check if we have more products to load
       const totalLoaded = (pageNum + 1) * PRODUCTS_PER_PAGE;
-      setHasMore(count ? totalLoaded < count : transformedProducts.length === PRODUCTS_PER_PAGE);
+      const hasMoreProducts = count ? totalLoaded < count : transformedProducts.length === PRODUCTS_PER_PAGE;
+      setHasMore(hasMoreProducts);
+      
+      // If no products returned, we've reached the end
+      if (!products || products.length === 0) {
+        setHasMore(false);
+      }
       
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to load products');
+      setHasMore(false);
     } finally {
       if (pageNum === 0) setLoading(false);
     }
   }, []);
 
   const loadMore = useCallback(() => {
+    if (!hasMore || loading) return;
+    
     const nextPage = page + 1;
     setPage(nextPage);
     fetchProducts(nextPage);
-  }, [page, fetchProducts]);
+  }, [page, hasMore, loading, fetchProducts]);
 
   useInfiniteScroll({
     hasMore,
