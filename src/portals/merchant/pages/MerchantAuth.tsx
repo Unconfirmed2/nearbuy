@@ -64,12 +64,12 @@ const MerchantAuth: React.FC = () => {
 
       console.log('Sign in successful:', data);
 
-      // Check if user has merchant role
+      // Check if user exists in our users table
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('role')
+        .select('role, name, email')
         .eq('id', data.user.id)
-        .single();
+        .maybeSingle();
 
       if (userError) {
         console.error('Error fetching user role:', userError);
@@ -77,10 +77,45 @@ const MerchantAuth: React.FC = () => {
         return;
       }
 
-      if (userData?.role !== 'merchant') {
-        toast.error('This account is not registered as a merchant');
-        await supabase.auth.signOut();
-        return;
+      // If user doesn't exist in users table, create them
+      if (!userData) {
+        console.log('User not found in users table, creating user record...');
+        
+        const userRole = data.user.user_metadata?.role || 'customer';
+        
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.user_metadata?.name || data.user.user_metadata?.contactName,
+            role: userRole,
+            avatar_url: data.user.user_metadata?.avatar_url
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating user record:', createError);
+          toast.error('Error creating user profile');
+          return;
+        }
+
+        console.log('Created user record:', newUser);
+        
+        // Check if the created user is a merchant
+        if (newUser.role !== 'merchant') {
+          toast.error('This account is not registered as a merchant');
+          await supabase.auth.signOut();
+          return;
+        }
+      } else {
+        // Check if existing user has merchant role
+        if (userData.role !== 'merchant') {
+          toast.error('This account is not registered as a merchant');
+          await supabase.auth.signOut();
+          return;
+        }
       }
 
       toast.success('Welcome back!');
