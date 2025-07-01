@@ -14,44 +14,40 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { supabase } from '@/integrations/supabase/client';
-import ProductCard from '@/components/ProductCard';
-import StoreSelectionModal from '@/components/StoreSelectionModal';
-
-interface Store {
-  id: number;
-  seller: string;
-  price: number;
-  distance: number;
-  rating: number;
-  nbScore: number;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  image: string;
-  category: string;
-  stores: Store[];
-}
-
-// Helper function to convert UUID string to a stable positive number
-const uuidToNumber = (uuid: string): number => {
-  // Create a simple hash from the UUID string
-  let hash = 0;
-  for (let i = 0; i < uuid.length; i++) {
-    const char = uuid.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  // Ensure it's positive
-  return Math.abs(hash);
-};
 
 const Home: React.FC = () => {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [featuredProducts] = useState([
+    {
+      id: 1,
+      name: 'Organic Bananas',
+      price: 2.49,
+      image: '/placeholder.svg',
+      store: 'Fresh Market',
+      distance: '0.8 mi',
+      rating: 4.5,
+      category: 'Produce'
+    },
+    {
+      id: 2,
+      name: 'Artisan Bread',
+      price: 4.99,
+      image: '/placeholder.svg',
+      store: 'Downtown Bakery',
+      distance: '1.2 mi',
+      rating: 4.8,
+      category: 'Bakery'
+    },
+    {
+      id: 3,
+      name: 'Local Honey',
+      price: 12.99,
+      image: '/placeholder.svg',
+      store: 'Farmers Market',
+      distance: '2.1 mi',
+      rating: 4.9,
+      category: 'Pantry'
+    }
+  ]);
   
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,90 +62,21 @@ const Home: React.FC = () => {
     value: 5
   });
 
-  // Fetch products from Supabase
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data: products, error } = await supabase
-          .from('products')
-          .select(`
-            id,
-            name,
-            description,
-            image_url,
-            brand,
-            category:categories(name)
-          `)
-          .limit(6);
-
-        if (error) {
-          console.error('Error fetching products:', error);
-          toast.error('Failed to load products');
-          return;
-        }
-
-        // Transform data to match expected format and add mock store data
-        const transformedProducts: Product[] = products?.map((product, index) => {
-          // Generate 2-4 mock stores per product
-          const storeCount = Math.floor(Math.random() * 3) + 2;
-          const stores: Store[] = [];
-          
-          // Convert UUID to number for product ID
-          const productId = uuidToNumber(product.id);
-          
-          for (let i = 0; i < storeCount; i++) {
-            stores.push({
-              id: productId * 10 + i + 1000, // Use product-based numbering to avoid conflicts
-              seller: `Store ${String.fromCharCode(65 + i)}`,
-              price: Math.floor(Math.random() * 50) + 10,
-              distance: Math.random() * 5 + 0.5,
-              rating: 3.5 + Math.random() * 1.5,
-              nbScore: Math.floor(Math.random() * 2) + 4
-            });
-          }
-
-          return {
-            id: productId,
-            name: product.name,
-            description: product.description || 'No description available',
-            image: product.image_url || '/placeholder.svg',
-            category: product.category?.name || 'General',
-            stores: stores.sort((a, b) => a.price - b.price) // Sort by price ascending
-          };
-        }) || [];
-
-        setFeaturedProducts(transformedProducts);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        toast.error('Failed to load products');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  const handleAddToBasket = (productId: number, storeId: number) => {
-    const product = featuredProducts.find(p => p.id === productId);
-    const store = product?.stores.find(s => s.id === storeId);
-    
-    if (product && store) {
-      addToBasket({
-        productId: product.id.toString(),
-        storeId: storeId,
-        productName: product.name,
-        storeName: store.seller,
-        price: store.price,
-        quantity: 1
-      });
-      toast.success('Added to cart!');
-    }
+  const handleAddToCart = (product: any) => {
+    addToBasket({
+      productId: product.id,
+      storeId: 1,
+      productName: product.name,
+      storeName: product.store,
+      price: product.price,
+      quantity: 1
+    });
+    toast.success('Added to cart!');
   };
 
-  const handleAddToFavorites = (product: Product) => {
+  const handleAddToFavorites = (product: any) => {
     addToFavorites({
-      productId: product.id.toString(),
+      productId: product.id,
       productName: product.name,
       image: product.image
     });
@@ -189,33 +116,6 @@ const Home: React.FC = () => {
       toast.error('Geolocation is not supported by this browser.');
     }
   };
-
-  if (loading) {
-    return (
-      <div className="space-y-8 container mx-auto px-4 py-8">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl font-bold mb-4">Find products you want NearBuy</h1>
-            <p className="text-xl opacity-90">Discover local products and plan your pickup route</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <Card key={i} className="group overflow-hidden hover:shadow-lg transition-shadow animate-pulse">
-              <div className="h-48 bg-gray-200"></div>
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8 container mx-auto px-4 py-8">
@@ -374,23 +274,67 @@ const Home: React.FC = () => {
           </Button>
         </div>
         
-        {featuredProducts.length === 0 ? (
-          <div className="text-center py-12">
-            <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
-            <p className="text-gray-600">Check back later for new products!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {featuredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToBasket={handleAddToBasket}
-              />
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {featuredProducts.map((product) => (
+            <Card key={product.id} className="group overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="relative">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-48 object-cover"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-white p-2 h-8 w-8"
+                  onClick={() => handleAddToFavorites(product)}
+                >
+                  <Heart className="w-4 h-4" />
+                </Button>
+                <Badge className="absolute top-2 left-2 bg-blue-600">
+                  {product.category}
+                </Badge>
+              </div>
+              
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="font-medium text-gray-900 line-clamp-2 cursor-pointer" 
+                        onClick={() => navigate(`/product/${product.id}`)}>
+                      {product.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">{product.store}</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center text-gray-500">
+                      <MapPin className="w-3 h-3 mr-1" />
+                      {product.distance}
+                    </div>
+                    <div className="flex items-center text-yellow-600">
+                      <Star className="w-3 h-3 mr-1 fill-current" />
+                      {product.rating}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-green-600">
+                      ${product.price}
+                    </span>
+                    <Button
+                      onClick={() => handleAddToCart(product)}
+                      size="sm"
+                      className="shrink-0"
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
