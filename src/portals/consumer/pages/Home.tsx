@@ -23,9 +23,10 @@ interface Product {
   price: number;
   image_url: string;
   brand: string;
-  category?: {
-    name: string;
-  };
+  category: string;
+  store: string;
+  distance: string;
+  rating: number;
 }
 
 const Home: React.FC = () => {
@@ -54,12 +55,10 @@ const Home: React.FC = () => {
           .select(`
             id,
             name,
-            price,
             image_url,
             brand,
             category:categories(name)
           `)
-          .eq('is_active', true)
           .limit(6);
 
         if (error) {
@@ -68,10 +67,13 @@ const Home: React.FC = () => {
           return;
         }
 
-        // Transform data to match expected format and add mock store data
-        const transformedProducts = products?.map(product => ({
-          ...product,
-          price: product.price || Math.floor(Math.random() * 100) + 10, // Random price if not set
+        // Transform data to match expected format and add mock data
+        const transformedProducts: Product[] = products?.map(product => ({
+          id: product.id,
+          name: product.name,
+          image_url: product.image_url || '/placeholder.svg',
+          brand: product.brand || 'Unknown Brand',
+          price: Math.floor(Math.random() * 100) + 10, // Mock price
           store: 'Local Store', // Mock store name
           distance: `${(Math.random() * 3 + 0.5).toFixed(1)} mi`, // Mock distance
           rating: 4.5 + Math.random() * 0.4, // Mock rating between 4.5-4.9
@@ -90,7 +92,7 @@ const Home: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: Product) => {
     addToBasket({
       productId: product.id,
       storeId: 1,
@@ -102,7 +104,7 @@ const Home: React.FC = () => {
     toast.success('Added to cart!');
   };
 
-  const handleAddToFavorites = (product: any) => {
+  const handleAddToFavorites = (product: Product) => {
     addToFavorites({
       productId: product.id,
       productName: product.name,
@@ -375,13 +377,13 @@ const Home: React.FC = () => {
                       </div>
                       <div className="flex items-center text-yellow-600">
                         <Star className="w-3 h-3 mr-1 fill-current" />
-                        {product.rating?.toFixed(1)}
+                        {product.rating.toFixed(1)}
                       </div>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-bold text-green-600">
-                        ${product.price?.toFixed(2)}
+                        ${product.price.toFixed(2)}
                       </span>
                       <Button
                         onClick={() => handleAddToCart(product)}
