@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { StoreFilterProvider } from './contexts/StoreFilterContext';
 import MerchantLayout from './components/MerchantLayout';
 import { useAuth } from './hooks/useAuth';
@@ -31,14 +31,8 @@ const MerchantApp: React.FC = () => {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-          <p className="text-gray-600">Please sign in to access the merchant portal.</p>
-        </div>
-      </div>
-    );
+    // Redirect unauthenticated users to merchant sign-in
+    return <Navigate to="/auth/signup/merchant" replace />;
   }
 
   const profile = {

@@ -46,7 +46,7 @@ const GuestNavbar: React.FC = () => {
               <HelpCircle className="h-4 w-4 mr-1" />
               Help Center
             </Link>
-            <Link to="/auth/signup/merchant" className="text-gray-700 hover:text-green-600 transition-colors flex items-center">
+            <Link to="/merchant" className="text-gray-700 hover:text-green-600 transition-colors flex items-center">
               <Store className="h-4 w-4 mr-1" />
               Merchant Portal
             </Link>
@@ -109,7 +109,7 @@ const GuestNavbar: React.FC = () => {
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Help Center
                   </Link>
-                  <Link to="/auth/signup/merchant" className="text-lg font-medium flex items-center text-green-600">
+                  <Link to="/merchant" className="text-lg font-medium flex items-center text-green-600">
                     <Store className="h-4 w-4 mr-2" />
                     Merchant Portal
                   </Link>
