@@ -34,6 +34,7 @@ import AdminApp from './portals/admin/AdminApp';
 // Layout
 import ConsumerLayout from './portals/consumer/components/ConsumerLayout';
 import MerchantLayout from './portals/merchant/components/MerchantLayout';
+import { StoreFilterProvider } from './portals/merchant/contexts/StoreFilterContext';
 import { useAuth } from './portals/consumer/hooks/useAuth';
 
 // Types
@@ -48,20 +49,22 @@ interface UserProfile {
 // Merchant Preview Component - shows consumer UI with merchant navigation
 const MerchantPreview = ({ user, profile, children }: { user: any, profile: any, children: React.ReactNode }) => {
   return (
-    <MerchantLayout user={user} profile={profile}>
-      <div className="space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-sm font-medium text-blue-800">Merchant Preview Mode</span>
+    <StoreFilterProvider>
+      <MerchantLayout user={user} profile={profile}>
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span className="text-sm font-medium text-blue-800">Merchant Preview Mode</span>
+            </div>
+            <p className="text-sm text-blue-600 mt-1">
+              You're viewing the customer experience. Cart actions are disabled for merchants.
+            </p>
           </div>
-          <p className="text-sm text-blue-600 mt-1">
-            You're viewing the customer experience. Cart actions are disabled for merchants.
-          </p>
+          {children}
         </div>
-        {children}
-      </div>
-    </MerchantLayout>
+      </MerchantLayout>
+    </StoreFilterProvider>
   );
 };
 
