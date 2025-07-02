@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,8 @@ import PromotionsManager from '../components/PromotionsManager';
 import CouponManager from '../components/CouponManager';
 
 const Marketing: React.FC = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="space-y-6">
       <div>
@@ -26,11 +29,11 @@ const Marketing: React.FC = () => {
         </TabsList>
 
         <TabsContent value="promotions">
-          <PromotionsManager storeId="debug-store-id" products={[]} />
+          <PromotionsManager storeId="" products={[]} />
         </TabsContent>
 
         <TabsContent value="coupons">
-          <CouponManager merchantId="debug-merchant-id" />
+          <CouponManager merchantId={user?.id || ''} />
         </TabsContent>
 
         <TabsContent value="sponsored">

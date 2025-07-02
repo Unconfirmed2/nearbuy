@@ -16,6 +16,7 @@ import {
   MapPin
 } from 'lucide-react';
 import { useOrders } from '../hooks/useOrders';
+import { useAuth } from '../hooks/useAuth';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useStores } from '../hooks/useStores';
 import { useProducts } from '../hooks/useProducts';
@@ -28,10 +29,11 @@ import CustomerEngagementCard from '../components/CustomerEngagementCard';
 const Dashboard: React.FC = () => {
   const [lastOrderCount, setLastOrderCount] = useState(0);
   
-  const { orders, loading: ordersLoading } = useOrders('debug-merchant-id');
-  const { analytics, loading: analyticsLoading } = useAnalytics('debug-merchant-id');
-  const { stores } = useStores('debug-merchant-id');
-  const { products } = useProducts('debug-merchant-id');
+  const { user } = useAuth();
+  const { orders, loading: ordersLoading } = useOrders(user?.id || '');
+  const { analytics, loading: analyticsLoading } = useAnalytics(user?.id);
+  const { stores } = useStores(user?.id);
+  const { products } = useProducts(user?.id || '');
 
   const recentOrders = orders.slice(0, 5);
   const pendingOrders = orders.filter(order => order.status === 'pending').length;
@@ -83,7 +85,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <OrderNotifications merchantId="debug-merchant-id" />
+      <OrderNotifications merchantId={user?.id || ''} />
 
       <div className="flex justify-between items-center">
         <div>
@@ -96,7 +98,7 @@ const Dashboard: React.FC = () => {
 
       {/* Verification Status */}
       <MerchantVerificationCard
-        merchantId="debug-merchant-id"
+        merchantId={user?.id || ''}
         verificationStatus="pending"
       />
 

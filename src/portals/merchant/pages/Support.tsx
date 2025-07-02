@@ -1,11 +1,14 @@
 
 import React from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { HelpCircle, MessageCircle, BookOpen, Phone } from 'lucide-react';
 import SupportTicketSystem from '../components/SupportTicketSystem';
 
 const Support: React.FC = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="space-y-6">
       <div>
@@ -70,7 +73,7 @@ const Support: React.FC = () => {
       </div>
 
       {/* Support Tickets */}
-      <SupportTicketSystem merchantId="debug-merchant-id" />
+      <SupportTicketSystem merchantId={user?.id || ''} />
 
       {/* FAQ Section */}
       <Card>

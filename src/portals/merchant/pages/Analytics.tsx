@@ -15,6 +15,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useAuth } from '../hooks/useAuth';
 import AnalyticsCard from '../components/AnalyticsCard';
 import RevenueChart from '../components/RevenueChart';
 import TopProductsTable from '../components/TopProductsTable';
@@ -22,7 +23,8 @@ import AnalyticsExport from '../components/AnalyticsExport';
 
 const Analytics: React.FC = () => {
   const [timeRange, setTimeRange] = useState('7d');
-  const { analytics, loading } = useAnalytics('debug-merchant-id');
+  const { user } = useAuth();
+  const { analytics, loading } = useAnalytics(user?.id);
 
   const timeRanges = [
     { value: '24h', label: 'Last 24 Hours' },
@@ -206,7 +208,7 @@ const Analytics: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="export">
-          <AnalyticsExport merchantId="debug-merchant-id" />
+          <AnalyticsExport merchantId={user?.id} />
         </TabsContent>
       </Tabs>
     </div>

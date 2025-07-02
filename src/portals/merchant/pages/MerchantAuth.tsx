@@ -81,7 +81,7 @@ const MerchantAuth: React.FC = () => {
       if (!userData) {
         console.log('User not found in users table, creating user record...');
         
-        const userRole = data.user.user_metadata?.role || 'customer';
+        const userRole = data.user.user_metadata?.role || 'merchant'; // Default to merchant for this portal
         
         const { data: newUser, error: createError } = await supabase
           .from('users')
@@ -101,6 +101,24 @@ const MerchantAuth: React.FC = () => {
           return;
         }
 
+        // Also create profile record
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.user_metadata?.name || data.user.user_metadata?.contactName,
+            role: userRole,
+            avatar_url: data.user.user_metadata?.avatar_url,
+            verification_status: 'approved',
+            verified_at: new Date().toISOString()
+          });
+
+        if (profileError) {
+          console.error('Error creating profile record:', profileError);
+          // Don't fail if profile creation fails, continue with user record
+        }
+
         console.log('Created user record:', newUser);
         
         // Check if the created user is a merchant
@@ -115,6 +133,31 @@ const MerchantAuth: React.FC = () => {
           toast.error('This account is not registered as a merchant');
           await supabase.auth.signOut();
           return;
+        }
+
+        // Ensure profile exists for existing user
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+
+        if (!profileData) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: userData.email,
+              name: userData.name,
+              role: userData.role,
+              avatar_url: null,
+              verification_status: 'approved',
+              verified_at: new Date().toISOString()
+            });
+
+          if (profileError) {
+            console.error('Error creating profile record:', profileError);
+          }
         }
       }
 

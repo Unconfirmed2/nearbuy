@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MerchantSettings from '../components/MerchantSettings';
 import NotificationSettings from '../components/NotificationSettings';
@@ -8,6 +9,7 @@ import MerchantProfileForm from '../components/MerchantProfileForm';
 import SecuritySettings from '../components/SecuritySettings';
 
 const Settings: React.FC = () => {
+  const { user } = useAuth();
   // Mock notification preferences
   const [notificationPreferences, setNotificationPreferences] = useState({
     email_new_orders: true,
@@ -33,18 +35,18 @@ const Settings: React.FC = () => {
       status: 'open' as const,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      merchant_id: 'debug-merchant-id'
+      merchant_id: user?.id || ''
     }
   ]);
 
-  // Mock merchant profile data
+  // Real merchant profile data would come from database
   const [merchantProfile, setMerchantProfile] = useState({
-    name: 'Debug Merchant',
-    email: 'merchant@example.com',
-    phone: '+1-555-0123',
-    business_name: 'Debug Store',
-    business_description: 'A test store for debugging purposes',
-    business_address: '123 Main St, City, State 12345'
+    name: '',
+    email: user?.email || '',
+    phone: '',
+    business_name: '',
+    business_description: '',
+    business_address: ''
   });
 
   const handleSaveNotifications = (preferences: any) => {
@@ -58,7 +60,7 @@ const Settings: React.FC = () => {
       id: `ticket-${Date.now()}`,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      merchant_id: 'debug-merchant-id'
+      merchant_id: user?.id || ''
     };
     setSupportTickets([newTicket, ...supportTickets]);
   };
@@ -105,26 +107,26 @@ const Settings: React.FC = () => {
 
         <TabsContent value="business">
           <MerchantSettings
-            merchantId="debug-merchant-id"
+            merchantId={user?.id || ''}
             profile={merchantProfile}
           />
         </TabsContent>
 
         <TabsContent value="notifications">
           <NotificationSettings
-            merchantId="debug-merchant-id"
+            merchantId={user?.id || ''}
             preferences={notificationPreferences}
             onSave={handleSaveNotifications}
           />
         </TabsContent>
 
         <TabsContent value="security">
-          <SecuritySettings merchantId="debug-merchant-id" />
+          <SecuritySettings merchantId={user?.id || ''} />
         </TabsContent>
 
         <TabsContent value="support">
           <SupportTicketSystem
-            merchantId="debug-merchant-id"
+            merchantId={user?.id || ''}
             tickets={supportTickets}
             onCreateTicket={handleCreateTicket}
             onUpdateTicket={handleUpdateTicket}

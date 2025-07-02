@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingCart, Clock, Bell } from 'lucide-react';
 import { useOrders } from '../hooks/useOrders';
+import { useAuth } from '../hooks/useAuth';
 import { useStores } from '../hooks/useStores';
 import OrdersFilters from '../components/OrdersFilters';
 import OrdersSummaryCards from '../components/OrdersSummaryCards';
@@ -20,8 +21,9 @@ const Orders: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
 
-  const { orders, loading, stats, updateOrderStatus } = useOrders('debug-merchant-id', searchTerm, statusFilter);
-  const { stores } = useStores('debug-merchant-id');
+  const { user } = useAuth();
+  const { orders, loading, stats, updateOrderStatus } = useOrders(user?.id || '', searchTerm, statusFilter);
+  const { stores } = useStores(user?.id);
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = 
@@ -147,11 +149,11 @@ const Orders: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="pickup">
-          <PickupScheduling storeId="debug-store-id" />
+          <PickupScheduling storeId="" />
         </TabsContent>
 
         <TabsContent value="notifications">
-          <OrderNotifications merchantId="debug-merchant-id" />
+          <OrderNotifications merchantId={user?.id || ''} />
         </TabsContent>
       </Tabs>
 

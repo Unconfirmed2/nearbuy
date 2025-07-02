@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, MessageSquare, Heart, TrendingUp } from 'lucide-react';
@@ -7,6 +8,8 @@ import ReviewManager from '../components/ReviewManager';
 import CustomerEngagement from '../components/CustomerEngagement';
 
 const Reviews: React.FC = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="space-y-6">
       <div>
@@ -33,11 +36,11 @@ const Reviews: React.FC = () => {
         </TabsList>
 
         <TabsContent value="reviews">
-          <ReviewManager merchantId="debug-merchant-id" />
+          <ReviewManager merchantId={user?.id || ''} />
         </TabsContent>
 
         <TabsContent value="engagement">
-          <CustomerEngagement merchantId="debug-merchant-id" />
+          <CustomerEngagement merchantId={user?.id || ''} />
         </TabsContent>
 
         <TabsContent value="analytics">

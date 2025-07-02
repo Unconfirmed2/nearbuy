@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import {
 import POSIntegration from '../components/POSIntegration';
 
 const Integrations: React.FC = () => {
+  const { user } = useAuth();
   const paymentIntegrations = [
     {
       name: 'Stripe',
@@ -155,8 +157,8 @@ const Integrations: React.FC = () => {
 
         <TabsContent value="pos">
           <POSIntegration 
-            merchantId="debug-merchant-id" 
-            storeId="debug-store-id" 
+            merchantId={user?.id || ''} 
+            storeId="" 
           />
         </TabsContent>
 
