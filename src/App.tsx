@@ -4,13 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// Auth components
-import AuthLayout from './components/auth/AuthLayout';
-import SignIn from './pages/auth/SignIn';
-import SignUp from './pages/auth/SignUp';
-import ConsumerSignUp from './pages/auth/ConsumerSignUp';
-import MerchantSignUp from './pages/auth/MerchantSignUp';
-
 // Consumer pages - now at root level
 import Home from './portals/consumer/pages/Home';
 import ProductSearch from './portals/consumer/pages/ProductSearch';
@@ -147,14 +140,6 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
         <Routes>
-          {/* Auth routes */}
-          <Route path="/auth" element={<AuthLayout />}>
-            <Route path="signin" element={<SignIn />} />
-            <Route path="signup" element={<SignUp />} />
-            <Route path="signup/consumer" element={<ConsumerSignUp />} />
-            <Route path="signup/merchant" element={<MerchantSignUp />} />
-          </Route>
-
           {/* Root route - handles merchant vs consumer logic */}
           <Route path="/" element={<RootHandler user={user} profile={profile} />} />
 

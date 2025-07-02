@@ -18,6 +18,7 @@ import Support from './pages/Support';
 import Integrations from './pages/Integrations';
 import UserManagement from './pages/UserManagement';
 import StorePreview from './pages/StorePreview';
+import MerchantAuth from './pages/MerchantAuth';
 
 const MerchantApp: React.FC = () => {
   const { user, loading } = useAuth();
@@ -31,8 +32,8 @@ const MerchantApp: React.FC = () => {
   }
 
   if (!user) {
-    // Redirect unauthenticated users to merchant sign-in
-    return <Navigate to="/auth/signup/merchant" replace />;
+    // Redirect unauthenticated users to merchant auth page
+    return <MerchantAuth />;
   }
 
   const profile = {
