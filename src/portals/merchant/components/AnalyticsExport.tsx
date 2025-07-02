@@ -58,10 +58,10 @@ const AnalyticsExport: React.FC<AnalyticsExportProps> = ({ merchantId }) => {
       return;
     }
 
-    // Simulate export
+    // Simulate export process
     toast.success(`Exporting ${selectedCount} metrics as ${exportType.toUpperCase()}...`);
     
-    // TODO: Implement actual export functionality
+    // TODO: Implement actual export functionality with real data
     setTimeout(() => {
       toast.success('Export completed! Download should start automatically.');
     }, 2000);

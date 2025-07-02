@@ -235,9 +235,9 @@ const Products: React.FC = () => {
 
         <TabsContent value="bulk-upload">
           <BulkProductUpload 
-            storeId={selectedStoreId === 'all' ? "debug-store-id" : selectedStoreId}
+            storeId={selectedStoreId === 'all' ? "" : selectedStoreId}
             onUploadComplete={(results) => {
-              console.log('Upload completed:', results);
+              
               toast.success(`Bulk upload completed: ${results.successful} successful, ${results.failed} failed`);
             }}
           />

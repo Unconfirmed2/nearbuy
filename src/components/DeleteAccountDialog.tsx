@@ -83,9 +83,10 @@ const DeleteAccountDialog: React.FC<DeleteAccountDialogProps> = ({
       toast.success('Account deleted successfully');
       navigate('/');
       
-    } catch (error: any) {
-      console.error('Delete account error:', error);
-      toast.error(error.message || 'Failed to delete account');
+    } catch (error) {
+      const err = error as Error;
+      console.error('Delete account error:', err);
+      toast.error(err.message || 'Failed to delete account');
     } finally {
       setLoading(false);
       handleClose();

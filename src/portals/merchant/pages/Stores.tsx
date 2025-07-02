@@ -34,11 +34,11 @@ const Stores: React.FC = () => {
     try {
       setCreateLoading(true);
       
-      // Simulate geocoding for the address
+      // TODO: Implement real geocoding for the address
       const geocodedData = {
         ...storeData,
-        latitude: 37.7749 + (Math.random() - 0.5) * 0.1,
-        longitude: -122.4194 + (Math.random() - 0.5) * 0.1,
+        latitude: 37.7749, // Default San Francisco coordinates
+        longitude: -122.4194,
         is_active: true,
         is_verified: false
       };

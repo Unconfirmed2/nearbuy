@@ -72,15 +72,15 @@ const Dashboard: React.FC = () => {
   };
 
   const handleViewFavorites = () => {
-    console.log('View favorites');
+    // TODO: Navigate to favorites view
   };
 
   const handleViewReviews = () => {
-    console.log('View reviews');
+    // TODO: Navigate to reviews section  
   };
 
   const handleViewCustomers = () => {
-    console.log('View customers');
+    // TODO: Navigate to customer analytics
   };
 
   return (

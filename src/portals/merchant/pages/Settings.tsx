@@ -51,7 +51,7 @@ const Settings: React.FC = () => {
 
   const handleSaveNotifications = (preferences: any) => {
     setNotificationPreferences(preferences);
-    console.log('Notification preferences saved:', preferences);
+    // TODO: Save notification preferences to database
   };
 
   const handleCreateTicket = (ticket: any) => {
@@ -77,7 +77,7 @@ const Settings: React.FC = () => {
 
   const handleSaveProfile = (profile: any) => {
     setMerchantProfile(profile);
-    console.log('Profile saved:', profile);
+    // TODO: Save merchant profile to database
   };
 
   return (

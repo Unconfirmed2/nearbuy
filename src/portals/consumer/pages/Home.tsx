@@ -135,9 +135,9 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
           id: uuidToNumber(item.store_id),
           seller: item.stores.name,
           price: Number(item.price),
-          distance: Math.random() * 3 + 0.5, // TODO: Calculate real distance
-          rating: 4.0 + Math.random() * 1.0,
-          nbScore: Math.floor(Math.random() * 2) + 4,
+          distance: 2.5, // TODO: Calculate real distance using user location
+          rating: 4.5,
+          nbScore: 4,
           address: item.stores.address || 'Address not available'
         });
       });

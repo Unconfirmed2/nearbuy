@@ -170,7 +170,7 @@ const Integrations: React.FC = () => {
                 <IntegrationCard
                   key={integration.name}
                   integration={integration}
-                  onConnect={() => console.log(`Connect ${integration.name}`)}
+                  onConnect={() => {/* TODO: Implement integration connection */}}
                 />
               ))}
             </div>
@@ -185,7 +185,7 @@ const Integrations: React.FC = () => {
                 <IntegrationCard
                   key={integration.name}
                   integration={integration}
-                  onConnect={() => console.log(`Connect ${integration.name}`)}
+                  onConnect={() => {/* TODO: Implement integration connection */}}
                 />
               ))}
             </div>
@@ -200,7 +200,7 @@ const Integrations: React.FC = () => {
                 <IntegrationCard
                   key={integration.name}
                   integration={integration}
-                  onConnect={() => console.log(`Connect ${integration.name}`)}
+                  onConnect={() => {/* TODO: Implement integration connection */}}
                 />
               ))}
             </div>

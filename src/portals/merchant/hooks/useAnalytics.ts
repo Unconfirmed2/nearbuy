@@ -22,12 +22,13 @@ export const useAnalytics = (merchantId?: string) => {
       
       console.log('Fetching analytics for merchant:', merchantId, 'dateRange:', dateRange);
       
-      // TODO: Replace with real Supabase query
+      // TODO: Replace with real Supabase analytics query
       // For now, return empty analytics since we don't have real data
       setAnalytics(null);
-    } catch (err: any) {
-      console.error('Error fetching analytics:', err);
-      setError(err.message);
+    } catch (err) {
+      const error = err as Error;
+      console.error('Error fetching analytics:', error);
+      setError(error.message);
       toast.error('Failed to load analytics');
     } finally {
       setLoading(false);
@@ -42,8 +43,9 @@ export const useAnalytics = (merchantId?: string) => {
       // Create mock download
       const filename = `analytics-report-${new Date().toISOString().split('T')[0]}.${format}`;
       toast.success(`Report exported as ${filename}`);
-    } catch (err: any) {
-      console.error('Error exporting report:', err);
+    } catch (err) {
+      const error = err as Error;
+      console.error('Error exporting report:', error);
       toast.error('Failed to export report');
     }
   };

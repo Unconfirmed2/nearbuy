@@ -22,10 +22,10 @@ const RoutePlanner: React.FC = () => {
         storeId: item.storeId,
         storeName: item.storeName,
         items: [],
-        // Mock store coordinates for demo
+        // TODO: Get real store coordinates from database
         coordinates: { 
-          lat: 40.7128 + (Math.random() - 0.5) * 0.1, 
-          lng: -74.0060 + (Math.random() - 0.5) * 0.1 
+          lat: 40.7128, 
+          lng: -74.0060 
         }
       };
     }

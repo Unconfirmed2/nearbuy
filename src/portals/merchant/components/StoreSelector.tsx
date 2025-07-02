@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Store } from 'lucide-react';
 
 interface StoreSelectorProps {
-  stores: any[];
+  stores: { id: string; name: string }[];
   selectedStoreId: string | 'all';
   onStoreChange: (storeId: string) => void;
   label?: string;

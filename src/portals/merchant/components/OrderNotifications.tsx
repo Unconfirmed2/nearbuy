@@ -78,10 +78,7 @@ const OrderNotifications: React.FC<OrderNotificationsProps> = ({ merchantId }) =
     
     if (notification.orderId) {
       toast.info(`Navigating to order ${notification.orderId}`);
-      // TODO: Navigate to order details
-    } else if (notification.productId) {
-      toast.info(`Navigating to product ${notification.productId}`);
-      // TODO: Navigate to product details
+      // TODO: Navigate to order details using React Router
     }
   };
 

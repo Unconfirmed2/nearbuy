@@ -34,8 +34,9 @@ const ConsumerSignUp: React.FC = () => {
 
       toast.success('Account created successfully! Please check your email to verify your account.');
       navigate('/auth/signin');
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -54,8 +55,9 @@ const ConsumerSignUp: React.FC = () => {
         }
       });
       if (error) throw error;
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      const err = error as Error;
+      toast.error(err.message);
     }
   };
 

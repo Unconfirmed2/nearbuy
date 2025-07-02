@@ -69,13 +69,12 @@ const Orders: React.FC = () => {
   const handleRefund = (orderId: string) => {
     console.log('Process refund for order:', orderId);
     toast.success('Refund processed successfully');
-    // TODO: Implement actual refund logic
+    // TODO: Implement actual refund logic via payment processor
   };
 
   const handleExport = () => {
-    console.log('Export orders');
+    // TODO: Implement actual export functionality with real order data
     toast.success('Orders exported successfully');
-    // TODO: Implement actual export functionality
   };
 
   if (loading) {

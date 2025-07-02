@@ -28,12 +28,7 @@ const PickupScheduling: React.FC<PickupSchedulingProps> = ({ storeId }) => {
   ];
 
   const handleSaveSettings = () => {
-    console.log('Saving pickup scheduling settings:', {
-      pickupEnabled,
-      timeSlotInterval,
-      maxOrdersPerSlot,
-      advanceBookingDays
-    });
+    // TODO: Implement actual settings save to database
     toast.success('Pickup scheduling settings saved');
   };
 

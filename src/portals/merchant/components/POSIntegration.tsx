@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 interface POSIntegrationProps {
   merchantId?: string;
   storeId?: string;
-  integrations?: any[];
+  integrations?: { id: string; provider: string; status: string; lastSynced?: string }[];
   onConnect?: (provider: string, credentials: any) => void;
   onSync?: (integrationId: string) => void;
 }
@@ -232,7 +232,7 @@ const POSIntegration: React.FC<POSIntegrationProps> = ({
                     <div>
                       <h4 className="font-medium">{provider?.name || integration.provider}</h4>
                       <p className="text-sm text-gray-600">
-                        Last synced: {new Date(integration.lastSynced).toLocaleString()}
+                        Last synced: {integration.lastSynced ? new Date(integration.lastSynced).toLocaleString() : 'Never'}
                       </p>
                     </div>
                   </div>

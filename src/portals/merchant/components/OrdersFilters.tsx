@@ -12,7 +12,7 @@ interface OrdersFiltersProps {
   onStatusChange: (status: string) => void;
   storeFilter: string;
   onStoreChange: (store: string) => void;
-  stores: any[];
+  stores: { id: string; name: string }[];
   onExport: () => void;
 }
 

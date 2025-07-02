@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface ProductFiltersProps {
   categories: string[];
-  stores: any[];
+  stores: { id: string; name: string }[];
   selectedCategory: string;
   selectedStore: string;
   onCategoryChange: (category: string) => void;

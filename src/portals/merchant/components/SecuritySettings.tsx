@@ -42,7 +42,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ merchantId }) => {
       return;
     }
 
-    // TODO: Implement actual password change
+    // TODO: Implement actual password change via Supabase
     toast.success('Password updated successfully');
     setPasswordData({
       currentPassword: '',

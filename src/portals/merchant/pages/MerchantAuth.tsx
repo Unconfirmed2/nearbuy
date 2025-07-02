@@ -163,12 +163,13 @@ const MerchantAuth: React.FC = () => {
 
       toast.success('Welcome back!');
       // Navigation will happen automatically via useAuth
-    } catch (error: any) {
-      console.error('Sign in error:', error);
-      if (error.message.includes('Invalid login credentials')) {
+    } catch (error) {
+      const err = error as Error;
+      console.error('Sign in error:', err);
+      if (err.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password');
       } else {
-        toast.error(error.message);
+        toast.error(err.message);
       }
     } finally {
       setLoading(false);
@@ -245,14 +246,15 @@ const MerchantAuth: React.FC = () => {
       } else {
         toast.success('Merchant account created successfully!');
       }
-    } catch (error: any) {
-      console.error('Sign up error:', error);
-      if (error.message.includes('User already registered')) {
+    } catch (error) {
+      const err = error as Error;
+      console.error('Sign up error:', err);
+      if (err.message.includes('User already registered')) {
         toast.error('An account with this email already exists. Please sign in instead.');
         setActiveTab('signin');
         setSignInEmail(signUpEmail);
       } else {
-        toast.error(error.message);
+        toast.error(err.message);
       }
     } finally {
       setLoading(false);

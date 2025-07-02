@@ -4,10 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Package, Upload, TrendingDown } from 'lucide-react';
+import { useStoreFilter } from '../contexts/StoreFilterContext';
+import { toast } from 'sonner';
 import InventoryManager from '../components/InventoryManager';
 import BulkProductUpload from '../components/BulkProductUpload';
 
 const Inventory: React.FC = () => {
+  const { selectedStoreId } = useStoreFilter();
   return (
     <div className="space-y-6">
       <div>
@@ -30,9 +33,9 @@ const Inventory: React.FC = () => {
 
         <TabsContent value="bulk-upload">
           <BulkProductUpload 
-            storeId="debug-store-id"
+            storeId={selectedStoreId || ""}
             onUploadComplete={(results) => {
-              console.log('Upload completed:', results);
+              toast.success(`Bulk upload completed: ${results.successful} successful, ${results.failed} failed`);
             }}
           />
         </TabsContent>

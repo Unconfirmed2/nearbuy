@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useStores } from '../hooks/useStores';
 import { useAuth } from '../hooks/useAuth';
+import { Store } from '../types/store';
 
 interface StoreFilterContextType {
   selectedStoreId: string;
   setSelectedStoreId: (storeId: string) => void;
-  stores: any[];
+  stores: Store[];
   loading: boolean;
 }
 

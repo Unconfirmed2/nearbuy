@@ -134,9 +134,10 @@ export const useUserManagement = (merchantId: string) => {
       toast.success('Invitation sent successfully!');
       await fetchInvitations();
       return true;
-    } catch (error: any) {
-      console.error('Error sending invitation:', error);
-      toast.error(`Failed to send invitation: ${error.message}`);
+    } catch (error) {
+      const err = error as Error;
+      console.error('Error sending invitation:', err);
+      toast.error(`Failed to send invitation: ${err.message}`);
       return false;
     }
   };
