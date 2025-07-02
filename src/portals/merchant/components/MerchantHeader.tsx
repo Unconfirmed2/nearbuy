@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -66,7 +65,7 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
   };
 
   const handleLogoClick = () => {
-    navigate('/');
+    navigate('/?merchant=true');
   };
 
   return (

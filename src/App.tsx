@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,6 +28,7 @@ import AdminApp from './portals/admin/AdminApp';
 // Layout
 import ConsumerLayout from './portals/consumer/components/ConsumerLayout';
 import MerchantLayout from './portals/merchant/components/MerchantLayout';
+import MerchantNavbar from './components/navigation/MerchantNavbar';
 import { StoreFilterProvider } from './portals/merchant/contexts/StoreFilterContext';
 import { useAuth } from './portals/consumer/hooks/useAuth';
 
@@ -40,30 +41,10 @@ interface UserProfile {
   avatar_url: string | null;
 }
 
-// Merchant Preview Component - shows consumer UI with merchant navigation
-const MerchantPreview = ({ user, profile, children }: { user: any, profile: any, children: React.ReactNode }) => {
-  return (
-    <StoreFilterProvider>
-      <MerchantLayout user={user} profile={profile}>
-        <div className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span className="text-sm font-medium text-blue-800">Merchant Preview Mode</span>
-            </div>
-            <p className="text-sm text-blue-600 mt-1">
-              You're viewing the customer experience. Cart actions are disabled for merchants.
-            </p>
-          </div>
-          {children}
-        </div>
-      </MerchantLayout>
-    </StoreFilterProvider>
-  );
-};
-
 // Root component that handles merchant vs consumer routing
 const RootHandler = ({ user, profile }: { user: any, profile: any }) => {
+  const [searchParams] = useSearchParams();
+  const isMerchantView = searchParams.get('merchant') === 'true';
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -104,10 +85,19 @@ const RootHandler = ({ user, profile }: { user: any, profile: any }) => {
     );
   }
 
-  // Check if user is a merchant and redirect to merchant portal
-  if (userProfile && (userProfile.role === 'merchant' || userProfile.user_role === 'merchant' || userProfile.user_role === 'super_merchant' || userProfile.user_role === 'store_user')) {
-    // Redirect merchant users to the merchant portal
+  // Check if user is a merchant and they're not in merchant view, redirect to merchant portal
+  if (userProfile && (userProfile.role === 'merchant' || userProfile.user_role === 'merchant' || userProfile.user_role === 'super_merchant' || userProfile.user_role === 'store_user') && !isMerchantView) {
     return <Navigate to="/merchant" replace />;
+  }
+
+  // If merchant parameter is present and user is authenticated merchant, show merchant navbar
+  if (isMerchantView && user && userProfile && (userProfile.role === 'merchant' || userProfile.user_role === 'merchant' || userProfile.user_role === 'super_merchant' || userProfile.user_role === 'store_user')) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <MerchantNavbar />
+        <Home />
+      </div>
+    );
   }
 
   // For consumers or guests, show the consumer home page
@@ -120,6 +110,8 @@ const RootHandler = ({ user, profile }: { user: any, profile: any }) => {
 
 export default function App() {
   const { user, loading } = useAuth();
+  const [searchParams] = useSearchParams();
+  const isMerchantView = searchParams.get('merchant') === 'true';
   
   const profile = user ? { 
     id: user.id, 
@@ -143,16 +135,30 @@ export default function App() {
           {/* Root route - handles merchant vs consumer logic */}
           <Route path="/" element={<RootHandler user={user} profile={profile} />} />
 
-          {/* Consumer routes */}
+          {/* Consumer routes with merchant navbar support */}
           <Route path="/search" element={
-            <ConsumerLayout user={user} profile={profile}>
-              <ProductSearch />
-            </ConsumerLayout>
+            isMerchantView && user ? (
+              <div className="min-h-screen bg-gray-50">
+                <MerchantNavbar />
+                <ProductSearch />
+              </div>
+            ) : (
+              <ConsumerLayout user={user} profile={profile}>
+                <ProductSearch />
+              </ConsumerLayout>
+            )
           } />
           <Route path="/product/:id" element={
-            <ConsumerLayout user={user} profile={profile}>
-              <ProductDetails />
-            </ConsumerLayout>
+            isMerchantView && user ? (
+              <div className="min-h-screen bg-gray-50">
+                <MerchantNavbar />
+                <ProductDetails />
+              </div>
+            ) : (
+              <ConsumerLayout user={user} profile={profile}>
+                <ProductDetails />
+              </ConsumerLayout>
+            )
           } />
           <Route path="/cart" element={
             <ConsumerLayout user={user} profile={profile}>
@@ -160,9 +166,16 @@ export default function App() {
             </ConsumerLayout>
           } />
           <Route path="/route-planner" element={
-            <ConsumerLayout user={user} profile={profile}>
-              <RoutePlanner />
-            </ConsumerLayout>
+            isMerchantView && user ? (
+              <div className="min-h-screen bg-gray-50">
+                <MerchantNavbar />
+                <RoutePlanner />
+              </div>
+            ) : (
+              <ConsumerLayout user={user} profile={profile}>
+                <RoutePlanner />
+              </ConsumerLayout>
+            )
           } />
           <Route path="/favorites" element={
             <ConsumerLayout user={user} profile={profile}>
@@ -170,9 +183,16 @@ export default function App() {
             </ConsumerLayout>
           } />
           <Route path="/support" element={
-            <ConsumerLayout user={user} profile={profile}>
-              <Support />
-            </ConsumerLayout>
+            isMerchantView && user ? (
+              <div className="min-h-screen bg-gray-50">
+                <MerchantNavbar />
+                <Support />
+              </div>
+            ) : (
+              <ConsumerLayout user={user} profile={profile}>
+                <Support />
+              </ConsumerLayout>
+            )
           } />
           <Route path="/auth-consumer" element={
             <ConsumerLayout user={user} profile={profile}>
