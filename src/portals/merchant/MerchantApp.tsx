@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { User } from '@supabase/supabase-js';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { StoreFilterProvider } from './contexts/StoreFilterContext';
 import MerchantLayout from './components/MerchantLayout';
 import MerchantAuth from './pages/MerchantAuth';
 import Dashboard from './pages/Dashboard';
@@ -100,22 +101,24 @@ const MerchantApp: React.FC<MerchantAppProps> = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MerchantLayout user={user} profile={profile}>
-        <Routes>
-          <Route index element={<Dashboard />} />
-          <Route path="stores" element={<Stores />} />
-          <Route path="products" element={<Products />} />
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="analytics" element={<Analytics />} />
-          <Route path="marketing" element={<Marketing />} />
-          <Route path="integrations" element={<Integrations />} />
-          <Route path="users" element={<UserManagement />} />
-          <Route path="reviews" element={<Reviews />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="support" element={<Support />} />
-        </Routes>
-      </MerchantLayout>
+      <StoreFilterProvider>
+        <MerchantLayout user={user} profile={profile}>
+          <Routes>
+            <Route index element={<Dashboard />} />
+            <Route path="stores" element={<Stores />} />
+            <Route path="products" element={<Products />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="orders" element={<Orders />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="marketing" element={<Marketing />} />
+            <Route path="integrations" element={<Integrations />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="reviews" element={<Reviews />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="support" element={<Support />} />
+          </Routes>
+        </MerchantLayout>
+      </StoreFilterProvider>
     </QueryClientProvider>
   );
 };

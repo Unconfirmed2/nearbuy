@@ -170,6 +170,39 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          created_at: string
+          email_type: string
+          error_message: string | null
+          id: string
+          recipient_email: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          error_message?: string | null
+          id?: string
+          recipient_email: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -254,6 +287,60 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          merchant_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          store_ids: string[] | null
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          merchant_id?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          store_ids?: string[] | null
+          token: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          merchant_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          store_ids?: string[] | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -853,32 +940,105 @@ export type Database = {
           },
         ]
       }
+      user_store_permissions: {
+        Row: {
+          created_at: string
+          granted_by: string
+          id: string
+          merchant_id: string
+          store_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by: string
+          id?: string
+          merchant_id: string
+          store_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string
+          id?: string
+          merchant_id?: string
+          store_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_store_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_store_permissions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_store_permissions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_store_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
+          all_stores_access: boolean | null
           avatar_url: string | null
           created_at: string
           email: string
           id: string
+          merchant_id: string | null
           name: string | null
           role: string
+          user_role: Database["public"]["Enums"]["user_role"] | null
         }
         Insert: {
+          all_stores_access?: boolean | null
           avatar_url?: string | null
           created_at?: string
           email: string
           id?: string
+          merchant_id?: string | null
           name?: string | null
           role?: string
+          user_role?: Database["public"]["Enums"]["user_role"] | null
         }
         Update: {
+          all_stores_access?: boolean | null
           avatar_url?: string | null
           created_at?: string
           email?: string
           id?: string
+          merchant_id?: string | null
           name?: string | null
           role?: string
+          user_role?: Database["public"]["Enums"]["user_role"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1040,6 +1200,10 @@ export type Database = {
         Args: { geom1: unknown; geom2: unknown }
         Returns: boolean
       }
+      accept_invitation: {
+        Args: { invitation_token: string; user_id: string }
+        Returns: boolean
+      }
       addauth: {
         Args: { "": string }
         Returns: boolean
@@ -1153,6 +1317,10 @@ export type Database = {
       equals: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: boolean
+      }
+      generate_invitation_token: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       geography: {
         Args: { "": string } | { "": unknown }
@@ -2686,6 +2854,10 @@ export type Database = {
           new_srid_in: number
         }
         Returns: string
+      }
+      user_has_store_access: {
+        Args: { user_id: string; store_id: string }
+        Returns: boolean
       }
     }
     Enums: {

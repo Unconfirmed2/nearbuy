@@ -23,6 +23,9 @@ import {
   Shield
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useStores } from '../hooks/useStores';
+import { useStoreFilter } from '../contexts/StoreFilterContext';
+import StoreSelector from './StoreSelector';
 import { toast } from 'sonner';
 
 interface MerchantNavbarProps {
@@ -32,6 +35,8 @@ interface MerchantNavbarProps {
 
 const MerchantNavbar: React.FC<MerchantNavbarProps> = ({ user, profile }) => {
   const navigate = useNavigate();
+  const { stores } = useStores(user?.id);
+  const { selectedStoreId, setSelectedStoreId } = useStoreFilter();
   const [notifications] = useState([
     {
       id: '1',
@@ -86,6 +91,12 @@ const MerchantNavbar: React.FC<MerchantNavbarProps> = ({ user, profile }) => {
         <h2 className="text-lg font-semibold text-gray-800">
           Good morning, {profile?.name || 'Merchant'}! 👋
         </h2>
+        <StoreSelector 
+          stores={stores}
+          selectedStoreId={selectedStoreId}
+          onStoreChange={setSelectedStoreId}
+          placeholder="Filter by store..."
+        />
       </div>
       
       <div className="flex items-center gap-3">
