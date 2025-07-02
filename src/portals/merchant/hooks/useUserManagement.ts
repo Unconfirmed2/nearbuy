@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -109,25 +110,23 @@ export const useUserManagement = (merchantId: string) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await fetch('/supabase/functions/v1/send-invitation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
+      const response = await supabase.functions.invoke('send-invitation', {
+        body: {
           email,
           role,
           storeIds,
           inviterName,
           companyName
-        }),
+        }
       });
 
-      const result = await response.json();
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to send invitation');
+      }
 
+      const result = response.data;
       if (!result.success) {
-        throw new Error(result.error);
+        throw new Error(result.error || 'Failed to send invitation');
       }
 
       toast.success('Invitation sent successfully!');

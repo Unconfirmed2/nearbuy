@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
@@ -110,13 +111,13 @@ const RootRedirect = ({ user, profile }: { user: any, profile: any }) => {
     );
   }
 
-  // If user is a merchant, show merchant preview mode
-  if (userProfile && userProfile.role === 'merchant') {
+  // If user has merchant role, show merchant preview mode
+  if (userProfile && (userProfile.role === 'merchant' || userProfile.user_role === 'merchant' || userProfile.user_role === 'super_merchant' || userProfile.user_role === 'store_user')) {
     const merchantProfile = {
       id: user.id,
       name: userProfile.name || user.user_metadata?.name,
       email: userProfile.email || user.email,
-      role: userProfile.role,
+      role: userProfile.role || userProfile.user_role,
       avatar_url: userProfile.avatar_url
     };
 

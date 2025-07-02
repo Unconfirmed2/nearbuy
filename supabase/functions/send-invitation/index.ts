@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
@@ -75,7 +76,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Prepare email content
-    const inviteUrl = `${supabaseUrl.replace('/rest/v1', '')}/merchant/accept-invitation?token=${token}`;
+    const baseUrl = supabaseUrl.replace('/rest/v1', '');
+    const inviteUrl = `${baseUrl}/merchant/accept-invitation?token=${token}`;
     
     let roleDescription = '';
     switch (role) {
@@ -100,10 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>${inviterName}</strong> has invited you to join ${companyName || 'their organization'} as a <strong>${roleDescription}</strong>.</p>
         
         ${storeIds.length > 0 ? `
-          <p>You will have access to the following store(s):</p>
-          <ul>
-            ${storeIds.map(id => `<li>Store ID: ${id}</li>`).join('')}
-          </ul>
+          <p>You will have access to ${storeIds.length} store(s).</p>
         ` : ''}
         
         <div style="margin: 30px 0;">
@@ -120,11 +119,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email
     const emailResponse = await resend.emails.send({
-      from: "Invitations <invitations@resend.dev>",
+      from: "Invitations <onboarding@resend.dev>",
       to: [email],
       subject,
       html: htmlContent,
     });
+
+    if (emailResponse.error) {
+      console.error('Resend error:', emailResponse.error);
+      throw new Error(`Failed to send email: ${emailResponse.error.message}`);
+    }
 
     // Log email
     await supabase
@@ -133,20 +137,14 @@ const handler = async (req: Request): Promise<Response> => {
         email_type: 'invitation',
         recipient_email: email,
         subject,
-        status: emailResponse.error ? 'failed' : 'sent',
-        error_message: emailResponse.error?.message,
-        sent_at: emailResponse.error ? null : new Date().toISOString()
+        status: 'sent',
+        sent_at: new Date().toISOString()
       });
-
-    if (emailResponse.error) {
-      throw new Error(`Failed to send email: ${emailResponse.error.message}`);
-    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Invitation sent successfully",
-        inviteUrl // Include for testing
+        message: "Invitation sent successfully"
       }),
       {
         status: 200,

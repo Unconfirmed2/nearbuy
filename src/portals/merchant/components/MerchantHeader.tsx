@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useAuth } from '../hooks/useAuth';
 
 interface MerchantHeaderProps {
   user: User;
@@ -42,6 +42,7 @@ interface MerchantHeaderProps {
 
 const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   
   const [notifications] = React.useState([]);
 
@@ -61,19 +62,30 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
   };
 
   const handleSignOut = async () => {
-    toast.success('Signed out successfully');
-    navigate('/consumer');
+    await signOut();
+  };
+
+  const handleLogoClick = () => {
+    navigate('/');
   };
 
   return (
     <header className="h-16 bg-white border-b px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center cursor-pointer" onClick={() => navigate('/')}>
+          <div 
+            className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center cursor-pointer" 
+            onClick={handleLogoClick}
+          >
             <span className="text-white font-bold text-sm">NB</span>
           </div>
           <div>
-            <h1 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer" onClick={() => navigate('/')}>NearBuy Merchant</h1>
+            <h1 
+              className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer" 
+              onClick={handleLogoClick}
+            >
+              NearBuy Merchant
+            </h1>
             <p className="text-sm text-gray-500">Welcome back, {profile?.name || 'Merchant'}!</p>
           </div>
         </div>
@@ -98,28 +110,34 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
               <p className="text-xs text-gray-500">{unreadCount} unread</p>
             </div>
             <div className="max-h-80 overflow-y-auto">
-              {notifications.map(notification => (
-                <div 
-                  key={notification.id}
-                  className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
-                    notification.unread ? 'bg-blue-50' : ''
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-lg">{getNotificationIcon(notification.type)}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm">{notification.title}</p>
-                        {notification.unread && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        )}
+              {notifications.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">
+                  No notifications
+                </div>
+              ) : (
+                notifications.map(notification => (
+                  <div 
+                    key={notification.id}
+                    className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
+                      notification.unread ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg">{getNotificationIcon(notification.type)}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{notification.title}</p>
+                          {notification.unread && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                        <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
                       </div>
-                      <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                      <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
             <div className="p-3 border-t">
               <Button variant="ghost" size="sm" className="w-full">

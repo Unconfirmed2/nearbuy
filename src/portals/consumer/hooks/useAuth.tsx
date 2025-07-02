@@ -29,7 +29,21 @@ export const useAuth = () => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Clear local state
+      setSession(null);
+      setUser(null);
+      
+      // Redirect to home
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Still redirect even if there's an error
+      window.location.href = '/';
+    }
   };
 
   return {
