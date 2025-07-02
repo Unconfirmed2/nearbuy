@@ -1,7 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 // Auth components
 import AuthLayout from './components/auth/AuthLayout';
@@ -44,6 +44,61 @@ interface UserProfile {
   avatar_url: string | null;
 }
 
+// Root redirect component to handle merchant users
+const RootRedirect = ({ user, profile }: { user: any, profile: any }) => {
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching user profile:', error);
+        } else {
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // If user is a merchant, redirect to merchant portal
+  if (userProfile && userProfile.role === 'merchant') {
+    return <Navigate to="/merchant" replace />;
+  }
+
+  // Otherwise, show consumer home page
+  return (
+    <ConsumerLayout user={user} profile={profile}>
+      <Home />
+    </ConsumerLayout>
+  );
+};
+
 export default function App() {
   const { user, loading } = useAuth();
   
@@ -74,12 +129,10 @@ export default function App() {
             <Route path="signup/merchant" element={<MerchantSignUp />} />
           </Route>
 
-          {/* Consumer routes at root level */}
-          <Route path="/" element={
-            <ConsumerLayout user={user} profile={profile}>
-              <Home />
-            </ConsumerLayout>
-          } />
+          {/* Root route with merchant detection */}
+          <Route path="/" element={<RootRedirect user={user} profile={profile} />} />
+
+          {/* Consumer routes */}
           <Route path="/search" element={
             <ConsumerLayout user={user} profile={profile}>
               <ProductSearch />
@@ -161,4 +214,4 @@ export default function App() {
       </div>
     </BrowserRouter>
   );
-};
+}
