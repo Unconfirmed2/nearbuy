@@ -163,14 +163,14 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
           </PopoverContent>
         </Popover>
 
-        {/* Enhanced User Menu */}
+        {/* Combined Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="flex items-center gap-2 px-3 py-2 h-auto">
               <div className="text-right">
-                <div className="text-xs text-gray-500">Hello, {profile?.name || 'Merchant'}</div>
+                <div className="text-xs text-gray-500">Merchant Portal</div>
                 <div className="text-sm font-medium text-gray-900 flex items-center">
-                  Account & Business <ChevronDown className="ml-1 h-3 w-3" />
+                  {profile?.name || user?.email?.split('@')[0] || 'Account'} <ChevronDown className="ml-1 h-3 w-3" />
                 </div>
               </div>
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -192,6 +192,13 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
                   Your Business
                 </DropdownMenuLabel>
                 <div className="space-y-1">
+                  <DropdownMenuItem 
+                    className="px-0 py-1 text-sm cursor-pointer"
+                    onClick={() => navigate('/merchant')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Dashboard
+                  </DropdownMenuItem>
                   <DropdownMenuItem 
                     className="px-0 py-1 text-sm cursor-pointer"
                     onClick={() => navigate('/merchant/stores')}
