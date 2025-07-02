@@ -69,8 +69,8 @@ const MerchantPreview = ({ user, profile, children }: { user: any, profile: any,
   );
 };
 
-// Root redirect component to handle merchant users
-const RootRedirect = ({ user, profile }: { user: any, profile: any }) => {
+// Root component that handles merchant vs consumer routing
+const RootHandler = ({ user, profile }: { user: any, profile: any }) => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -111,24 +111,13 @@ const RootRedirect = ({ user, profile }: { user: any, profile: any }) => {
     );
   }
 
-  // If user has merchant role, show merchant preview mode
+  // Check if user is a merchant and redirect to merchant portal
   if (userProfile && (userProfile.role === 'merchant' || userProfile.user_role === 'merchant' || userProfile.user_role === 'super_merchant' || userProfile.user_role === 'store_user')) {
-    const merchantProfile = {
-      id: user.id,
-      name: userProfile.name || user.user_metadata?.name,
-      email: userProfile.email || user.email,
-      role: userProfile.role || userProfile.user_role,
-      avatar_url: userProfile.avatar_url
-    };
-
-    return (
-      <MerchantPreview user={user} profile={merchantProfile}>
-        <Home isMerchantPreview={true} />
-      </MerchantPreview>
-    );
+    // Redirect merchant users to the merchant portal
+    return <Navigate to="/merchant" replace />;
   }
 
-  // Otherwise, show consumer home page
+  // For consumers or guests, show the consumer home page
   return (
     <ConsumerLayout user={user} profile={profile}>
       <Home />
@@ -166,8 +155,8 @@ export default function App() {
             <Route path="signup/merchant" element={<MerchantSignUp />} />
           </Route>
 
-          {/* Root route with merchant detection */}
-          <Route path="/" element={<RootRedirect user={user} profile={profile} />} />
+          {/* Root route - handles merchant vs consumer logic */}
+          <Route path="/" element={<RootHandler user={user} profile={profile} />} />
 
           {/* Consumer routes */}
           <Route path="/search" element={
