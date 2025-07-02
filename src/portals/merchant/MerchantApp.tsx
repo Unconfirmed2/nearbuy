@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StoreFilterProvider } from './contexts/StoreFilterContext';
 import MerchantLayout from './components/MerchantLayout';
 import { useAuth } from './hooks/useAuth';
@@ -19,6 +20,16 @@ import Integrations from './pages/Integrations';
 import UserManagement from './pages/UserManagement';
 import StorePreview from './pages/StorePreview';
 import MerchantAuth from './pages/MerchantAuth';
+
+// Create a query client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const MerchantApp: React.FC = () => {
   const { user, loading } = useAuth();
@@ -44,31 +55,33 @@ const MerchantApp: React.FC = () => {
   };
 
   return (
-    <StoreFilterProvider>
-      <Routes>
-        {/* Store Preview - standalone page without merchant layout */}
-        <Route path="/store-preview/:storeId" element={<StorePreview />} />
-        
-        {/* All other routes with merchant layout */}
-        <Route path="/*" element={
-          <MerchantLayout user={user} profile={profile}>
-            <Routes>
-              <Route index element={<Dashboard />} />
-              <Route path="stores" element={<Stores />} />
-              <Route path="products" element={<Products />} />
-              <Route path="orders" element={<Orders />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="marketing" element={<Marketing />} />
-              <Route path="reviews" element={<Reviews />} />
-              <Route path="integrations" element={<Integrations />} />
-              <Route path="users" element={<UserManagement />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="support" element={<Support />} />
-            </Routes>
-          </MerchantLayout>
-        } />
-      </Routes>
-    </StoreFilterProvider>
+    <QueryClientProvider client={queryClient}>
+      <StoreFilterProvider>
+        <Routes>
+          {/* Store Preview - standalone page without merchant layout */}
+          <Route path="/store-preview/:storeId" element={<StorePreview />} />
+          
+          {/* All other routes with merchant layout */}
+          <Route path="/*" element={
+            <MerchantLayout user={user} profile={profile}>
+              <Routes>
+                <Route index element={<Dashboard />} />
+                <Route path="stores" element={<Stores />} />
+                <Route path="products" element={<Products />} />
+                <Route path="orders" element={<Orders />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="marketing" element={<Marketing />} />
+                <Route path="reviews" element={<Reviews />} />
+                <Route path="integrations" element={<Integrations />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="support" element={<Support />} />
+              </Routes>
+            </MerchantLayout>
+          } />
+        </Routes>
+      </StoreFilterProvider>
+    </QueryClientProvider>
   );
 };
 
