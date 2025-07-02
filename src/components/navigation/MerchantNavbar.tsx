@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { Menu, ChevronDown, HelpCircle, Store, User, ShoppingCart, BarChart3, Package, Star, Megaphone, Settings, LogOut, MapPin } from 'lucide-react';
+import { Menu, ChevronDown, Store, User, ShoppingCart, BarChart3, Package, Star, Megaphone, Settings, LogOut, MapPin } from 'lucide-react';
 import { 
   Sheet, 
   SheetContent, 
@@ -64,23 +64,6 @@ const MerchantNavbar: React.FC = () => {
               value={travelFilter}
               onChange={setTravelFilter}
             />
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/?merchant=true" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Home
-            </Link>
-            <Link to="/search?merchant=true" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Products
-            </Link>
-            <Link to="/route-planner?merchant=true" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Route Planner
-            </Link>
-            <Link to="/support?merchant=true" className="text-gray-700 hover:text-blue-600 transition-colors flex items-center">
-              <HelpCircle className="h-4 w-4 mr-1" />
-              Help Center
-            </Link>
           </div>
 
           {/* Desktop Merchant Menu */}
@@ -175,14 +158,6 @@ const MerchantNavbar: React.FC = () => {
                     value={travelFilter}
                     onChange={setTravelFilter}
                   />
-
-                  <Link to="/?merchant=true" className="text-lg font-medium">Home</Link>
-                  <Link to="/search?merchant=true" className="text-lg font-medium">Products</Link>
-                  <Link to="/route-planner?merchant=true" className="text-lg font-medium">Route Planner</Link>
-                  <Link to="/support?merchant=true" className="text-lg font-medium flex items-center">
-                    <HelpCircle className="h-4 w-4 mr-2" />
-                    Help Center
-                  </Link>
                   
                   <div className="border-t pt-4 space-y-2">
                     <div className="text-sm font-semibold text-gray-600 mb-2">Merchant Portal</div>
