@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -9,17 +10,24 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { Menu, ChevronDown, HelpCircle, Store, User, ShoppingCart, BarChart3, Package, Star, Megaphone, Settings, LogOut } from 'lucide-react';
+import { Menu, ChevronDown, HelpCircle, Store, User, ShoppingCart, BarChart3, Package, Star, Megaphone, Settings, LogOut, MapPin } from 'lucide-react';
 import { 
   Sheet, 
   SheetContent, 
   SheetTrigger 
 } from '@/components/ui/sheet';
 import { useAuth } from '@/portals/merchant/hooks/useAuth';
+import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
 
 const MerchantNavbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  
+  const [travelFilter, setTravelFilter] = React.useState<TravelFilterValue>({
+    mode: 'driving',
+    type: 'time',
+    value: 5
+  });
 
   const handleSignOut = async () => {
     await signOut();
@@ -38,6 +46,25 @@ const MerchantNavbar: React.FC = () => {
               NearBuy
             </span>
           </Link>
+
+          {/* Center Section - Location and Filter */}
+          <div className="hidden md:flex items-center space-x-4 flex-1 max-w-2xl mx-8">
+            {/* Location Input */}
+            <div className="relative flex-1 max-w-xs">
+              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                type="text"
+                placeholder="Location"
+                className="pl-10 bg-gray-50 border-gray-200 focus:bg-white"
+              />
+            </div>
+
+            {/* Travel Filter */}
+            <TravelFilter 
+              value={travelFilter}
+              onChange={setTravelFilter}
+            />
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
@@ -133,6 +160,22 @@ const MerchantNavbar: React.FC = () => {
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <div className="flex flex-col space-y-4 mt-8">
+                  {/* Mobile Location Input */}
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Location"
+                      className="pl-10 bg-gray-50 border-gray-200"
+                    />
+                  </div>
+
+                  {/* Mobile Travel Filter */}
+                  <TravelFilter 
+                    value={travelFilter}
+                    onChange={setTravelFilter}
+                  />
+
                   <Link to="/?merchant=true" className="text-lg font-medium">Home</Link>
                   <Link to="/search?merchant=true" className="text-lg font-medium">Products</Link>
                   <Link to="/route-planner?merchant=true" className="text-lg font-medium">Route Planner</Link>
