@@ -163,7 +163,7 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
           </PopoverContent>
         </Popover>
 
-        {/* Combined Menu */}
+        {/* Single Combined Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="flex items-center gap-2 px-3 py-2 h-auto">
