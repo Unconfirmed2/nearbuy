@@ -16,36 +16,42 @@ interface CreateStoreDialogProps {
   onClose: () => void;
   onSubmit: (storeData: any) => void;
   loading?: boolean;
+  store?: any;
+  isEdit?: boolean;
 }
 
 const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
   open,
   onClose,
   onSubmit,
-  loading = false
+  loading = false,
+  store,
+  isEdit = false
 }) => {
   const [storeData, setStoreData] = useState({
-    name: '',
-    business_name: '',
-    description: '',
-    address: '',
-    phone: '',
-    contact_email: '',
-    business_type: '',
-    tax_id: ''
+    name: store?.name || '',
+    business_name: store?.business_name || '',
+    description: store?.description || '',
+    address: store?.address || '',
+    phone: store?.phone || '',
+    contact_email: store?.contact_email || '',
+    business_type: store?.business_type || '',
+    tax_id: store?.tax_id || ''
   });
 
-  const [businessHours, setBusinessHours] = useState<BusinessHours>({
-    monday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-    tuesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-    wednesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-    thursday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-    friday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-    saturday: { isOpen: true, openTime: '10:00', closeTime: '16:00' },
-    sunday: { isOpen: false, openTime: '10:00', closeTime: '16:00' }
-  });
+  const [businessHours, setBusinessHours] = useState<BusinessHours>(
+    store?.business_hours || {
+      monday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      tuesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      wednesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      thursday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      friday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+      saturday: { isOpen: true, openTime: '10:00', closeTime: '16:00' },
+      sunday: { isOpen: false, openTime: '10:00', closeTime: '16:00' }
+    }
+  );
 
-  const [socialMedia, setSocialMedia] = useState<SocialMedia>({});
+  const [socialMedia, setSocialMedia] = useState<SocialMedia>(store?.social_media || {});
 
   const businessTypes = [
     'Retail Store',
@@ -107,7 +113,7 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Store className="w-5 h-5" />
-            Create New Store
+            {isEdit ? 'Edit Store' : 'Create New Store'}
           </DialogTitle>
         </DialogHeader>
 
@@ -226,7 +232,7 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
 
         <div className="flex gap-2 pt-4">
           <Button onClick={handleSubmit} disabled={loading || !storeData.name || !storeData.address || !businessHours}>
-            {loading ? 'Creating...' : 'Create Store'}
+            {loading ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Store' : 'Create Store')}
           </Button>
           <Button variant="outline" onClick={handleClose}>
             Cancel

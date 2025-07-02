@@ -12,7 +12,8 @@ import {
   Edit, 
   Eye,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Trash2
 } from 'lucide-react';
 import { Store } from '../types/store';
 
@@ -21,13 +22,15 @@ interface StoreCardProps {
   onEdit: (store: Store) => void;
   onToggleStatus: (storeId: string, isActive: boolean) => void;
   onViewDetails: (store: Store) => void;
+  onDelete: (storeId: string) => void;
 }
 
 const StoreCard: React.FC<StoreCardProps> = ({ 
   store, 
   onEdit, 
   onToggleStatus, 
-  onViewDetails 
+  onViewDetails,
+  onDelete
 }) => {
   const getStatusBadge = () => {
     if (store.is_verified) {
@@ -147,6 +150,14 @@ const StoreCard: React.FC<StoreCardProps> = ({
               onClick={() => onEdit(store)}
             >
               <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDelete(store.id)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>

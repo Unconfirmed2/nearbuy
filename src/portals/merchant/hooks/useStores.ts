@@ -155,19 +155,31 @@ export const useStores = (merchantId?: string) => {
     }
   };
 
-  const updateStore = async (storeId: string, updates: Partial<Store>) => {
+  const updateStore = async (storeId: string, updates: any) => {
     try {
+      const updateData: any = {
+        name: updates.name,
+        description: updates.description,
+        address: updates.address,
+        business_name: updates.business_name,
+        business_type: updates.business_type,
+        contact_phone: updates.contact_phone,
+        contact_email: updates.contact_email,
+        phone: updates.phone,
+        tax_id: updates.tax_id,
+        is_active: updates.is_active
+      };
+
+      // Remove undefined values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+
       const { error } = await supabase
         .from('stores')
-        .update({
-          name: updates.name,
-          description: updates.description,
-          address: updates.address,
-          contact_phone: updates.contact_phone,
-          contact_email: updates.contact_email,
-          phone: updates.phone,
-          is_active: updates.is_active
-        })
+        .update(updateData)
         .eq('id', storeId);
 
       if (error) throw error;
@@ -179,6 +191,8 @@ export const useStores = (merchantId?: string) => {
             : store
         )
       );
+      
+      return true;
     } catch (err) {
       console.error('Error updating store:', err);
       throw new Error('Failed to update store');

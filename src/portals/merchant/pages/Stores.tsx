@@ -16,7 +16,7 @@ const Stores: React.FC = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const { user } = useAuth();
 
-  const { stores, loading, createStore } = useStores(user?.id);
+  const { stores, loading, createStore, updateStore, deleteStore } = useStores(user?.id);
 
   // Transform stores to match StoreCard interface
   const transformedStores = stores.map(store => ({
@@ -45,7 +45,8 @@ const Stores: React.FC = () => {
       
       await createStore(geocodedData);
       setShowCreateStore(false);
-      toast.success('Store created successfully! Pending verification.');
+      setSelectedStore(null);
+      toast.success('Store created successfully!');
     } catch (error) {
       toast.error('Failed to create store');
       console.error('Store creation error:', error);
@@ -54,21 +55,49 @@ const Stores: React.FC = () => {
     }
   };
 
+  const handleUpdateStore = async (storeData: any) => {
+    if (!selectedStore) return;
+    
+    try {
+      setCreateLoading(true);
+      await updateStore(selectedStore.id, storeData);
+      setShowCreateStore(false);
+      setSelectedStore(null);
+      toast.success('Store updated successfully!');
+    } catch (error) {
+      toast.error('Failed to update store');
+      console.error('Store update error:', error);
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   const handleEditStore = (store: any) => {
     setSelectedStore(store);
     setShowCreateStore(true);
-    toast.info('Store editing functionality coming soon!');
   };
 
-  const handleToggleStatus = (storeId: string, isActive: boolean) => {
-    console.log('Toggle store status:', storeId, isActive);
-    toast.success(`Store ${isActive ? 'activated' : 'deactivated'} successfully`);
-    // TODO: Implement actual store status toggle
+  const handleToggleStatus = async (storeId: string, isActive: boolean) => {
+    try {
+      await updateStore(storeId, { is_active: isActive });
+      toast.success(`Store ${isActive ? 'activated' : 'deactivated'} successfully`);
+    } catch (error) {
+      toast.error('Failed to update store status');
+    }
   };
 
   const handleViewDetails = (store: any) => {
-    console.log('View store details:', store);
-    toast.info('Store details view coming soon!');
+    setSelectedStore(store);
+    setShowCreateStore(true);
+  };
+
+  const handleDeleteStore = async (storeId: string) => {
+    try {
+      await deleteStore(storeId);
+      toast.success('Store deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete store');
+    }
   };
 
   if (loading) {
@@ -148,6 +177,7 @@ const Stores: React.FC = () => {
               onEdit={handleEditStore}
               onToggleStatus={handleToggleStatus}
               onViewDetails={handleViewDetails}
+              onDelete={handleDeleteStore}
             />
           ))}
         </div>
@@ -159,8 +189,10 @@ const Stores: React.FC = () => {
           setShowCreateStore(false);
           setSelectedStore(null);
         }}
-        onSubmit={handleCreateStore}
+        onSubmit={selectedStore ? handleUpdateStore : handleCreateStore}
         loading={createLoading}
+        store={selectedStore}
+        isEdit={!!selectedStore}
       />
     </div>
   );
