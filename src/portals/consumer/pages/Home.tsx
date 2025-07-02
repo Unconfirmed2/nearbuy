@@ -38,6 +38,10 @@ interface Product {
   stores: Store[];
 }
 
+interface HomeProps {
+  isMerchantPreview?: boolean;
+}
+
 // Helper function to convert UUID string to a stable positive number
 const uuidToNumber = (uuid: string): number => {
   // Create a simple hash from the UUID string
@@ -53,7 +57,7 @@ const uuidToNumber = (uuid: string): number => {
 
 const PRODUCTS_PER_PAGE = 20;
 
-const Home: React.FC = () => {
+const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
@@ -197,6 +201,11 @@ const Home: React.FC = () => {
   }, []);
 
   const handleAddToBasket = (productId: number, storeId: number) => {
+    if (isMerchantPreview) {
+      toast.info('Cart actions are disabled in merchant preview mode');
+      return;
+    }
+
     const product = featuredProducts.find(p => p.id === productId);
     const store = product?.stores.find(s => s.id === storeId);
     
@@ -214,6 +223,11 @@ const Home: React.FC = () => {
   };
 
   const handleAddToFavorites = (product: Product) => {
+    if (isMerchantPreview) {
+      toast.info('Favorites are disabled in merchant preview mode');
+      return;
+    }
+
     addToFavorites({
       productId: product.id,
       productName: product.name,
@@ -289,7 +303,12 @@ const Home: React.FC = () => {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 rounded-lg">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl font-bold mb-4">Find products you want NearBuy</h1>
-          <p className="text-xl opacity-90">Discover local products and plan your pickup route</p>
+          <p className="text-xl opacity-90">
+            {isMerchantPreview 
+              ? "Preview how your products appear to customers" 
+              : "Discover local products and plan your pickup route"
+            }
+          </p>
         </div>
       </div>
 
@@ -434,7 +453,9 @@ const Home: React.FC = () => {
       {/* Featured Products */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Featured Products Near You</h2>
+          <h2 className="text-2xl font-bold">
+            {isMerchantPreview ? "Your Products as Seen by Customers" : "Featured Products Near You"}
+          </h2>
           <Button variant="outline" onClick={() => navigate('/search')}>
             View All
           </Button>
@@ -454,6 +475,7 @@ const Home: React.FC = () => {
                   key={product.id}
                   product={product}
                   onAddToBasket={handleAddToBasket}
+                  isMerchantPreview={isMerchantPreview}
                 />
               ))}
             </div>

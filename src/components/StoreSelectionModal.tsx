@@ -29,9 +29,16 @@ interface StoreSelectionModalProps {
   onClose: () => void;
   product: Product;
   onAddToBasket: (productId: number, storeId: number) => void;
+  isMerchantPreview?: boolean;
 }
 
-const StoreSelectionModal = ({ isOpen, onClose, product, onAddToBasket }: StoreSelectionModalProps) => {
+const StoreSelectionModal = ({ 
+  isOpen, 
+  onClose, 
+  product, 
+  onAddToBasket, 
+  isMerchantPreview = false 
+}: StoreSelectionModalProps) => {
   const [selectedStoreForMap, setSelectedStoreForMap] = useState<Store | null>(null);
 
   const handleAddToBasket = (storeId: number) => {
@@ -58,6 +65,14 @@ const StoreSelectionModal = ({ isOpen, onClose, product, onAddToBasket }: StoreS
             </div>
           </DialogTitle>
         </DialogHeader>
+        
+        {isMerchantPreview && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div className="text-sm text-blue-800">
+              <strong>Merchant Preview:</strong> This is how customers see your product availability.
+            </div>
+          </div>
+        )}
         
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {product.stores.map((store) => (
@@ -92,11 +107,14 @@ const StoreSelectionModal = ({ isOpen, onClose, product, onAddToBasket }: StoreS
               <div className="flex space-x-2">
                 <Button 
                   onClick={() => handleAddToBasket(store.id)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-sm"
+                  className={`flex-1 bg-blue-600 hover:bg-blue-700 text-sm ${
+                    isMerchantPreview ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                   size="sm"
+                  disabled={isMerchantPreview}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
-                  Add to Basket
+                  {isMerchantPreview ? 'Cart Disabled' : 'Add to Basket'}
                 </Button>
                 <Button 
                   onClick={() => handleShowOnMap(store)}

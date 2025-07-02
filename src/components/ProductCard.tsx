@@ -1,3 +1,4 @@
+
 import { Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,15 +27,21 @@ interface Product {
 interface ProductCardProps {
   product: Product;
   onAddToBasket: (productId: number, storeId: number) => void;
+  isMerchantPreview?: boolean;
 }
 
-const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
+const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false }: ProductCardProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const bestPriceStore = product.stores.reduce((best, current) => 
     current.price < best.price ? current : best
   );
+
+  const handleFavoriteClick = () => {
+    if (isMerchantPreview) return; // Disable for merchants
+    setIsFavorited(!isFavorited);
+  };
 
   return (
     <>
@@ -48,10 +55,17 @@ const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-white p-1 h-8 w-8"
-            onClick={() => setIsFavorited(!isFavorited)}
+            className={`absolute top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-white p-1 h-8 w-8 ${
+              isMerchantPreview ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            onClick={handleFavoriteClick}
+            disabled={isMerchantPreview}
           >
-            <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+            <Heart className={`w-4 h-4 ${
+              isFavorited && !isMerchantPreview 
+                ? 'fill-red-500 text-red-500' 
+                : 'text-gray-600'
+            }`} />
           </Button>
         </div>
         
@@ -74,7 +88,7 @@ const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
               className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
               size="sm"
             >
-              See stores
+              {isMerchantPreview ? 'View stores' : 'See stores'}
             </Button>
           </div>
         </CardContent>
@@ -85,6 +99,7 @@ const ProductCard = ({ product, onAddToBasket }: ProductCardProps) => {
         onClose={() => setIsModalOpen(false)}
         product={product}
         onAddToBasket={onAddToBasket}
+        isMerchantPreview={isMerchantPreview}
       />
     </>
   );

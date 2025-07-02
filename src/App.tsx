@@ -33,6 +33,7 @@ import AdminApp from './portals/admin/AdminApp';
 
 // Layout
 import ConsumerLayout from './portals/consumer/components/ConsumerLayout';
+import MerchantLayout from './portals/merchant/components/MerchantLayout';
 import { useAuth } from './portals/consumer/hooks/useAuth';
 
 // Types
@@ -43,6 +44,26 @@ interface UserProfile {
   role: 'customer' | 'store_owner' | 'admin' | 'moderator';
   avatar_url: string | null;
 }
+
+// Merchant Preview Component - shows consumer UI with merchant navigation
+const MerchantPreview = ({ user, profile, children }: { user: any, profile: any, children: React.ReactNode }) => {
+  return (
+    <MerchantLayout user={user} profile={profile}>
+      <div className="space-y-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span className="text-sm font-medium text-blue-800">Merchant Preview Mode</span>
+          </div>
+          <p className="text-sm text-blue-600 mt-1">
+            You're viewing the customer experience. Cart actions are disabled for merchants.
+          </p>
+        </div>
+        {children}
+      </div>
+    </MerchantLayout>
+  );
+};
 
 // Root redirect component to handle merchant users
 const RootRedirect = ({ user, profile }: { user: any, profile: any }) => {
@@ -86,9 +107,21 @@ const RootRedirect = ({ user, profile }: { user: any, profile: any }) => {
     );
   }
 
-  // If user is a merchant, redirect to merchant portal
+  // If user is a merchant, show merchant preview mode
   if (userProfile && userProfile.role === 'merchant') {
-    return <Navigate to="/merchant" replace />;
+    const merchantProfile = {
+      id: user.id,
+      name: userProfile.name || user.user_metadata?.name,
+      email: userProfile.email || user.email,
+      role: userProfile.role,
+      avatar_url: userProfile.avatar_url
+    };
+
+    return (
+      <MerchantPreview user={user} profile={merchantProfile}>
+        <Home isMerchantPreview={true} />
+      </MerchantPreview>
+    );
   }
 
   // Otherwise, show consumer home page
