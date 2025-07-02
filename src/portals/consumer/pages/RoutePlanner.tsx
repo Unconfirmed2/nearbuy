@@ -46,7 +46,7 @@ const RoutePlanner: React.FC = () => {
           });
         },
         (error) => {
-          console.log('Location access denied:', error);
+          
           // Use default NYC coordinates for demo
           setCurrentLocation({ lat: 40.7128, lng: -74.0060 });
         }

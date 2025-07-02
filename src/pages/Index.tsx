@@ -196,7 +196,7 @@ const Index = () => {
       };
       addToBasket(newItem);
       setBasket(getBasket()); // Update state
-      console.log("Added to basket:", newItem);
+      
     }
   };
 
@@ -214,7 +214,7 @@ const Index = () => {
           });
         },
         (error) => {
-          console.log("Location access denied", error);
+          
         }
       );
     }

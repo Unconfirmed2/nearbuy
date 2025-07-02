@@ -44,16 +44,23 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ storeId, onUpload
     setUploadResults(null);
 
     try {
-      // Simulate file processing
+      // Process CSV file
       const reader = new FileReader();
       reader.onload = async (e) => {
         const csv = e.target?.result as string;
-        const lines = csv.split('\n');
-        const headers = lines[0].split(',');
+        const lines = csv.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          toast.error('CSV file must contain headers and at least one data row');
+          setIsUploading(false);
+          return;
+        }
+
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
         
         // Validate headers
-        const requiredHeaders = ['name', 'description', 'price', 'category', 'sku'];
-        const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+        const requiredHeaders = ['name', 'price'];
+        const missingHeaders = requiredHeaders.filter(h => !headers.some(header => header.toLowerCase().includes(h.toLowerCase())));
         
         if (missingHeaders.length > 0) {
           toast.error(`Missing required headers: ${missingHeaders.join(', ')}`);
@@ -61,21 +68,30 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ storeId, onUpload
           return;
         }
 
-        // Simulate processing with progress
+        // Process each row
         const totalRows = lines.length - 1;
         let processedRows = 0;
         let successfulRows = 0;
         let errors: ValidationError[] = [];
 
         for (let i = 1; i < lines.length; i++) {
-          const row = lines[i].split(',');
+          const row = lines[i].split(',').map(cell => cell.trim().replace(/"/g, ''));
           
-          // Simulate validation
-          if (Math.random() > 0.9) { // 10% error rate for demo
+          // Basic validation
+          const nameIndex = headers.findIndex(h => h.toLowerCase().includes('name'));
+          const priceIndex = headers.findIndex(h => h.toLowerCase().includes('price'));
+          
+          if (nameIndex >= 0 && (!row[nameIndex] || row[nameIndex].length === 0)) {
             errors.push({
-              row: i,
+              row: i + 1,
+              field: 'name',
+              message: 'Product name is required'
+            });
+          } else if (priceIndex >= 0 && (!row[priceIndex] || isNaN(Number(row[priceIndex])))) {
+            errors.push({
+              row: i + 1,
               field: 'price',
-              message: 'Invalid price format'
+              message: 'Valid price is required'
             });
           } else {
             successfulRows++;
@@ -84,8 +100,8 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ storeId, onUpload
           processedRows++;
           setUploadProgress((processedRows / totalRows) * 100);
           
-          // Simulate processing delay
-          await new Promise(resolve => setTimeout(resolve, 50));
+          // Small delay for UI feedback
+          await new Promise(resolve => setTimeout(resolve, 10));
         }
 
         setValidationErrors(errors);

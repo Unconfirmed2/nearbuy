@@ -68,7 +68,7 @@ const OrderHistory: React.FC = () => {
 
   const handleReorder = (order: Order) => {
     // In a real app, this would add items back to cart
-    console.log('Reordering:', order);
+    
     navigate('/consumer/cart');
   };
 

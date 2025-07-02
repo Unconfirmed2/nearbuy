@@ -121,12 +121,14 @@ export const useUserManagement = (merchantId: string) => {
       });
 
       if (response.error) {
+        console.error('Supabase function error:', response.error);
         throw new Error(response.error.message || 'Failed to send invitation');
       }
 
       const result = response.data;
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send invitation');
+      if (!result || !result.success) {
+        console.error('Function response:', result);
+        throw new Error(result?.error || 'Failed to send invitation');
       }
 
       toast.success('Invitation sent successfully!');

@@ -439,13 +439,6 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                           <ShoppingCart className="h-4 w-4 mr-2" />
                           Shopping Cart
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="px-0 py-1 text-sm cursor-pointer"
-                          onClick={() => navigate('/merchant')}
-                        >
-                          <Store className="h-4 w-4 mr-2" />
-                          Sell on NearBuy
-                        </DropdownMenuItem>
                       </div>
                     </div>
                   </div>

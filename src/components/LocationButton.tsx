@@ -59,7 +59,7 @@ const LocationButton = ({ userLocation, onLocationChange }: LocationButtonProps)
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
-          console.log("Location updated:", position.coords);
+          
           
           // Reverse geocode to get address - commented out to avoid TS error
           /*

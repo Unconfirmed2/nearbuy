@@ -138,7 +138,7 @@ const ConsumerSignUp: React.FC = () => {
       </p>
       
       <p className="mt-2 text-center text-sm text-gray-600">
-        Want to sell on NearBuy?{' '}
+        Want to become a merchant?{' '}
         <Link to="/auth/signup/merchant" className="text-blue-600 hover:text-blue-500">
           Sign up as Merchant
         </Link>
