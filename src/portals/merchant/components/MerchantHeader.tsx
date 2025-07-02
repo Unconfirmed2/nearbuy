@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,8 @@ import {
   Megaphone,
   Heart,
   History,
-  ShoppingCart
+  ShoppingCart,
+  Eye
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useNavigate } from 'react-router-dom';
@@ -68,6 +70,10 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
     navigate('/?merchant=true');
   };
 
+  const handlePreviewMode = () => {
+    navigate('/merchant/preview');
+  };
+
   return (
     <header className="h-16 bg-white border-b px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-4">
@@ -91,6 +97,17 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
       </div>
       
       <div className="flex items-center gap-3">
+        {/* Preview Mode Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePreviewMode}
+          className="flex items-center gap-2"
+        >
+          <Eye className="h-4 w-4" />
+          Preview Store
+        </Button>
+
         {/* Notifications */}
         <Popover>
           <PopoverTrigger asChild>

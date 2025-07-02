@@ -20,6 +20,7 @@ import Integrations from './pages/Integrations';
 import UserManagement from './pages/UserManagement';
 import StorePreview from './pages/StorePreview';
 import MerchantAuth from './pages/MerchantAuth';
+import MerchantPreview from './pages/MerchantPreview';
 
 // Create a query client for React Query
 const queryClient = new QueryClient({
@@ -60,6 +61,9 @@ const MerchantApp: React.FC = () => {
         <Routes>
           {/* Store Preview - standalone page without merchant layout */}
           <Route path="/store-preview/:storeId" element={<StorePreview />} />
+          
+          {/* Merchant Preview - standalone page without merchant layout */}
+          <Route path="/preview" element={<MerchantPreview />} />
           
           {/* All other routes with merchant layout */}
           <Route path="/*" element={
