@@ -62,13 +62,13 @@ const Dashboard: React.FC = () => {
   }
 
   const customerEngagementData = {
-    total_favorites: 156,
-    recent_favorites: 12,
-    pending_reviews: 3,
-    average_rating: 4.2,
-    total_reviews: 89,
-    repeat_customers: 67,
-    new_customers: 23
+    total_favorites: 0,
+    recent_favorites: 0,
+    pending_reviews: 0,
+    average_rating: 0,
+    total_reviews: 0,
+    repeat_customers: 0,
+    new_customers: 0
   };
 
   const handleViewFavorites = () => {
@@ -107,8 +107,8 @@ const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <AnalyticsCard
             title="Today's Revenue"
-            value={formatCurrency(7200)}
-            change={15.3}
+            value={formatCurrency(0)}
+            change={0}
             changeLabel="vs yesterday"
             icon={<DollarSign className="w-4 h-4" />}
           />
@@ -128,7 +128,7 @@ const Dashboard: React.FC = () => {
           />
           <AnalyticsCard
             title="Active Stores"
-            value={stores.filter(s => s.status === 'active').length}
+            value={stores.filter(s => s.is_active).length}
             icon={<MapPin className="w-4 h-4" />}
           />
         </div>
@@ -303,34 +303,34 @@ const Dashboard: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Monthly Revenue Goal</span>
-                  <span className="text-sm text-gray-600">$150,000</span>
+                  <span className="text-sm text-gray-600">$0</span>
                 </div>
-                <Progress value={83.6} className="h-2" />
+                <Progress value={0} className="h-2" />
                 <div className="text-xs text-gray-500 mt-1">
-                  $125,451 of $150,000 (83.6%)
+                  $0 of $0 (0%)
                 </div>
               </div>
               
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Orders Goal</span>
-                  <span className="text-sm text-gray-600">400</span>
+                  <span className="text-sm text-gray-600">0</span>
                 </div>
-                <Progress value={85.5} className="h-2" />
+                <Progress value={0} className="h-2" />
                 <div className="text-xs text-gray-500 mt-1">
-                  342 of 400 orders (85.5%)
+                  0 of 0 orders (0%)
                 </div>
               </div>
               
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Customer Satisfaction</span>
-                  <span className="text-sm text-gray-600">95%</span>
+                  <span className="text-sm text-gray-600">0%</span>
                 </div>
-                <Progress value={94.2} className="h-2" />
+                <Progress value={0} className="h-2" />
                 <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                   <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                  4.7/5.0 average rating
+                  0.0/5.0 average rating
                 </div>
               </div>
             </CardContent>

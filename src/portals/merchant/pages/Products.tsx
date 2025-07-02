@@ -19,7 +19,6 @@ const Products: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showProductForm, setShowProductForm] = useState(false);
-  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [duplicatingProduct, setDuplicatingProduct] = useState<any>(null);
@@ -147,10 +146,6 @@ const Products: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowBulkUpload(true)}>
-            <Upload className="w-4 h-4 mr-2" />
-            Bulk Upload
-          </Button>
           <Button onClick={() => setShowProductForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Product
