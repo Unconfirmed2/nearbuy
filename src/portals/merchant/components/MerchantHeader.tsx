@@ -69,11 +69,11 @@ const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
     <header className="h-16 bg-white border-b px-6 flex items-center justify-between shadow-sm">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Store className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center cursor-pointer" onClick={() => navigate('/')}>
+            <span className="text-white font-bold text-sm">NB</span>
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">NearBuy Merchant</h1>
+            <h1 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer" onClick={() => navigate('/')}>NearBuy Merchant</h1>
             <p className="text-sm text-gray-500">Welcome back, {profile?.name || 'Merchant'}!</p>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Copy, Edit, Trash2, Calendar, Percent } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Coupon {
   id: string;
@@ -24,34 +25,41 @@ interface Coupon {
 
 interface CouponManagerProps {
   merchantId: string;
-  storeId?: string;
+  storeId: string;
 }
 
 const CouponManager: React.FC<CouponManagerProps> = ({ merchantId, storeId }) => {
-  const [coupons, setCoupons] = useState<Coupon[]>([
-    {
-      id: '1',
-      code: 'WELCOME10',
-      discount_type: 'percentage',
-      discount_value: 10,
-      min_order_amount: 25,
-      max_uses: 100,
-      used_count: 15,
-      expires_at: '2024-02-28',
-      is_active: true,
-      created_at: '2024-01-01'
-    },
-    {
-      id: '2',
-      code: 'SAVE5',
-      discount_type: 'fixed',
-      discount_value: 5,
-      max_uses: 50,
-      used_count: 32,
-      is_active: true,
-      created_at: '2024-01-15'
-    }
-  ]);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch coupons from database
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      if (!storeId) return;
+      
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('coupons')
+          .select('*')
+          .eq('store_id', storeId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setCoupons((data || []).map(item => ({
+          ...item,
+          discount_type: item.discount_type as 'percentage' | 'fixed'
+        })));
+      } catch (error) {
+        console.error('Error fetching coupons:', error);
+        toast.error('Failed to load coupons');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCoupons();
+  }, [storeId]);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newCoupon, setNewCoupon] = useState({
@@ -72,31 +80,47 @@ const CouponManager: React.FC<CouponManagerProps> = ({ merchantId, storeId }) =>
     setNewCoupon(prev => ({ ...prev, code: result }));
   };
 
-  const handleCreateCoupon = () => {
-    const coupon: Coupon = {
-      id: Date.now().toString(),
-      code: newCoupon.code,
-      discount_type: newCoupon.discount_type,
-      discount_value: newCoupon.discount_value,
-      min_order_amount: newCoupon.min_order_amount ? parseFloat(newCoupon.min_order_amount) : undefined,
-      max_uses: newCoupon.max_uses ? parseInt(newCoupon.max_uses) : undefined,
-      used_count: 0,
-      expires_at: newCoupon.expires_at || undefined,
-      is_active: true,
-      created_at: new Date().toISOString()
-    };
+  const handleCreateCoupon = async () => {
+    if (!storeId) return;
 
-    setCoupons(prev => [coupon, ...prev]);
-    setShowCreateDialog(false);
-    setNewCoupon({
-      code: '',
-      discount_type: 'percentage',
-      discount_value: 0,
-      min_order_amount: '',
-      max_uses: '',
-      expires_at: ''
-    });
-    toast.success('Coupon created successfully');
+    try {
+      const couponData = {
+        store_id: storeId,
+        code: newCoupon.code,
+        discount_type: newCoupon.discount_type,
+        discount_value: newCoupon.discount_value,
+        min_order_amount: newCoupon.min_order_amount ? parseFloat(newCoupon.min_order_amount) : null,
+        max_uses: newCoupon.max_uses ? parseInt(newCoupon.max_uses) : null,
+        expires_at: newCoupon.expires_at || null,
+        is_active: true
+      };
+
+      const { data, error } = await supabase
+        .from('coupons')
+        .insert(couponData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCoupons(prev => [{
+        ...data,
+        discount_type: data.discount_type as 'percentage' | 'fixed'
+      }, ...prev]);
+      setShowCreateDialog(false);
+      setNewCoupon({
+        code: '',
+        discount_type: 'percentage',
+        discount_value: 0,
+        min_order_amount: '',
+        max_uses: '',
+        expires_at: ''
+      });
+      toast.success('Coupon created successfully');
+    } catch (error) {
+      console.error('Error creating coupon:', error);
+      toast.error('Failed to create coupon');
+    }
   };
 
   const copyCouponCode = (code: string) => {
@@ -104,16 +128,43 @@ const CouponManager: React.FC<CouponManagerProps> = ({ merchantId, storeId }) =>
     toast.success('Coupon code copied to clipboard');
   };
 
-  const toggleCouponStatus = (id: string) => {
-    setCoupons(prev => prev.map(coupon =>
-      coupon.id === id ? { ...coupon, is_active: !coupon.is_active } : coupon
-    ));
-    toast.success('Coupon status updated');
+  const toggleCouponStatus = async (id: string) => {
+    try {
+      const coupon = coupons.find(c => c.id === id);
+      if (!coupon) return;
+
+      const { error } = await supabase
+        .from('coupons')
+        .update({ is_active: !coupon.is_active })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setCoupons(prev => prev.map(coupon =>
+        coupon.id === id ? { ...coupon, is_active: !coupon.is_active } : coupon
+      ));
+      toast.success('Coupon status updated');
+    } catch (error) {
+      console.error('Error updating coupon:', error);
+      toast.error('Failed to update coupon status');
+    }
   };
 
-  const deleteCoupon = (id: string) => {
-    setCoupons(prev => prev.filter(coupon => coupon.id !== id));
-    toast.success('Coupon deleted');
+  const deleteCoupon = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('coupons')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setCoupons(prev => prev.filter(coupon => coupon.id !== id));
+      toast.success('Coupon deleted');
+    } catch (error) {
+      console.error('Error deleting coupon:', error);
+      toast.error('Failed to delete coupon');
+    }
   };
 
   const getDiscountDisplay = (coupon: Coupon) => {
@@ -239,8 +290,13 @@ const CouponManager: React.FC<CouponManagerProps> = ({ merchantId, storeId }) =>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {coupons.map(coupon => (
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-gray-500">Loading coupons...</div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {coupons.map(coupon => (
             <div key={coupon.id} className="border rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -308,7 +364,8 @@ const CouponManager: React.FC<CouponManagerProps> = ({ merchantId, storeId }) =>
               <p className="text-sm">Create your first coupon to start offering discounts</p>
             </div>
           )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

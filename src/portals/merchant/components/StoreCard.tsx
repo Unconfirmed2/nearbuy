@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,16 +47,18 @@ const StoreCard: React.FC<StoreCardProps> = ({
   };
 
   const formatBusinessHours = () => {
-    if (!store.business_hours) return 'Hours not set';
+    if (!store.business_hours || typeof store.business_hours !== 'object') {
+      return 'Hours not set';
+    }
     
-    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase() as keyof typeof store.business_hours;
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const todayHours = store.business_hours[today];
     
-    if (!todayHours || todayHours.closed) {
+    if (!todayHours || !todayHours.isOpen) {
       return 'Closed today';
     }
     
-    return `${todayHours.open} - ${todayHours.close} today`;
+    return `${todayHours.openTime} - ${todayHours.closeTime} today`;
   };
 
   return (
@@ -91,7 +92,7 @@ const StoreCard: React.FC<StoreCardProps> = ({
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-gray-600">
             <MapPin className="w-4 h-4" />
-            <span>{store.address}, {store.city}, {store.state} {store.zip_code}</span>
+            <span>{store.address || 'No address set'}</span>
           </div>
           
           {store.contact_phone && (

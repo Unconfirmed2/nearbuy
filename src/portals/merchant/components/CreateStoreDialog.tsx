@@ -225,7 +225,7 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
         </Tabs>
 
         <div className="flex gap-2 pt-4">
-          <Button onClick={handleSubmit} disabled={loading || !storeData.name || !storeData.address}>
+          <Button onClick={handleSubmit} disabled={loading || !storeData.name || !storeData.address || !businessHours}>
             {loading ? 'Creating...' : 'Create Store'}
           </Button>
           <Button variant="outline" onClick={handleClose}>

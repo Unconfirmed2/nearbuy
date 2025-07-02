@@ -1,15 +1,19 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useStores } from '../hooks/useStores';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, TrendingUp, Target, Percent, Megaphone } from 'lucide-react';
 import PromotionsManager from '../components/PromotionsManager';
 import CouponManager from '../components/CouponManager';
+import StoreSelector from '../components/StoreSelector';
 
 const Marketing: React.FC = () => {
   const { user } = useAuth();
+  const { stores } = useStores(user?.id);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('all');
   
   return (
     <div className="space-y-6">
@@ -19,6 +23,13 @@ const Marketing: React.FC = () => {
           Create campaigns, manage promotions, and boost your sales
         </p>
       </div>
+
+      <StoreSelector 
+        stores={stores}
+        selectedStoreId={selectedStoreId}
+        onStoreChange={setSelectedStoreId}
+        placeholder="Select store for marketing campaigns..."
+      />
 
       <Tabs defaultValue="promotions" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
@@ -33,7 +44,18 @@ const Marketing: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="coupons">
-          <CouponManager merchantId={user?.id || ''} />
+          {selectedStoreId && selectedStoreId !== 'all' ? (
+            <CouponManager merchantId={user?.id || ''} storeId={selectedStoreId} />
+          ) : (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center text-gray-500">
+                  <Percent className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                  <p>Please select a specific store to manage coupons</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="sponsored">
