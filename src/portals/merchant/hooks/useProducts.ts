@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Product, InventoryItem } from '../types/product';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useProducts = (merchantId: string) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -12,91 +13,88 @@ export const useProducts = (merchantId: string) => {
       try {
         setLoading(true);
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!merchantId) {
+          setProducts([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch products that belong to stores owned by this merchant
+        const { data: storeData, error: storeError } = await supabase
+          .from('stores')
+          .select('id')
+          .eq('merchant_id', merchantId);
+
+        if (storeError) {
+          console.error('Error fetching stores:', storeError);
+          setError('Failed to fetch products');
+          return;
+        }
+
+        if (!storeData || storeData.length === 0) {
+          setProducts([]);
+          setLoading(false);
+          return;
+        }
+
+        const storeIds = storeData.map(store => store.id);
+
+        // Fetch products and their inventory
+        const { data: inventoryData, error: inventoryError } = await supabase
+          .from('inventory')
+          .select(`
+            id,
+            price,
+            quantity,
+            store_id,
+            updated_at,
+            products (
+              id,
+              name,
+              description,
+              brand,
+              category_id,
+              image_url,
+              created_at
+            )
+          `)
+          .in('store_id', storeIds);
+
+        if (inventoryError) {
+          console.error('Error fetching inventory:', inventoryError);
+          setError('Failed to fetch products');
+          return;
+        }
+
+        // Transform data to Product type
+        const transformedProducts: Product[] = (inventoryData || []).map(inv => ({
+          id: inv.products?.id || '',
+          name: inv.products?.name || '',
+          description: inv.products?.description || '',
+          brand: inv.products?.brand || '',
+          category_id: inv.products?.category_id || '',
+          sku: '', // Not in current schema
+          price: inv.price,
+          images: inv.products?.image_url ? [inv.products.image_url] : ['/placeholder.svg'],
+          tags: [], // Not in current schema
+          is_active: true, // Assuming active if in inventory
+          track_inventory: true,
+          store_id: inv.store_id,
+          created_at: inv.products?.created_at || '',
+          updated_at: inv.updated_at,
+          inventory: [{
+            id: inv.id.toString(),
+            product_id: inv.products?.id || '',
+            store_id: inv.store_id,
+            quantity: inv.quantity,
+            reserved_quantity: 0,
+            low_stock_threshold: 5,
+            track_quantity: true,
+            updated_at: inv.updated_at
+          }]
+        })).filter(product => product.id); // Filter out products without IDs
         
-        const mockProducts: Product[] = [
-          {
-            id: 'product-1',
-            name: 'iPhone 15 Pro',
-            description: 'Latest iPhone with advanced features',
-            brand: 'Apple',
-            category_id: 'electronics',
-            sku: 'IPHONE15PRO-128',
-            price: 999.99,
-            images: ['/placeholder.svg'],
-            tags: ['smartphone', 'apple', 'premium'],
-            is_active: true,
-            track_inventory: true,
-            store_id: 'store-1',
-            created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-            inventory: [{
-              id: 'inv-1',
-              product_id: 'product-1',
-              store_id: 'store-1',
-              quantity: 25,
-              reserved_quantity: 0,
-              low_stock_threshold: 5,
-              track_quantity: true,
-              updated_at: new Date().toISOString()
-            }]
-          },
-          {
-            id: 'product-2',
-            name: 'Samsung Galaxy Book',
-            description: 'Powerful laptop for productivity',
-            brand: 'Samsung',
-            category_id: 'electronics',
-            sku: 'GALAXYBOOK-16-512',
-            price: 1299.99,
-            images: ['/placeholder.svg'],
-            tags: ['laptop', 'samsung', 'productivity'],
-            is_active: true,
-            track_inventory: true,
-            store_id: 'store-1',
-            created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-            inventory: [{
-              id: 'inv-2',
-              product_id: 'product-2',
-              store_id: 'store-1',
-              quantity: 8,
-              reserved_quantity: 0,
-              low_stock_threshold: 3,
-              track_quantity: true,
-              updated_at: new Date().toISOString()
-            }]
-          },
-          {
-            id: 'product-3',
-            name: 'Wireless Earbuds',
-            description: 'High-quality wireless earbuds with noise cancellation',
-            brand: 'TechBrand',
-            category_id: 'electronics',
-            sku: 'EARBUDS-WL-BLK',
-            price: 199.99,
-            images: ['/placeholder.svg'],
-            tags: ['earbuds', 'wireless', 'audio'],
-            is_active: true,
-            track_inventory: true,
-            store_id: 'store-1',
-            created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-            inventory: [{
-              id: 'inv-3',
-              product_id: 'product-3',
-              store_id: 'store-1',
-              quantity: 50,
-              reserved_quantity: 0,
-              low_stock_threshold: 10,
-              track_quantity: true,
-              updated_at: new Date().toISOString()
-            }]
-          }
-        ];
-        
-        setProducts(mockProducts);
+        setProducts(transformedProducts);
       } catch (err) {
         setError('Failed to fetch products');
         console.error('Error fetching products:', err);
@@ -105,33 +103,71 @@ export const useProducts = (merchantId: string) => {
       }
     };
 
-    if (merchantId) {
-      fetchProducts();
-    }
+    fetchProducts();
   }, [merchantId]);
 
   const createProduct = async (productData: Partial<Product>) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      if (!productData.store_id) {
+        throw new Error('Store ID is required to create a product');
+      }
+
+      // Create product in products table
+      const { data: productRecord, error: productError } = await supabase
+        .from('products')
+        .insert({
+          name: productData.name || '',
+          description: productData.description || '',
+          brand: productData.brand || '',
+          category_id: productData.category_id || null,
+          image_url: productData.images?.[0] || null
+        })
+        .select()
+        .single();
+
+      if (productError) throw productError;
+
+      // Create inventory record
+      const { data: inventoryRecord, error: inventoryError } = await supabase
+        .from('inventory')
+        .insert({
+          store_id: productData.store_id,
+          product_id: productRecord.id,
+          price: productData.price || 0,
+          quantity: 0 // Default quantity
+        })
+        .select()
+        .single();
+
+      if (inventoryError) throw inventoryError;
+
       const newProduct: Product = {
-        id: `product-${Date.now()}`,
-        name: productData.name || '',
-        description: productData.description || '',
-        brand: productData.brand || '',
-        category_id: productData.category_id || '',
+        id: productRecord.id,
+        name: productRecord.name,
+        description: productRecord.description || '',
+        brand: productRecord.brand || '',
+        category_id: productRecord.category_id || '',
         sku: productData.sku || '',
-        price: productData.price || 0,
-        images: productData.images || ['/placeholder.svg'],
+        price: inventoryRecord.price,
+        images: productRecord.image_url ? [productRecord.image_url] : ['/placeholder.svg'],
         tags: productData.tags || [],
-        is_active: productData.is_active ?? true,
-        track_inventory: productData.track_inventory ?? true,
-        store_id: productData.store_id || 'store-1',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        is_active: true,
+        track_inventory: true,
+        store_id: productData.store_id,
+        created_at: productRecord.created_at,
+        updated_at: productRecord.created_at,
         metadata: productData.metadata,
-        variants: productData.variants || []
+        variants: productData.variants || [],
+        inventory: [{
+          id: inventoryRecord.id.toString(),
+          product_id: productRecord.id,
+          store_id: productData.store_id,
+          quantity: inventoryRecord.quantity,
+          reserved_quantity: 0,
+          low_stock_threshold: 5,
+          track_quantity: true,
+          updated_at: inventoryRecord.updated_at
+        }]
       };
       
       setProducts(prev => [...prev, newProduct]);

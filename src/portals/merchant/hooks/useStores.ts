@@ -9,59 +9,57 @@ export const useStores = (merchantId?: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data for demonstration
+  // Fetch stores from Supabase
   useEffect(() => {
     const fetchStores = async () => {
       try {
         setLoading(true);
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!merchantId) {
+          setStores([]);
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('stores')
+          .select('*')
+          .eq('merchant_id', merchantId);
+
+        if (error) {
+          console.error('Error fetching stores:', error);
+          setError('Failed to fetch stores');
+          return;
+        }
+
+        // Transform Supabase data to Store type
+        const transformedStores: Store[] = (data || []).map(store => ({
+          id: store.id,
+          name: store.name,
+          description: store.description || '',
+          address: store.address || '',
+          city: '',
+          state: '',
+          zip_code: '',
+          latitude: undefined,
+          longitude: undefined,
+          phone: store.phone,
+          email: store.contact_email,
+          website: undefined,
+          logo_url: store.logo_url,
+          contact_phone: store.contact_phone,
+          contact_email: store.contact_email,
+          status: store.verification_status === 'approved' ? 'active' : 'pending_verification',
+          is_verified: store.is_verified,
+          is_active: store.is_active ?? true,
+          business_hours: undefined,
+          social_media: undefined,
+          merchant_id: store.merchant_id,
+          created_at: store.created_at,
+          updated_at: store.created_at
+        }));
         
-        const mockStores: Store[] = [
-          {
-            id: 'store-1',
-            name: 'Downtown Electronics',
-            description: 'Your one-stop shop for electronics and gadgets',
-            address: '123 Main St',
-            city: 'Downtown',
-            state: 'CA',
-            zip_code: '90210',
-            latitude: 34.0522,
-            longitude: -118.2437,
-            phone: '+1 (555) 123-4567',
-            contact_phone: '+1 (555) 123-4567',
-            contact_email: 'store@downtown-electronics.com',
-            status: 'active',
-            is_verified: true,
-            is_active: true,
-            merchant_id: merchantId,
-            created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          {
-            id: 'store-2',
-            name: 'Westside Books',
-            description: 'Independent bookstore with rare and new books',
-            address: '456 Oak Ave',
-            city: 'Westside',
-            state: 'CA',
-            zip_code: '90211',
-            latitude: 34.0522,
-            longitude: -118.2437,
-            phone: '+1 (555) 987-6543',
-            contact_phone: '+1 (555) 987-6543',
-            contact_email: 'info@westside-books.com',
-            status: 'pending_verification',
-            is_verified: false,
-            is_active: false,
-            merchant_id: merchantId,
-            created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        ];
-        
-        setStores(mockStores);
+        setStores(transformedStores);
       } catch (err) {
         setError('Failed to fetch stores');
         console.error('Error fetching stores:', err);
@@ -70,12 +68,7 @@ export const useStores = (merchantId?: string) => {
       }
     };
 
-    if (merchantId) {
-      fetchStores();
-    } else {
-      setLoading(false);
-      setStores([]);
-    }
+    fetchStores();
   }, [merchantId]);
 
   const createStore = async (storeData: any) => {
@@ -84,6 +77,9 @@ export const useStores = (merchantId?: string) => {
     }
 
     try {
+      console.log('Creating store with data:', storeData);
+      console.log('Merchant ID:', merchantId);
+
       // Parse address parts from the full address
       const addressParts = (storeData.address || '').split(',');
       const city = addressParts[1]?.trim() || '';
@@ -93,28 +89,37 @@ export const useStores = (merchantId?: string) => {
       const zip_code = stateParts[1] || '';
 
       // Insert store into Supabase
+      const insertData = {
+        name: storeData.name,
+        description: storeData.description,
+        address: storeData.address,
+        business_name: storeData.business_name,
+        business_type: storeData.business_type,
+        contact_phone: storeData.contact_phone,
+        contact_email: storeData.contact_email,
+        phone: storeData.phone,
+        tax_id: storeData.tax_id,
+        merchant_id: merchantId,
+        owner_id: merchantId,
+        is_verified: false,
+        is_active: true,
+        verification_status: 'pending' as const
+      };
+
+      console.log('Inserting store data:', insertData);
+
       const { data, error } = await supabase
         .from('stores')
-        .insert({
-          name: storeData.name,
-          description: storeData.description,
-          address: storeData.address,
-          business_name: storeData.business_name,
-          business_type: storeData.business_type,
-          contact_phone: storeData.contact_phone,
-          contact_email: storeData.contact_email,
-          phone: storeData.phone,
-          tax_id: storeData.tax_id,
-          merchant_id: merchantId,
-          owner_id: merchantId,
-          is_verified: false,
-          is_active: true,
-          verification_status: 'pending'
-        })
+        .insert(insertData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Store created successfully:', data);
 
       const newStore: Store = {
         id: data.id,
@@ -152,8 +157,20 @@ export const useStores = (merchantId?: string) => {
 
   const updateStore = async (storeId: string, updates: Partial<Store>) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase
+        .from('stores')
+        .update({
+          name: updates.name,
+          description: updates.description,
+          address: updates.address,
+          contact_phone: updates.contact_phone,
+          contact_email: updates.contact_email,
+          phone: updates.phone,
+          is_active: updates.is_active
+        })
+        .eq('id', storeId);
+
+      if (error) throw error;
       
       setStores(prev => 
         prev.map(store => 
@@ -170,8 +187,12 @@ export const useStores = (merchantId?: string) => {
 
   const deleteStore = async (storeId: string) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await supabase
+        .from('stores')
+        .delete()
+        .eq('id', storeId);
+
+      if (error) throw error;
       
       setStores(prev => prev.filter(store => store.id !== storeId));
     } catch (err) {

@@ -21,79 +21,86 @@ export const useOrders = (merchantId: string, searchTerm: string = '', statusFil
     queryFn: async (): Promise<OrderWithDetails[]> => {
       console.log('Fetching orders for merchant:', merchantId);
       
-      // For now, return mock data since we don't have real orders yet
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const mockOrders: OrderWithDetails[] = [
-        {
-          id: 'order-1',
-          order_number: 'ORD-1001',
-          customer_name: 'John Doe',
-          customer_email: 'john.doe@email.com',
-          store_name: 'Downtown Electronics',
-          items_count: 3,
-          user_id: 'user-1',
-          store_id: 'store-1',
-          status: 'pending',
-          total_amount: 299.99,
-          tax_amount: 24.00,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          pickup_time: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
-          profiles: {
-            name: 'John Doe',
-            email: 'john.doe@email.com'
-          },
-          stores: {
-            name: 'Downtown Electronics'
-          },
-          order_items: [
-            {
-              quantity: 2,
-              unit_price: 149.99,
-              products: {
-                name: 'Wireless Headphones',
-                brand: 'TechBrand'
-              }
-            }
-          ]
+      if (!merchantId) return [];
+
+      // Get store IDs for this merchant
+      const { data: storeData, error: storeError } = await supabase
+        .from('stores')
+        .select('id, name')
+        .eq('merchant_id', merchantId);
+
+      if (storeError) {
+        console.error('Error fetching stores:', storeError);
+        throw new Error('Failed to fetch orders');
+      }
+
+      if (!storeData || storeData.length === 0) {
+        return [];
+      }
+
+      const storeIds = storeData.map(s => s.id);
+
+      // Fetch orders for merchant's stores
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          user_id,
+          store_id,
+          total_amount,
+          pickup_time,
+          created_at,
+          status,
+          users (
+            name,
+            email
+          ),
+          stores (
+            name
+          ),
+          order_items (
+            quantity,
+            unit_price,
+            products (
+              name,
+              brand
+            )
+          )
+        `)
+        .in('store_id', storeIds);
+
+      if (ordersError) {
+        console.error('Error fetching orders:', ordersError);
+        throw new Error('Failed to fetch orders');
+      }
+
+      // Transform to OrderWithDetails format
+      const transformedOrders: OrderWithDetails[] = (ordersData || []).map((order, index) => ({
+        id: order.id,
+        order_number: `ORD-${(index + 1).toString().padStart(4, '0')}`,
+        customer_name: order.users?.name || 'Unknown Customer',
+        customer_email: order.users?.email || '',
+        store_name: order.stores?.name || 'Unknown Store',
+        items_count: order.order_items?.length || 0,
+        user_id: order.user_id,
+        store_id: order.store_id,
+        status: order.status,
+        total_amount: order.total_amount || 0,
+        tax_amount: (order.total_amount || 0) * 0.08, // Assuming 8% tax
+        created_at: order.created_at,
+        updated_at: order.created_at,
+        pickup_time: order.pickup_time,
+        profiles: {
+          name: order.users?.name || 'Unknown Customer',
+          email: order.users?.email || ''
         },
-        {
-          id: 'order-2',
-          order_number: 'ORD-1002',
-          customer_name: 'Jane Smith',
-          customer_email: 'jane.smith@email.com',
-          store_name: 'Downtown Electronics',
-          items_count: 1,
-          user_id: 'user-2',
-          store_id: 'store-1',
-          status: 'ready_for_pickup',
-          total_amount: 149.99,
-          tax_amount: 12.00,
-          created_at: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-          updated_at: new Date().toISOString(),
-          pickup_time: new Date(Date.now() + 43200000).toISOString(), // 12 hours from now
-          profiles: {
-            name: 'Jane Smith',
-            email: 'jane.smith@email.com'
-          },
-          stores: {
-            name: 'Downtown Electronics'
-          },
-          order_items: [
-            {
-              quantity: 1,
-              unit_price: 149.99,
-              products: {
-                name: 'Bluetooth Speaker',
-                brand: 'AudioTech'
-              }
-            }
-          ]
-        }
-      ];
-      
-      return mockOrders;
+        stores: {
+          name: order.stores?.name || 'Unknown Store'
+        },
+        order_items: order.order_items || []
+      }));
+
+      return transformedOrders;
     },
   });
 
