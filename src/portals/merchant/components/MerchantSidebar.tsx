@@ -12,7 +12,8 @@ import {
   Settings, 
   HelpCircle,
   Zap,
-  Star
+  Star,
+  Users
 } from 'lucide-react';
 
 const MerchantSidebar = () => {
@@ -27,6 +28,7 @@ const MerchantSidebar = () => {
     { icon: Megaphone, label: 'Marketing', path: '/merchant/marketing' },
     { icon: Star, label: 'Reviews', path: '/merchant/reviews' },
     { icon: Zap, label: 'Integrations', path: '/merchant/integrations' },
+    { icon: Users, label: 'User Management', path: '/merchant/users' },
     { icon: Settings, label: 'Settings', path: '/merchant/settings' },
     { icon: HelpCircle, label: 'Support', path: '/merchant/support' }
   ];

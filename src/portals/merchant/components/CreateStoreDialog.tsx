@@ -28,7 +28,7 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
   store,
   isEdit = false
 }) => {
-  const [storeData, setStoreData] = useState({
+  const initialStoreData = {
     name: store?.name || '',
     business_name: store?.business_name || '',
     description: store?.description || '',
@@ -37,21 +37,30 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
     contact_email: store?.contact_email || '',
     business_type: store?.business_type || '',
     tax_id: store?.tax_id || ''
-  });
+  };
 
-  const [businessHours, setBusinessHours] = useState<BusinessHours>(
-    store?.business_hours || {
-      monday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-      tuesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-      wednesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-      thursday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-      friday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
-      saturday: { isOpen: true, openTime: '10:00', closeTime: '16:00' },
-      sunday: { isOpen: false, openTime: '10:00', closeTime: '16:00' }
-    }
+  const initialBusinessHours = store?.business_hours || {
+    monday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    tuesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    wednesday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    thursday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    friday: { isOpen: true, openTime: '09:00', closeTime: '17:00' },
+    saturday: { isOpen: true, openTime: '10:00', closeTime: '16:00' },
+    sunday: { isOpen: false, openTime: '10:00', closeTime: '16:00' }
+  };
+
+  const initialSocialMedia = store?.social_media || {};
+
+  const [storeData, setStoreData] = useState(initialStoreData);
+  const [businessHours, setBusinessHours] = useState<BusinessHours>(initialBusinessHours);
+  const [socialMedia, setSocialMedia] = useState<SocialMedia>(initialSocialMedia);
+
+  // Check if any data has changed
+  const hasChanges = isEdit && (
+    JSON.stringify(storeData) !== JSON.stringify(initialStoreData) ||
+    JSON.stringify(businessHours) !== JSON.stringify(initialBusinessHours) ||
+    JSON.stringify(socialMedia) !== JSON.stringify(initialSocialMedia)
   );
-
-  const [socialMedia, setSocialMedia] = useState<SocialMedia>(store?.social_media || {});
 
   const businessTypes = [
     'Retail Store',
@@ -231,7 +240,10 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
         </Tabs>
 
         <div className="flex gap-2 pt-4">
-          <Button onClick={handleSubmit} disabled={loading || !storeData.name || !storeData.address || !businessHours}>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={loading || !storeData.name || !storeData.address || (isEdit && !hasChanges)}
+          >
             {loading ? (isEdit ? 'Updating...' : 'Creating...') : (isEdit ? 'Update Store' : 'Create Store')}
           </Button>
           <Button variant="outline" onClick={handleClose}>
