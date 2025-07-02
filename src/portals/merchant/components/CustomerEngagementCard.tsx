@@ -36,10 +36,10 @@ const CustomerEngagementCard: React.FC<CustomerEngagementCardProps> = ({
           <Heart className="h-4 w-4 text-red-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{data.total_favorites}</div>
+          <div className="text-2xl font-bold">{data.total_favorites || 0}</div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <TrendingUp className="h-3 w-3" />
-            +{data.recent_favorites} this week
+            +{data.recent_favorites || 0} this week
           </div>
           <Button variant="outline" size="sm" className="mt-3" onClick={onViewFavorites}>
             View Details
@@ -54,13 +54,13 @@ const CustomerEngagementCard: React.FC<CustomerEngagementCardProps> = ({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold flex items-center gap-2">
-            {data.average_rating.toFixed(1)}
+            {(data.average_rating || 0).toFixed(1)}
             <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
           </div>
           <div className="text-xs text-muted-foreground">
-            {data.total_reviews} total reviews
+            {data.total_reviews || 0} total reviews
           </div>
-          {data.pending_reviews > 0 && (
+          {(data.pending_reviews || 0) > 0 && (
             <Badge variant="outline" className="mt-2">
               {data.pending_reviews} pending responses
             </Badge>
@@ -77,12 +77,14 @@ const CustomerEngagementCard: React.FC<CustomerEngagementCardProps> = ({
           <Users className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{data.repeat_customers + data.new_customers}</div>
+          <div className="text-2xl font-bold">{(data.repeat_customers || 0) + (data.new_customers || 0)}</div>
           <div className="text-xs text-muted-foreground">
-            {data.repeat_customers} repeat • {data.new_customers} new
+            {data.repeat_customers || 0} repeat • {data.new_customers || 0} new
           </div>
           <div className="text-xs text-green-600 mt-1">
-            {Math.round((data.repeat_customers / (data.repeat_customers + data.new_customers)) * 100)}% retention rate
+            {data.repeat_customers || data.new_customers ? 
+              Math.round(((data.repeat_customers || 0) / ((data.repeat_customers || 0) + (data.new_customers || 0))) * 100) 
+              : 0}% retention rate
           </div>
           <Button variant="outline" size="sm" className="mt-3" onClick={onViewCustomers}>
             View Customers

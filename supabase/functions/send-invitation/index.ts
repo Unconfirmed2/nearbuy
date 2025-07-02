@@ -76,8 +76,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Prepare email content
-    const baseUrl = supabaseUrl.replace('/rest/v1', '');
-    const inviteUrl = `${baseUrl}/merchant/accept-invitation?token=${token}`;
+    const projectRef = supabaseUrl.split('//')[1].split('.')[0];
+    const inviteUrl = `https://${projectRef}.lovableproject.com/merchant/accept-invitation?token=${token}`;
     
     let roleDescription = '';
     switch (role) {
