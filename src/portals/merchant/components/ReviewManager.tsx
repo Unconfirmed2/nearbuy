@@ -27,40 +27,7 @@ interface ReviewManagerProps {
 }
 
 const ReviewManager: React.FC<ReviewManagerProps> = ({ merchantId, storeId }) => {
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      id: '1',
-      customer_name: 'Sarah Johnson',
-      customer_avatar: undefined,
-      rating: 5,
-      comment: 'Excellent service and great products! Very satisfied with my purchase.',
-      product_name: 'Organic Coffee Beans',
-      store_name: 'Downtown Coffee Shop',
-      created_at: '2024-01-10T14:30:00Z'
-    },
-    {
-      id: '2',
-      customer_name: 'Mike Chen',
-      customer_avatar: undefined,
-      rating: 4,
-      comment: 'Good quality but delivery was a bit slow. Overall happy with the experience.',
-      product_name: 'Artisan Bread',
-      store_name: 'Local Bakery',
-      created_at: '2024-01-08T09:15:00Z',
-      merchant_reply: 'Thank you for your feedback, Mike! We\'re working on improving our delivery times.',
-      merchant_reply_at: '2024-01-08T15:20:00Z'
-    },
-    {
-      id: '3',
-      customer_name: 'Emma Wilson',
-      customer_avatar: undefined,
-      rating: 3,
-      comment: 'Product was okay but not as described. Could be better.',
-      product_name: 'Handmade Scarf',
-      store_name: 'Craft Corner',
-      created_at: '2024-01-05T16:45:00Z'
-    }
-  ]);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const [replyText, setReplyText] = useState<{[key: string]: string}>({});
   const [showReplyForm, setShowReplyForm] = useState<{[key: string]: boolean}>({});

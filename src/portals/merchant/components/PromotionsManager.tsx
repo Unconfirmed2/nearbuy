@@ -34,22 +34,7 @@ const PromotionsManager: React.FC<PromotionsManagerProps> = ({
   storeId,
   products
 }) => {
-  const [promotions, setPromotions] = useState<Promotion[]>([
-    {
-      id: 'promo-1',
-      name: 'Summer Sale',
-      description: '20% off all electronics',
-      type: 'percentage',
-      value: 20,
-      code: 'SUMMER20',
-      start_date: '2024-06-01',
-      end_date: '2024-08-31',
-      usage_limit: 1000,
-      usage_count: 245,
-      is_active: true,
-      applicable_products: []
-    }
-  ]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Partial<Promotion>>({});

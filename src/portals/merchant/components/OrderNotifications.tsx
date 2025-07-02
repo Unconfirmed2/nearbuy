@@ -22,35 +22,7 @@ interface OrderNotificationsProps {
 }
 
 const OrderNotifications: React.FC<OrderNotificationsProps> = ({ merchantId }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 'notif-1',
-      type: 'new_order',
-      title: 'New Order Received',
-      message: 'Order #ORD-12345 from Sarah Johnson - $89.99',
-      timestamp: new Date(),
-      read: false,
-      orderId: 'order-12345'
-    },
-    {
-      id: 'notif-2',
-      type: 'low_stock',
-      title: 'Low Stock Alert',
-      message: 'Premium Skinny Jeans - Only 2 units left',
-      timestamp: new Date(Date.now() - 1800000),
-      read: false,
-      productId: 'product-123'
-    },
-    {
-      id: 'notif-3',
-      type: 'pickup_ready',
-      title: 'Order Ready for Pickup',
-      message: 'Order #ORD-12344 is prepared and waiting',
-      timestamp: new Date(Date.now() - 3600000),
-      read: true,
-      orderId: 'order-12344'
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

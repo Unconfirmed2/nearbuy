@@ -23,26 +23,7 @@ interface CustomerEngagementProps {
 }
 
 const CustomerEngagement: React.FC<CustomerEngagementProps> = ({ merchantId }) => {
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      id: 'review-1',
-      customer_name: 'Sarah Johnson',
-      rating: 5,
-      comment: 'Great quality jeans, perfect fit!',
-      product_name: 'Premium Skinny Jeans',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 'review-2',
-      customer_name: 'Mike Chen',
-      rating: 4,
-      comment: 'Good product but shipping took a while.',
-      product_name: 'Classic T-Shirt',
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      merchant_reply: 'Thank you for the feedback! We\'re working on faster shipping.',
-      replied_at: new Date().toISOString(),
-    }
-  ]);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
   const [showReplyForm, setShowReplyForm] = useState<{ [key: string]: boolean }>({});
@@ -79,9 +60,9 @@ const CustomerEngagement: React.FC<CustomerEngagementProps> = ({ merchantId }) =
   };
 
   const favoriteStats = {
-    total_favorites: 234,
-    this_week: 12,
-    top_favorited: 'Premium Skinny Jeans'
+    total_favorites: 0,
+    this_week: 0,
+    top_favorited: 'No data yet'
   };
 
   return (

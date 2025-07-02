@@ -43,32 +43,7 @@ interface MerchantHeaderProps {
 const MerchantHeader: React.FC<MerchantHeaderProps> = ({ user, profile }) => {
   const navigate = useNavigate();
   
-  const [notifications] = React.useState([
-    {
-      id: '1',
-      title: 'New Order #1234',
-      message: 'Order for iPhone 15 Pro Max ready for confirmation',
-      type: 'new_order',
-      time: '2 minutes ago',
-      unread: true
-    },
-    {
-      id: '2',
-      title: 'Low Stock Alert',
-      message: 'MacBook Air M3 is running low (3 left)',
-      type: 'low_stock',
-      time: '1 hour ago',
-      unread: true
-    },
-    {
-      id: '3',
-      title: 'New Review',
-      message: 'Sarah left a 5-star review for AirPods Pro',
-      type: 'review',
-      time: '3 hours ago',
-      unread: false
-    }
-  ]);
+  const [notifications] = React.useState([]);
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
