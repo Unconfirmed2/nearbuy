@@ -1,17 +1,40 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useStores } from '../hooks/useStores';
+import { useAuth } from '../hooks/useAuth';
 
 interface StoreFilterContextType {
   selectedStoreId: string;
   setSelectedStoreId: (storeId: string) => void;
+  stores: any[];
+  loading: boolean;
 }
 
 const StoreFilterContext = createContext<StoreFilterContextType | undefined>(undefined);
 
 export const StoreFilterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  const { stores, loading } = useStores(user?.id);
   const [selectedStoreId, setSelectedStoreId] = useState<string>('all');
 
+  // Auto-select the first store if merchant has only one store
+  useEffect(() => {
+    if (!loading && stores && stores.length > 0) {
+      if (stores.length === 1) {
+        setSelectedStoreId(stores[0].id);
+      } else if (selectedStoreId === 'all' && stores.length > 1) {
+        // Keep 'all' as default for multiple stores
+        setSelectedStoreId('all');
+      }
+    }
+  }, [stores, loading]);
+
   return (
-    <StoreFilterContext.Provider value={{ selectedStoreId, setSelectedStoreId }}>
+    <StoreFilterContext.Provider value={{ 
+      selectedStoreId, 
+      setSelectedStoreId, 
+      stores: stores || [], 
+      loading 
+    }}>
       {children}
     </StoreFilterContext.Provider>
   );

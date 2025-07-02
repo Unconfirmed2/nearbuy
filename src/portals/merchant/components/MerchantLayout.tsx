@@ -3,6 +3,7 @@ import React from 'react';
 import { User } from '@supabase/supabase-js';
 import MerchantSidebar from './MerchantSidebar';
 import MerchantHeader from './MerchantHeader';
+import DashboardStoreSelector from './DashboardStoreSelector';
 
 interface MerchantLayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ const MerchantLayout: React.FC<MerchantLayoutProps> = ({ children, user, profile
           </div>
         </div>
         <main className="flex-1 p-6">
+          <DashboardStoreSelector />
           {children}
         </main>
       </div>

@@ -6,6 +6,7 @@ import { Plus, Search, Package, Upload, Copy } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { useStores } from '../hooks/useStores';
 import { useAuth } from '../hooks/useAuth';
+import { useStoreFilter } from '../contexts/StoreFilterContext';
 import ProductCard from '../components/ProductCard';
 import ProductForm from '../components/ProductForm';
 import ProductFilters from '../components/ProductFilters';
@@ -17,7 +18,6 @@ import { toast } from 'sonner';
 const Products: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStore, setSelectedStore] = useState('all');
   const [showProductForm, setShowProductForm] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
@@ -25,22 +25,28 @@ const Products: React.FC = () => {
   const [duplicatingProduct, setDuplicatingProduct] = useState<any>(null);
 
   const { user } = useAuth();
+  const { selectedStoreId } = useStoreFilter();
   const { products, loading, createProduct, updateProduct, deleteProduct } = useProducts(user?.id || '');
   const { stores } = useStores(user?.id);
 
-  const filteredProducts = products.filter(product => {
+  // Filter products based on store selection
+  const storeFilteredProducts = products.filter(product => {
+    if (selectedStoreId === 'all') return true;
+    return product.store_id === selectedStoreId;
+  });
+
+  const filteredProducts = storeFilteredProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.sku.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
-    const matchesStore = selectedStore === 'all' || product.store_id === selectedStore;
     
-    return matchesSearch && matchesCategory && matchesStore;
+    return matchesSearch && matchesCategory;
   });
 
-  // Extract unique category IDs from products and create a simple string array
+  // Extract unique category IDs from store-filtered products
   const categoryIds = Array.from(new Set(
-    products
+    storeFilteredProducts
       .map(p => p.category_id)
       .filter(Boolean)
   ));
@@ -133,6 +139,11 @@ const Products: React.FC = () => {
           <h1 className="text-3xl font-bold">Products</h1>
           <p className="text-gray-600 mt-2">
             Manage your product catalog and inventory
+            {selectedStoreId !== 'all' && (
+              <span className="text-blue-600 font-medium">
+                {' '}• Filtered to: {stores.find(s => s.id === selectedStoreId)?.name}
+              </span>
+            )}
           </p>
         </div>
         <div className="flex gap-2">
@@ -155,7 +166,7 @@ const Products: React.FC = () => {
         </TabsList>
 
         <TabsContent value="products" className="space-y-6">
-          {products.length > 0 && (
+          {storeFilteredProducts.length > 0 && (
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -168,16 +179,16 @@ const Products: React.FC = () => {
               </div>
               <ProductFilters
                 categories={categoryIds}
-                stores={stores}
+                stores={[]} // Don't show store filter here since we have global filter
                 selectedCategory={selectedCategory}
-                selectedStore={selectedStore}
+                selectedStore="all"
                 onCategoryChange={setSelectedCategory}
-                onStoreChange={setSelectedStore}
+                onStoreChange={() => {}} // No-op since store filter is global
               />
             </div>
           )}
 
-          {filteredProducts.length === 0 && (searchTerm || selectedCategory !== 'all' || selectedStore !== 'all') ? (
+          {filteredProducts.length === 0 && (searchTerm || selectedCategory !== 'all') ? (
             <div className="text-center py-12">
               <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
@@ -185,12 +196,17 @@ const Products: React.FC = () => {
                 No products match your search criteria. Try adjusting your filters.
               </p>
             </div>
-          ) : products.length === 0 ? (
+          ) : storeFilteredProducts.length === 0 ? (
             <div className="text-center py-12">
               <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {selectedStoreId === 'all' ? 'No products yet' : 'No products in this store'}
+              </h3>
               <p className="text-gray-600 mb-6">
-                Start building your product catalog by adding your first product.
+                {selectedStoreId === 'all' 
+                  ? 'Start building your product catalog by adding your first product.'
+                  : 'This store doesn\'t have any products yet. Add products to get started.'
+                }
               </p>
               <Button onClick={() => setShowProductForm(true)}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -219,7 +235,7 @@ const Products: React.FC = () => {
 
         <TabsContent value="bulk-upload">
           <BulkProductUpload 
-            storeId="debug-store-id"
+            storeId={selectedStoreId === 'all' ? "debug-store-id" : selectedStoreId}
             onUploadComplete={(results) => {
               console.log('Upload completed:', results);
               toast.success(`Bulk upload completed: ${results.successful} successful, ${results.failed} failed`);

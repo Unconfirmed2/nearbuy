@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +7,7 @@ import { ShoppingCart, Clock, Bell } from 'lucide-react';
 import { useOrders } from '../hooks/useOrders';
 import { useAuth } from '../hooks/useAuth';
 import { useStores } from '../hooks/useStores';
+import { useStoreFilter } from '../contexts/StoreFilterContext';
 import OrdersFilters from '../components/OrdersFilters';
 import OrdersSummaryCards from '../components/OrdersSummaryCards';
 import OrdersTable from '../components/OrdersTable';
@@ -17,25 +19,39 @@ import { toast } from 'sonner';
 const Orders: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [storeFilter, setStoreFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
 
   const { user } = useAuth();
+  const { selectedStoreId } = useStoreFilter();
   const { orders, loading, stats, updateOrderStatus } = useOrders(user?.id || '', searchTerm, statusFilter);
   const { stores } = useStores(user?.id);
 
-  const filteredOrders = orders.filter(order => {
+  // Filter orders based on store selection
+  const storeFilteredOrders = orders.filter(order => {
+    if (selectedStoreId === 'all') return true;
+    return order.store_id === selectedStoreId;
+  });
+
+  const filteredOrders = storeFilteredOrders.filter(order => {
     const matchesSearch = 
       order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer_email.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    const matchesStore = storeFilter === 'all' || order.store_id === storeFilter;
     
-    return matchesSearch && matchesStatus && matchesStore;
+    return matchesSearch && matchesStatus;
   });
+
+  // Calculate store-filtered stats
+  const storeFilteredStats = {
+    ...stats,
+    total_orders: storeFilteredOrders.length,
+    pending_orders: storeFilteredOrders.filter(o => o.status === 'pending').length,
+    ready_orders: storeFilteredOrders.filter(o => o.status === 'ready').length,
+    completed_orders: storeFilteredOrders.filter(o => o.status === 'completed').length,
+  };
 
   const handleViewDetails = (order: any) => {
     setSelectedOrder(order);
@@ -87,11 +103,16 @@ const Orders: React.FC = () => {
           <h1 className="text-3xl font-bold">Orders</h1>
           <p className="text-gray-600 mt-2">
             Manage customer orders and fulfillment
+            {selectedStoreId !== 'all' && (
+              <span className="text-blue-600 font-medium">
+                {' '}• Filtered to: {stores.find(s => s.id === selectedStoreId)?.name}
+              </span>
+            )}
           </p>
         </div>
-        {stats.pending_orders > 0 && (
+        {storeFilteredStats.pending_orders > 0 && (
           <Badge variant="destructive" className="text-sm">
-            {stats.pending_orders} pending orders need attention
+            {storeFilteredStats.pending_orders} pending orders need attention
           </Badge>
         )}
       </div>
@@ -104,7 +125,7 @@ const Orders: React.FC = () => {
         </TabsList>
 
         <TabsContent value="orders" className="space-y-6">
-          <OrdersSummaryCards stats={stats} />
+          <OrdersSummaryCards stats={storeFilteredStats} />
 
           <Card>
             <CardHeader>
@@ -114,9 +135,9 @@ const Orders: React.FC = () => {
                 onSearchChange={setSearchTerm}
                 statusFilter={statusFilter}
                 onStatusChange={setStatusFilter}
-                storeFilter={storeFilter}
-                onStoreChange={setStoreFilter}
-                stores={stores}
+                storeFilter="disabled" // Disable store filter since we have global filter
+                onStoreChange={() => {}} // No-op
+                stores={[]} // Empty since filter is disabled
                 onExport={handleExport}
               />
             </CardHeader>
@@ -125,13 +146,15 @@ const Orders: React.FC = () => {
                 <div className="text-center py-12">
                   <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {searchTerm || statusFilter !== 'all' || storeFilter !== 'all' 
+                    {searchTerm || statusFilter !== 'all'
                       ? 'No orders match your filters'
-                      : 'No orders yet'
+                      : selectedStoreId === 'all' 
+                        ? 'No orders yet'
+                        : 'No orders for this store'
                     }
                   </h3>
                   <p className="text-gray-600">
-                    {searchTerm || statusFilter !== 'all' || storeFilter !== 'all'
+                    {searchTerm || statusFilter !== 'all'
                       ? 'Try adjusting your search criteria.'
                       : 'Orders will appear here when customers make purchases.'
                     }
@@ -149,7 +172,7 @@ const Orders: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="pickup">
-          <PickupScheduling storeId="" />
+          <PickupScheduling storeId={selectedStoreId === 'all' ? '' : selectedStoreId} />
         </TabsContent>
 
         <TabsContent value="notifications">
