@@ -13,15 +13,15 @@ const Cart: React.FC = () => {
   const [basketItems, setBasketItems] = useState<BasketItem[]>(getBasket());
   const navigate = useNavigate();
 
-  const updateQuantity = (productId: number, storeId: number, newQuantity: number) => {
+  const updateQuantity = (sku: string, storeId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeFromBasket(productId, storeId);
+      removeFromBasket(sku, storeId);
       setBasketItems(getBasket());
       toast.success('Item removed from cart');
     } else {
       // Update localStorage
       const updatedItems = basketItems.map(item =>
-        item.productId === productId && item.storeId === storeId
+        item.sku === sku && item.storeId === storeId
           ? { ...item, quantity: newQuantity }
           : item
       );
@@ -30,8 +30,8 @@ const Cart: React.FC = () => {
     }
   };
 
-  const removeItem = (productId: number, storeId: number) => {
-    removeFromBasket(productId, storeId);
+  const removeItem = (sku: string, storeId: string) => {
+    removeFromBasket(sku, storeId);
     setBasketItems(getBasket());
     toast.success('Item removed from cart');
   };
@@ -104,7 +104,7 @@ const Cart: React.FC = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {items.map((item) => (
-                    <div key={`${item.productId}-${item.storeId}`} className="flex items-center space-x-4 p-4 border rounded-lg">
+                    <div key={`${item.sku}-${item.storeId}`} className="flex items-center space-x-4 p-4 border rounded-lg">
                       <div className="flex-1">
                         <h3 className="font-medium">{item.productName}</h3>
                         <p className="text-gray-600">${item.price.toFixed(2)} each</p>
@@ -113,7 +113,7 @@ const Cart: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => updateQuantity(item.productId, item.storeId, (item.quantity || 1) - 1)}
+                          onClick={() => updateQuantity(item.sku, item.storeId, (item.quantity || 1) - 1)}
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -121,7 +121,7 @@ const Cart: React.FC = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => updateQuantity(item.productId, item.storeId, (item.quantity || 1) + 1)}
+                          onClick={() => updateQuantity(item.sku, item.storeId, (item.quantity || 1) + 1)}
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -131,7 +131,7 @@ const Cart: React.FC = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeItem(item.productId, item.storeId)}
+                          onClick={() => removeItem(item.sku, item.storeId)}
                           className="text-red-600 hover:text-red-700"
                         >
                           <Trash2 className="h-4 w-4" />

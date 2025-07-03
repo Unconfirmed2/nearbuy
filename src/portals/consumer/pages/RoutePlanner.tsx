@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { getUserLocation, setUserLocation } from '@/utils/location';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +11,32 @@ import { toast } from 'sonner';
 
 const RoutePlanner: React.FC = () => {
   const [basketItems, setBasketItems] = useState<BasketItem[]>(getBasket());
+  // Try to load persistent location from localStorage
+  const [locationValue, setLocationValue] = useState('');
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  // Always sync locationValue with persistent storage on mount
+  useEffect(() => {
+    const stored = getUserLocation();
+    if (stored && stored !== locationValue) {
+      setLocationValue(stored);
+      // Try to parse as lat,lng string
+      const match = stored.match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);
+      if (match) {
+        setCurrentLocation({ lat: parseFloat(match[1]), lng: parseFloat(match[2]) });
+      }
+    }
+  }, []);
+  // Handler for manual location change
+  const handleLocationInput = (val: string) => {
+    setLocationValue(val);
+    setUserLocation(val);
+    // Try to parse as lat,lng string
+    const match = val.match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);
+    if (match) {
+      setCurrentLocation({ lat: parseFloat(match[1]), lng: parseFloat(match[2]) });
+    }
+  };
   const [travelMode, setTravelMode] = useState<'driving' | 'walking' | 'bicycling'>('driving');
   const [routeOptimized, setRouteOptimized] = useState(false);
 
@@ -36,23 +62,33 @@ const RoutePlanner: React.FC = () => {
   const stores = Object.values(storeGroups);
 
   useEffect(() => {
-    // Get user's current location
-    if (navigator.geolocation) {
+    // If no persistent location, get user's current location
+    if (!locationValue && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCurrentLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setCurrentLocation({ lat, lng });
+          setLocationValue(`${lat},${lng}`);
+          setUserLocation(`${lat},${lng}`);
         },
         (error) => {
-          
           // Use default NYC coordinates for demo
           setCurrentLocation({ lat: 40.7128, lng: -74.0060 });
         }
       );
     }
-  }, []);
+  }, [locationValue]);
+  // ...existing code...
+  // Add a location input field for user to change location
+  // Place this in your UI where appropriate, e.g. above the route planner controls
+  // Example:
+  // <Input
+  //   placeholder="Set your location (lat,lng or address)"
+  //   value={locationValue}
+  //   onChange={e => handleLocationInput(e.target.value)}
+  //   className="mb-4 w-80"
+  // />
 
   const handleOptimizeRoute = () => {
     if (!currentLocation) {
@@ -172,7 +208,7 @@ const RoutePlanner: React.FC = () => {
                     </div>
                     <div className="text-sm text-gray-600 space-y-1">
                       {store.items.map((item: BasketItem) => (
-                        <div key={`${item.productId}-${item.storeId}`}>
+                      <div key={`${item.sku}-${item.storeId}`}> 
                           {item.quantity}x {item.productName}
                         </div>
                       ))}

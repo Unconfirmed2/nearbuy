@@ -6,17 +6,19 @@ import { MapPin, Star, ShoppingCart, Map } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Store {
-  id: number;
+  id: string;
   seller: string;
   price: number;
   distance: number;
+  travelTime: number;
   rating: number;
   nbScore: number;
   address?: string;
 }
 
 interface Product {
-  id: number;
+  id: string;
+  sku: string;
   name: string;
   description: string;
   image: string;
@@ -28,7 +30,7 @@ interface StoreSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product;
-  onAddToBasket: (productId: number, storeId: number) => void;
+  onAddToBasket: (sku: string, storeId: string) => void;
   isMerchantPreview?: boolean;
 }
 
@@ -41,8 +43,8 @@ const StoreSelectionModal = ({
 }: StoreSelectionModalProps) => {
   const [selectedStoreForMap, setSelectedStoreForMap] = useState<Store | null>(null);
 
-  const handleAddToBasket = (storeId: number) => {
-    onAddToBasket(product.id, storeId);
+  const handleAddToBasket = (storeId: string) => {
+    onAddToBasket(product.sku, storeId);
     onClose();
   };
 

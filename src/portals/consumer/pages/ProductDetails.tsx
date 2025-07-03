@@ -38,6 +38,35 @@ const ProductDetails: React.FC = () => {
         .eq('sku', id)
         .order('quantity', { ascending: false });
       const inventory = (inventoryData && inventoryData.length > 0) ? inventoryData[0] : null;
+      // Calculate real distance if user location and store address are available
+      let distanceStr = '';
+      let travelTimeStr = '';
+      try {
+        const { getUserLocation } = await import('@/utils/location');
+        const { calculateDistance, calculateTravelTime } = await import('@/lib/distance');
+        const userLocation = getUserLocation();
+        if (userLocation && inventory?.stores?.address) {
+          const [distanceMeters, travelTimeMinutes] = await Promise.all([
+            calculateDistance(userLocation, inventory.stores.address),
+            calculateTravelTime(userLocation, inventory.stores.address)
+          ]);
+          if (distanceMeters >= 1000) {
+            distanceStr = `${(distanceMeters / 1000).toFixed(1)} km`;
+          } else {
+            distanceStr = `${Math.round(distanceMeters)} m`;
+          }
+          if (travelTimeMinutes >= 60) {
+            const hours = Math.floor(travelTimeMinutes / 60);
+            const mins = Math.round(travelTimeMinutes % 60);
+            travelTimeStr = `${hours}h${mins > 0 ? ` ${mins}m` : ''}`;
+          } else if (travelTimeMinutes > 0) {
+            travelTimeStr = `${Math.round(travelTimeMinutes)} min`;
+          }
+        }
+      } catch (e) {
+        distanceStr = '';
+        travelTimeStr = '';
+      }
       setProduct({
         id: parseInt(productData.id, 10),
         sku: productData.sku,
@@ -49,7 +78,8 @@ const ProductDetails: React.FC = () => {
         reviewCount: 128, // TODO: fetch real review count
         store: inventory?.stores?.name || '',
         storeAddress: inventory?.stores?.address || '',
-        distance: '0.8 mi', // TODO: calculate real distance
+        distance: distanceStr,
+        travelTime: travelTimeStr,
         price: inventory?.price ?? 0,
         inStock: inventory?.quantity > 0,
         stockCount: inventory?.quantity ?? 0
@@ -61,9 +91,8 @@ const ProductDetails: React.FC = () => {
 
   const handleAddToCart = () => {
     addToBasket({
-      productId: product.id,
       sku: product.sku,
-      storeId: 1,
+      storeId: '1',
       productName: product.name,
       storeName: product.store,
       price: product.price,
@@ -74,7 +103,6 @@ const ProductDetails: React.FC = () => {
 
   const handleAddToFavorites = () => {
     addToFavorites({
-      productId: product.id,
       sku: product.sku,
       productName: product.name,
       image: product.image
@@ -151,7 +179,19 @@ const ProductDetails: React.FC = () => {
               <p className="font-medium">{product.store}</p>
               <div className="flex items-center text-gray-600">
                 <MapPin className="w-4 h-4 mr-1" />
-                <span className="text-sm">{product.storeAddress} • {product.distance}</span>
+                <span className="text-sm">
+                  {product.storeAddress}
+                  {product.distance && (
+                    <>
+                      {' • '}{product.distance}
+                    </>
+                  )}
+                  {product.travelTime && (
+                    <>
+                      {' • '}{product.travelTime} away
+                    </>
+                  )}
+                </span>
               </div>
             </div>
           </div>

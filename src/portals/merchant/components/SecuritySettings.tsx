@@ -25,6 +25,7 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ merchantId }) => {
     newPassword: '',
     confirmPassword: ''
   });
+  const passwordsMatch = passwordData.newPassword === passwordData.confirmPassword;
 
   const handlePasswordChange = () => {
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
@@ -42,14 +43,41 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ merchantId }) => {
       return;
     }
 
-    // TODO: Implement actual password change via Supabase
-    toast.success('Password updated successfully');
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
+    // Implement actual password change via Supabase
+    // Example using Supabase JS client:
+    // You may need to adjust this based on your auth setup
+    import('@/integrations/supabase/client').then(async ({ supabase }) => {
+      // Re-authenticate user before allowing password change
+      const email = user?.email;
+      if (!email) {
+        toast.error('User email not found. Please re-login.');
+        return;
+      }
+      // Sign in to verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: passwordData.currentPassword
+      });
+      if (signInError) {
+        toast.error('Current password is incorrect.');
+        return;
+      }
+      // Now update password
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+      if (error) {
+        toast.error(error.message || 'Failed to update password');
+      } else {
+        toast.success('Password updated successfully');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setShowPasswordChange(false);
+      }
     });
-    setShowPasswordChange(false);
   };
 
   const handleToggle2FA = () => {
@@ -142,10 +170,18 @@ const SecuritySettings: React.FC<SecuritySettingsProps> = ({ merchantId }) => {
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  className={
+                    !passwordsMatch && passwordData.confirmPassword
+                      ? 'border-red-500 focus-visible:ring-red-500'
+                      : ''
+                  }
                 />
+                {!passwordsMatch && passwordData.confirmPassword && (
+                  <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
+                )}
               </div>
               <div className="flex gap-2">
-                <Button onClick={handlePasswordChange}>Update Password</Button>
+                <Button onClick={handlePasswordChange} disabled={!passwordsMatch}>Update Password</Button>
                 <Button variant="outline" onClick={() => setShowPasswordChange(false)}>
                   Cancel
                 </Button>

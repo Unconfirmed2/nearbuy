@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getUserLocation, setUserLocation } from '@/utils/location';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,17 +21,19 @@ import StoreSelectionModal from '@/components/StoreSelectionModal';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 interface Store {
-  id: number;
+  id: string;
   seller: string;
   price: number;
   distance: number;
   rating: number;
   nbScore: number;
   address?: string;
+  travelTime: number; // in minutes or seconds, depending on your convention
 }
 
 interface Product {
-  id: number;
+  id: string;
+  sku: string;
   name: string;
   description: string;
   image: string;
@@ -62,6 +65,7 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [count, setCount] = useState<number | null>(null);
   
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,6 +73,14 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
   
   // Mobile location and filter states
   const [locationValue, setLocationValue] = useState('');
+
+  // Always sync locationValue with persistent storage on mount
+  useEffect(() => {
+    const stored = getUserLocation();
+    if (stored && stored !== locationValue) {
+      setLocationValue(stored);
+    }
+  }, []);
   const [isLocationPopoverOpen, setIsLocationPopoverOpen] = useState(false);
   const [travelFilter, setTravelFilter] = useState<TravelFilterValue>({
     mode: 'driving',
@@ -81,7 +93,7 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
     try {
       if (pageNum === 0) setLoading(true);
       
-      const { data: products, error, count } = await supabase
+      const { data: products, error, count: supabaseCount } = await supabase
         .from('products')
         .select(`
           id,
@@ -93,6 +105,9 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
         `, { count: 'exact' })
         .range(pageNum * PRODUCTS_PER_PAGE, (pageNum + 1) * PRODUCTS_PER_PAGE - 1)
         .limit(PRODUCTS_PER_PAGE);
+      if (typeof supabaseCount === 'number') {
+        setCount(supabaseCount);
+      }
 
       if (error) {
         toast.error('Failed to load products');
@@ -132,29 +147,68 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
           productInventoryMap.set(item.sku, []);
         }
         productInventoryMap.get(item.sku).push({
-          id: uuidToNumber(item.store_id),
+          id: item.store_id,
           seller: item.stores.name,
           price: Number(item.price),
-          distance: 2.5, // TODO: Calculate real distance using user location
-          rating: 4.5,
-          nbScore: 4,
-          address: item.stores.address || 'Address not available'
+          distance: undefined, // Will be set below if locationValue is present
+          rating: item.stores.rating ?? 4.5,
+          nbScore: item.stores.nbScore ?? 4,
+          address: item.stores.address || 'Address not available',
+          travelTime: undefined // Will be set below if locationValue is present
         });
       });
 
       // Transform products with real store data
-      const transformedProducts: Product[] = products?.map((product) => {
+      let transformedProducts: Product[] = products?.map((product) => {
         const stores = productInventoryMap.get(product.id) || [];
-        
         return {
-          id: uuidToNumber(product.id),
+          id: product.id,
+          sku: product.id,
           name: product.name,
           description: product.description || 'No description available',
           image: product.image_url || '/placeholder.svg',
           category: product.category?.name || 'General',
-          stores: stores.sort((a, b) => a.price - b.price)
+          stores: stores
         };
       }).filter(product => product.stores.length > 0) || [];
+
+      // Calculate distance and travelTime for each store if locationValue is set
+      if (locationValue) {
+        const { calculateDistance, calculateTravelTime } = await import('@/lib/distance');
+        for (const product of transformedProducts) {
+          // Calculate and collect all store distances/times in parallel for this product
+          await Promise.all(product.stores.map(async (store) => {
+            if (store.address) {
+              try {
+                store.distance = await calculateDistance(locationValue, store.address);
+                store.travelTime = await calculateTravelTime(locationValue, store.address);
+              } catch (e) {
+                console.error('Distance/TravelTime error:', e, { origin: locationValue, dest: store.address });
+              }
+            }
+          }));
+        }
+        // Only filter out stores that EXCEED the filter value, keep others
+        transformedProducts = transformedProducts.map(product => ({
+          ...product,
+          stores: product.stores.filter(store => {
+            if (travelFilter.type === 'time') {
+              return typeof store.travelTime !== 'number' || store.travelTime <= travelFilter.value;
+            } else {
+              return typeof store.distance !== 'number' || store.distance <= travelFilter.value * 1000;
+            }
+          })
+        })).filter(product => product.stores.length > 0);
+        // Debug log
+        console.log('After filtering:', transformedProducts.length, 'products');
+        transformedProducts.forEach(p => console.log(p.name, p.stores.length, 'stores', p.stores.map(s => ({ id: s.id, distance: s.distance, travelTime: s.travelTime }))));
+      }
+
+      // Sort stores by price after distance/travelTime is set
+      transformedProducts = transformedProducts.map(product => ({
+        ...product,
+        stores: product.stores.sort((a, b) => a.price - b.price)
+      }));
       
       if (reset || pageNum === 0) {
         setFeaturedProducts(transformedProducts);
@@ -183,11 +237,15 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
 
   const loadMore = useCallback(() => {
     if (!hasMore || loading) return;
-    
+    // Prevent fetching if we've loaded all products
+    if (typeof count === 'number' && (page + 1) * PRODUCTS_PER_PAGE >= count) {
+      setHasMore(false);
+      return;
+    }
     const nextPage = page + 1;
     setPage(nextPage);
     fetchProducts(nextPage);
-  }, [page, hasMore, loading, fetchProducts]);
+  }, [page, hasMore, loading, fetchProducts, count]);
 
   useInfiniteScroll({
     hasMore,
@@ -200,18 +258,18 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
     setPage(0);
   }, []);
 
-  const handleAddToBasket = (productId: number, storeId: number) => {
+  const handleAddToBasket = (sku: string, storeId: string) => {
     if (isMerchantPreview) {
       toast.info('Cart actions are disabled in merchant preview mode');
       return;
     }
 
-    const product = featuredProducts.find(p => p.id === productId);
+    const product = featuredProducts.find(p => p.sku === sku);
     const store = product?.stores.find(s => s.id === storeId);
     
     if (product && store) {
       addToBasket({
-        productId: productId,
+        sku: product.sku,
         storeId: storeId,
         productName: product.name,
         storeName: store.seller,
@@ -229,7 +287,7 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
     }
 
     addToFavorites({
-      productId: product.id,
+      sku: product.sku,
       productName: product.name,
       image: product.image
     });
@@ -246,6 +304,7 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
 
   const handleLocationSelect = (selectedLocation: string) => {
     setLocationValue(selectedLocation);
+    setUserLocation(selectedLocation);
     setIsLocationPopoverOpen(false);
     toast.success('Location updated!');
   };
@@ -257,6 +316,7 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
           const { latitude, longitude } = position.coords;
           const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
           setLocationValue(locationString);
+          setUserLocation(locationString);
           setIsLocationPopoverOpen(false);
           toast.success('Location updated to your current position!');
         },
@@ -472,7 +532,7 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {featuredProducts.map((product) => (
                 <ProductCard
-                  key={product.id}
+                  key={product.sku}
                   product={product}
                   onAddToBasket={handleAddToBasket}
                   isMerchantPreview={isMerchantPreview}

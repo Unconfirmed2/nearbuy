@@ -6,17 +6,19 @@ import { useState } from "react";
 import StoreSelectionModal from "./StoreSelectionModal";
 
 interface Store {
-  id: number;
+  id: string;
   seller: string;
   price: number;
   distance: number;
+  travelTime: number;
   rating: number;
   nbScore: number;
   address?: string;
 }
 
 interface Product {
-  id: number;
+  id: string;
+  sku: string;
   name: string;
   description: string;
   image: string;
@@ -26,11 +28,12 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
-  onAddToBasket: (productId: number, storeId: number) => void;
+  onAddToBasket: (sku: string, storeId: string) => void;
   isMerchantPreview?: boolean;
+  locationValue?: string;
 }
 
-const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false }: ProductCardProps) => {
+const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false, locationValue }: ProductCardProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 

@@ -214,7 +214,7 @@ const Checkout: React.FC = () => {
                     
                     <div className="space-y-2">
                       {items.map((item) => (
-                        <div key={`${item.productId}-${item.storeId}`} className="flex justify-between text-sm">
+                        <div key={`${item.sku}-${item.storeId}`} className="flex justify-between text-sm">
                           <span>{item.quantity}x {item.productName}</span>
                           <span>${((item.quantity || 1) * item.price).toFixed(2)}</span>
                         </div>

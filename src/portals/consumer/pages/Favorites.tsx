@@ -10,8 +10,8 @@ import { toast } from 'sonner';
 const Favorites: React.FC = () => {
   const [favorites, setFavorites] = useState<FavoriteItem[]>(getFavorites());
 
-  const handleRemoveFavorite = (productId: number) => {
-    removeFromFavorites(productId);
+  const handleRemoveFavorite = (sku: string) => {
+    removeFromFavorites(sku);
     setFavorites(getFavorites());
     toast.success('Removed from favorites');
   };
@@ -19,8 +19,8 @@ const Favorites: React.FC = () => {
   const handleAddToCart = (favorite: FavoriteItem) => {
     // For demo purposes, using mock store data
     addToBasket({
-      productId: favorite.productId,
-      storeId: 1,
+      sku: favorite.sku,
+      storeId: '1',
       productName: favorite.productName,
       storeName: 'Demo Store',
       price: 29.99,
@@ -52,7 +52,7 @@ const Favorites: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {favorites.map((favorite) => (
-          <Card key={favorite.productId} className="group overflow-hidden hover:shadow-lg transition-shadow">
+          <Card key={favorite.sku} className="group overflow-hidden hover:shadow-lg transition-shadow">
             <div className="relative">
               <img
                 src={favorite.image}
@@ -63,7 +63,7 @@ const Favorites: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-white p-2 h-8 w-8"
-                onClick={() => handleRemoveFavorite(favorite.productId)}
+                onClick={() => handleRemoveFavorite(favorite.sku)}
               >
                 <Heart className="w-4 h-4 fill-red-500 text-red-500" />
               </Button>

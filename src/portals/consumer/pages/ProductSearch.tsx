@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getUserLocation, setUserLocation } from '@/utils/location';
+import { calculateDistance, calculateTravelTime } from '@/lib/distance';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,17 +15,20 @@ import { addToBasket } from '@/utils/localStorage';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
 interface Store {
-  id: number;
+  id: string;
   seller: string;
   price: number;
   distance: number;
   rating: number;
   nbScore: number;
   address?: string;
+  travelTime: number;
 }
 
+
 interface Product {
-  id: number;
+  id: string;
+  sku: string;
   name: string;
   description: string;
   image: string;
@@ -57,6 +62,15 @@ const ProductSearch: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  // Persistent location value
+  const [locationValue, setLocationValue] = useState('');
+
+  useEffect(() => {
+    const stored = getUserLocation();
+    if (stored && stored !== locationValue) {
+      setLocationValue(stored);
+    }
+  }, []);
 
   // Fetch products from Supabase with pagination
   const fetchProducts = useCallback(async (query: string, pageNum: number = 0, reset: boolean = false) => {
@@ -121,29 +135,140 @@ const ProductSearch: React.FC = () => {
           productInventoryMap.set(item.sku, []);
         }
         productInventoryMap.get(item.sku).push({
-          id: uuidToNumber(item.store_id),
+          id: item.store_id,
           seller: item.stores.name,
           price: Number(item.price),
-          distance: 2.5, // TODO: Calculate real distance using user location
-          rating: 4.5,
-          nbScore: 4,
-          address: item.stores.address || 'Address not available'
+          distance: 0, // Will be set later if locationValue is present
+          rating: item.stores.rating ?? 0, // Use real rating if available
+          nbScore: item.stores.nbScore ?? 0, // Use real nbScore if available
+          address: item.stores.address || 'Address not available',
+          travelTime: 0
         });
       });
 
-      // Transform products with real store data
-      const transformedProducts: Product[] = products?.map((product) => {
-        const stores = productInventoryMap.get(product.id) || [];
-        
+      // Calculate distance/travelTime for each store if locationValue is set
+      let transformedProducts: Product[] = products?.map((product) => {
+        let stores = productInventoryMap.get(product.id) || [];
         return {
-          id: uuidToNumber(product.id),
+          id: product.id,
+          sku: product.id,
           name: product.name,
           description: product.description || 'No description available',
           image: product.image_url || '/placeholder.svg',
           category: product.category?.name || 'General',
-          stores: stores.sort((a, b) => a.price - b.price)
+          stores: stores
         };
-      }).filter(product => product.stores.length > 0) || [];
+      }) || [];
+
+      // 1. Calculate travelTime/distance for each store if locationValue is set
+      if (locationValue) {
+        for (const product of transformedProducts) {
+          for (const store of product.stores) {
+            if (store.address) {
+              try {
+                if (travelFilter.type === 'time') {
+                  store.travelTime = await calculateTravelTime(locationValue, store.address);
+                } else {
+                  store.distance = await calculateDistance(locationValue, store.address);
+                }
+              } catch (e) {
+                // fallback: leave as is
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Filter stores within the distance/time threshold
+      transformedProducts = transformedProducts.map(product => ({
+        ...product,
+        stores: product.stores.filter(store => {
+          if (locationValue) {
+            if (travelFilter.type === 'time') {
+              return store.travelTime <= travelFilter.value;
+            } else {
+              return store.distance <= travelFilter.value * 1000; // value in km
+            }
+          }
+          return true;
+        })
+      })).filter(product => product.stores.length > 0);
+
+      // 3. Filter products by search field (if present), with improved fuzzy matching and ranking
+      let filteredProducts: Product[] = transformedProducts;
+      let ranked: Array<{product: Product, score: number}> = [];
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        for (const product of transformedProducts) {
+          let score = 0;
+          if (product.name.toLowerCase() === q) score += 100;
+          else if (product.name.toLowerCase().includes(q)) score += 50;
+          if (product.category.toLowerCase() === q) score += 40;
+          else if (product.category.toLowerCase().includes(q)) score += 20;
+          if (product.description.toLowerCase().includes(q)) score += 10;
+          // Bonus for closest store
+          const bestStore = product.stores[0];
+          if (locationValue && bestStore) {
+            if (travelFilter.type === 'time') {
+              score += Math.max(0, 30 - bestStore.travelTime); // closer = higher score
+            } else {
+              score += Math.max(0, 30000 - bestStore.distance) / 1000; // closer = higher score
+            }
+          }
+          if (score > 0) ranked.push({ product, score });
+        }
+        // Sort by score desc, then by nearest store, then price, then name
+        ranked.sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          const aStore = a.product.stores[0];
+          const bStore = b.product.stores[0];
+          if (locationValue) {
+            if (travelFilter.type === 'time') {
+              return aStore.travelTime - bStore.travelTime || aStore.price - bStore.price || a.product.name.localeCompare(b.product.name);
+            } else {
+              return aStore.distance - bStore.distance || aStore.price - bStore.price || a.product.name.localeCompare(b.product.name);
+            }
+          }
+          return aStore.price - bStore.price || a.product.name.localeCompare(b.product.name);
+        });
+        filteredProducts = ranked.map(r => r.product);
+      } else {
+        // No search: sort all by nearest store, then price, then name
+        filteredProducts = filteredProducts.map(product => ({
+          ...product,
+          stores: product.stores.sort((a, b) => {
+            if (locationValue) {
+              if (travelFilter.type === 'time') {
+                return a.travelTime - b.travelTime || a.price - b.price;
+              } else {
+                return a.distance - b.distance || a.price - b.price;
+              }
+            }
+            return a.price - b.price;
+          })
+        }))
+        .sort((a, b) => {
+          const aStore = a.stores[0];
+          const bStore = b.stores[0];
+          if (locationValue) {
+            if (travelFilter.type === 'time') {
+              return aStore.travelTime - bStore.travelTime || aStore.price - bStore.price || a.name.localeCompare(b.name);
+            } else {
+              return aStore.distance - bStore.distance || aStore.price - bStore.price || a.name.localeCompare(b.name);
+            }
+          }
+          return aStore.price - bStore.price || a.name.localeCompare(b.name);
+        });
+      }
+
+      // 4. Only show products with at least one store
+      filteredProducts = filteredProducts.filter(product => product.stores.length > 0);
+
+      if (reset || pageNum === 0) {
+        setProducts(filteredProducts);
+      } else {
+        setProducts(prev => [...prev, ...filteredProducts]);
+      }
 
       if (reset || pageNum === 0) {
         setProducts(transformedProducts);
@@ -213,13 +338,12 @@ const ProductSearch: React.FC = () => {
     }
   };
 
-  const handleAddToBasket = (productId: number, storeId: number) => {
-    const product = products.find(p => p.id === productId);
+  const handleAddToBasket = (sku: string, storeId: string) => {
+    const product = products.find(p => p.sku === sku);
     const store = product?.stores.find(s => s.id === storeId);
-    
     if (product && store) {
       addToBasket({
-        productId: productId,
+        sku: product.sku,
         storeId: storeId,
         productName: product.name,
         storeName: store.seller,
@@ -263,6 +387,15 @@ const ProductSearch: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            />
+            <Input
+              placeholder="Set your location"
+              value={locationValue}
+              onChange={e => {
+                setLocationValue(e.target.value);
+                setUserLocation(e.target.value);
+              }}
+              className="w-64"
             />
             <Button onClick={handleSearch} disabled={loading}>
               <Search className="h-4 w-4 mr-2" />
@@ -313,6 +446,7 @@ const ProductSearch: React.FC = () => {
                     key={product.id}
                     product={product}
                     onAddToBasket={handleAddToBasket}
+                    locationValue={locationValue}
                   />
                 ))}
               </div>

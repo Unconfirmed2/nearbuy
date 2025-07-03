@@ -1,7 +1,6 @@
 export interface BasketItem {
-  productId: number;
   sku: string;
-  storeId: number;
+  storeId: string;
   productName: string;
   storeName: string;
   price: number;
@@ -9,7 +8,6 @@ export interface BasketItem {
 }
 
 export interface FavoriteItem {
-  productId: number;
   sku: string;
   productName: string;
   image: string;
@@ -31,28 +29,24 @@ export const addToBasket = (item: BasketItem): void => {
   try {
     const basket = getBasket();
     const existingIndex = basket.findIndex(
-      (existing) => existing.productId === item.productId && existing.storeId === item.storeId
+      (existing) => existing.sku === item.sku && existing.storeId === item.storeId
     );
-    
     if (existingIndex >= 0) {
-      // Update quantity if item already exists
       basket[existingIndex].quantity = (basket[existingIndex].quantity || 1) + 1;
     } else {
-      // Add new item with quantity 1
       basket.push({ ...item, quantity: 1 });
     }
-    
     localStorage.setItem('nearbuy_basket', JSON.stringify(basket));
   } catch (error) {
     console.error('Error saving to basket:', error);
   }
 };
 
-export const removeFromBasket = (productId: number, storeId: number): void => {
+export const removeFromBasket = (sku: string, storeId: string): void => {
   try {
     const basket = getBasket();
     const filteredBasket = basket.filter(
-      (item) => !(item.productId === productId && item.storeId === storeId)
+      (item) => !(item.sku === sku && item.storeId === storeId)
     );
     localStorage.setItem('nearbuy_basket', JSON.stringify(filteredBasket));
   } catch (error) {
@@ -82,8 +76,7 @@ export const getFavorites = (): FavoriteItem[] => {
 export const addToFavorites = (item: FavoriteItem): void => {
   try {
     const favorites = getFavorites();
-    const exists = favorites.some((fav) => fav.productId === item.productId);
-    
+    const exists = favorites.some((fav) => fav.sku === item.sku);
     if (!exists) {
       const newFavorite: FavoriteItem = {
         ...item,
@@ -97,17 +90,17 @@ export const addToFavorites = (item: FavoriteItem): void => {
   }
 };
 
-export const removeFromFavorites = (productId: number): void => {
+export const removeFromFavorites = (sku: string): void => {
   try {
     const favorites = getFavorites();
-    const filteredFavorites = favorites.filter((item) => item.productId !== productId);
+    const filteredFavorites = favorites.filter((item) => item.sku !== sku);
     localStorage.setItem('nearbuy_favorites', JSON.stringify(filteredFavorites));
   } catch (error) {
     console.error('Error removing from favorites:', error);
   }
 };
 
-export const isFavorite = (productId: number): boolean => {
+export const isFavorite = (sku: string): boolean => {
   const favorites = getFavorites();
-  return favorites.some((fav) => fav.productId === productId);
+  return favorites.some((fav) => fav.sku === sku);
 };

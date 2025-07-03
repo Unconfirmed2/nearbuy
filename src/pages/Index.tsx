@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { calculateDistance, calculateTravelTime } from "@/lib/distance";
+import { latLngToString } from "@/lib/latLngToString";
 import { MapPin, Search, Filter, Star, Clock, Navigation, Menu, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +19,7 @@ interface Store {
   seller: string;
   price: number;
   distance: number;
+  travelTime: number;
   rating: number;
   nbScore: number;
   address?: string;
@@ -96,31 +99,60 @@ const Index = () => {
       }
       // Group inventory by product
       const grouped: Product[] = [];
-      productsData.forEach(product => {
+      for (const product of productsData) {
         const productStores = inventoryData.filter(inv => inv.sku === product.id);
-        if (productStores.length === 0) return;
+        if (productStores.length === 0) continue;
+        // Calculate distances and travel times for each store
+        const storesWithDistance = await Promise.all(productStores.map(async inv => {
+          let distance = 0;
+          let travelTime = 0;
+          if (userLocation && inv.stores?.address) {
+            try {
+              distance = await calculateDistance(
+                latLngToString(userLocation),
+                inv.stores.address
+              );
+              // Convert meters to miles for consistency with previous logic
+              distance = distance / 1609.34;
+              travelTime = await calculateTravelTime(
+                latLngToString(userLocation),
+                inv.stores.address
+              );
+            } catch (e) {
+              distance = 9999; // fallback if error
+              travelTime = 9999;
+            }
+          } else {
+            distance = 9999; // fallback if no user location
+            travelTime = 9999;
+          }
+          return {
+            id: String(inv.sku),
+            seller: inv.stores?.name || '',
+            price: inv.price,
+            distance,
+            travelTime,
+            rating: 4.5, // TODO: Replace with real rating
+            nbScore: calculateNBScore(distance, inv.price),
+            address: inv.stores?.address || undefined,
+          };
+        }));
         grouped.push({
           id: product.sku,
+          sku: product.sku,
           name: product.name,
           description: product.description || '',
           image: product.image_url || '',
           category: product.category_id || null,
-          stores: productStores.map(inv => ({
-            id: String(inv.sku),
-            seller: inv.stores?.name || '',
-            price: inv.price,
-            distance: Math.random() * 3 + 0.5, // TODO: Replace with real distance
-            rating: 4.5, // TODO: Replace with real rating
-            nbScore: calculateNBScore(Math.random() * 3 + 0.5, inv.price),
-            address: inv.stores?.address || undefined,
-          }))
+          stores: storesWithDistance
         });
-      });
+      }
       setProducts(grouped);
       setLoading(false);
     };
     fetchProducts();
-  }, []);
+    // Re-run when userLocation changes
+  }, [userLocation]);
 
   // Sort stores within each product
   products.forEach(product => {
@@ -152,14 +184,8 @@ const Index = () => {
           const storeDistanceKm = store.distance * 1.60934;
           return storeDistanceKm <= travelFilter.value;
         } else {
-          const minPerMile = {
-            walking: 16,
-            driving: 2,
-            biking: 5,
-            transit: 8
-          };
-          const time = store.distance * minPerMile[travelFilter.mode];
-          return time <= travelFilter.value;
+          // Use real travel time if available
+          return store.travelTime <= travelFilter.value;
         }
       });
       const matchesSearch = searchQuery === "" || 
@@ -171,15 +197,14 @@ const Index = () => {
   });
 
   // Patch: convert all IDs to numbers for ProductCard/StoreSelectionModal compatibility
-  const toNumberId = (id: string | number): number => typeof id === 'number' ? id : parseInt(id, 10);
+  // (No longer needed, using sku everywhere)
 
-  // Update ProductCard and StoreSelectionModal usage to use string IDs
-  const handleAddToBasket = (productId: number, storeId: number) => {
-    const product = products.find(p => p.stores.some(s => s.id === storeId));
+  // Use sku as the main identifier for products
+  const handleAddToBasket = (sku: string, storeId: string) => {
+    const product = products.find(p => p.sku === sku);
     const store = product?.stores.find(s => s.id === storeId);
     if (product && store) {
       const newItem = {
-        productId,
         sku: product.sku,
         storeId,
         productName: product.name,
@@ -302,12 +327,8 @@ const Index = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
               <ProductCard 
-                key={`${product.name}-${product.id}`} 
-                product={{
-                  ...product,
-                  id: toNumberId(product.id),
-                  stores: product.stores.map(s => ({ ...s, id: toNumberId(s.id) }))
-                }}
+                key={`${product.name}-${product.sku}`} 
+                product={product}
                 onAddToBasket={handleAddToBasket}
               />
             ))}
