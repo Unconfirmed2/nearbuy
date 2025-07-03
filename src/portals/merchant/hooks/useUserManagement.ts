@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -117,6 +116,9 @@ export const useUserManagement = (merchantId: string) => {
           storeIds,
           inviterName,
           companyName
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 

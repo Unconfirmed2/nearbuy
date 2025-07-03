@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,11 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MessageSquare, HelpCircle, Send, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@supabase/auth-helpers-react';
 
 interface SupportTicket {
   id: string;
   subject: string;
-  message: string;
+  description: string;
   status: 'open' | 'in_progress' | 'closed';
   priority: 'low' | 'medium' | 'high';
   created_at: string;
@@ -25,35 +26,56 @@ const Support: React.FC = () => {
     message: '',
     priority: 'medium' as const
   });
-  const [tickets] = useState<SupportTicket[]>([
-    {
-      id: 'ticket-1',
-      subject: 'Unable to complete order',
-      message: 'I was trying to place an order but the checkout page is not loading properly.',
-      status: 'in_progress',
-      priority: 'high',
-      created_at: '2024-01-15T10:30:00Z',
-      updated_at: '2024-01-15T14:20:00Z'
-    },
-    {
-      id: 'ticket-2',
-      subject: 'Question about store hours',
-      message: 'What are the pickup hours for Downtown Market?',
-      status: 'closed',
-      priority: 'low',
-      created_at: '2024-01-12T09:15:00Z',
-      updated_at: '2024-01-12T11:45:00Z'
-    }
-  ]);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const user = useUser();
 
-  const handleSubmitTicket = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchTickets = async () => {
+      setLoading(true);
+      if (!user) {
+        setTickets([]);
+        setLoading(false);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('merchant_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error || !data) {
+        setTickets([]);
+        setLoading(false);
+        return;
+      }
+      setTickets(data);
+      setLoading(false);
+    };
+    fetchTickets();
+  }, [user]);
+
+  const handleSubmitTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTicket.subject.trim() || !newTicket.message.trim()) {
       toast.error('Please fill in all required fields');
       return;
     }
-
-    // Mock ticket submission
+    if (!user) {
+      toast.error('You must be logged in to submit a ticket.');
+      return;
+    }
+    const { data, error } = await supabase.from('support_tickets').insert({
+      subject: newTicket.subject,
+      description: newTicket.message,
+      priority: newTicket.priority,
+      status: 'open',
+      merchant_id: user.id
+    }).select('*').single();
+    if (error || !data) {
+      toast.error('Failed to submit ticket.');
+      return;
+    }
+    setTickets([data, ...tickets]);
     toast.success('Support ticket submitted! We\'ll get back to you soon.');
     setNewTicket({ subject: '', message: '', priority: 'medium' });
   };
@@ -149,7 +171,11 @@ const Support: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="tickets" className="space-y-4">
-          {tickets.length === 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="p-12 text-center">Loading tickets...</CardContent>
+            </Card>
+          ) : tickets.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
                 <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -174,7 +200,7 @@ const Support: React.FC = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-700 mb-4">{ticket.message}</p>
+                    <p className="text-gray-700 mb-4">{ticket.description}</p>
                     <div className="flex items-center text-sm text-gray-500 space-x-4">
                       <div className="flex items-center">
                         <Clock className="h-4 w-4 mr-1" />

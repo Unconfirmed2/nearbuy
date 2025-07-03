@@ -1,4 +1,5 @@
 
+
 export interface Product {
   id: string;
   name: string;
@@ -9,7 +10,7 @@ export interface Product {
   price: number;
   cost_price?: number;
   compare_at_price?: number;
-  images: string[];
+  image: string[];
   tags: string[];
   is_active: boolean;
   track_inventory: boolean;
@@ -25,7 +26,6 @@ export interface Product {
 
 export interface ProductVariant {
   id: string;
-  product_id: string;
   name: string;
   sku?: string;
   price?: number;
@@ -60,7 +60,7 @@ export interface Category {
 
 export interface InventoryItem {
   id: string;
-  product_id: string;
+  sku: string;
   store_id: string;
   quantity: number;
   reserved_quantity: number;
@@ -83,8 +83,9 @@ export interface CreateProductData {
   track_inventory: boolean;
   store_id: string;
   metadata?: ProductMetadata;
-  variants?: Omit<ProductVariant, 'id' | 'product_id' | 'created_at' | 'updated_at'>[];
+  variants?: Omit<ProductVariant, 'id' | 'sku' | 'created_at' | 'updated_at'>[];
   inventory?: {
+    sku: string;
     quantity: number;
     low_stock_threshold: number;
   };
@@ -96,4 +97,12 @@ export interface ProductFilters {
   is_active?: boolean;
   low_stock?: boolean;
   store_id?: string;
+}
+
+export interface FavoriteItem {
+  productId: number;
+  sku: string;
+  productName: string;
+  image: string;
+  addedAt?: string;
 }

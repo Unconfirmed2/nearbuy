@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +7,7 @@ import { Calendar, Clock, CreditCard, MapPin, ShoppingBag } from 'lucide-react';
 import { getBasket, BasketItem, clearBasket } from '@/utils/localStorage';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react';
 
 const Checkout: React.FC = () => {
   const [basketItems] = useState<BasketItem[]>(getBasket());
@@ -15,6 +15,8 @@ const Checkout: React.FC = () => {
   const [selectedTime, setSelectedTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('card-1');
   const navigate = useNavigate();
+  const supabase = useSupabaseClient();
+  const user = useUser();
 
   // Group items by store
   const groupedByStore = basketItems.reduce((groups, item) => {
@@ -39,16 +41,44 @@ const Checkout: React.FC = () => {
     return slots;
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!selectedDate || !selectedTime) {
       toast.error('Please select a pickup date and time');
       return;
     }
+    if (!user) {
+      toast.error('You must be logged in to place an order.');
+      return;
+    }
 
-    // Mock order placement
-    const orderNumbers = Object.keys(groupedByStore).map((_, index) => 
-      `ORD-${Date.now()}-${index + 1}`
-    );
+    // Place an order for each store in the basket
+    const orderNumbers: string[] = [];
+    for (const [storeKey, items] of Object.entries(groupedByStore)) {
+      const storeId = String(items[0].storeId);
+      const userId = user.id;
+      const orderRes = await supabase.from('orders').insert({
+        store_id: storeId,
+        pickup_time: selectedTime,
+        status: 'pending',
+        total_amount: items.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0),
+        user_id: userId
+      }).select('id').single();
+      if (orderRes.error || !orderRes.data) {
+        toast.error('Failed to place order. Please try again.');
+        return;
+      }
+      const orderId = orderRes.data.id;
+      // Insert order items
+      for (const item of items) {
+        await supabase.from('order_items').insert({
+          order_id: orderId,
+          sku: item.sku, // use sku
+          quantity: item.quantity || 1,
+          unit_price: item.price
+        });
+      }
+      orderNumbers.push(orderId);
+    }
 
     clearBasket();
     toast.success('Orders placed successfully!');

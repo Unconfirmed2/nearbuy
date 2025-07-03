@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Package, AlertTriangle, TrendingDown, Search, Edit } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InventoryItem {
   id: string;
@@ -28,42 +28,48 @@ const InventoryManager: React.FC<InventoryManagerProps> = ({ storeId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{ [key: string]: number }>({});
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [inventory, setInventory] = useState<InventoryItem[]>([
-    {
-      id: 'inv-1',
-      product_name: 'Premium Skinny Jeans',
-      sku: 'PSJ-001',
-      store_name: 'Downtown Store',
-      current_stock: 5,
-      min_stock_level: 10,
-      max_stock_level: 100,
-      price: 89.99,
-      last_updated: new Date().toISOString()
-    },
-    {
-      id: 'inv-2',
-      product_name: 'Classic T-Shirt',
-      sku: 'CTS-002',
-      store_name: 'Downtown Store',
-      current_stock: 25,
-      min_stock_level: 15,
-      max_stock_level: 200,
-      price: 24.99,
-      last_updated: new Date().toISOString()
-    },
-    {
-      id: 'inv-3',
-      product_name: 'Denim Jacket',
-      sku: 'DJ-003',
-      store_name: 'Mall Location',
-      current_stock: 2,
-      min_stock_level: 5,
-      max_stock_level: 50,
-      price: 129.99,
-      last_updated: new Date().toISOString()
-    }
-  ]);
+  useEffect(() => {
+    const fetchInventory = async () => {
+      setLoading(true);
+      let query = supabase
+        .from('inventory')
+        .select(`
+          id,
+          quantity,
+          min_stock_level,
+          max_stock_level,
+          price,
+          updated_at,
+          products(name, sku),
+          stores(name)
+        `);
+      if (storeId) {
+        query = query.eq('store_id', storeId);
+      }
+      const { data, error } = await query;
+      if (error || !data) {
+        setInventory([]);
+        setLoading(false);
+        return;
+      }
+      setInventory(data.map((inv: any) => ({
+        id: inv.id,
+        product_name: inv.products?.name || '',
+        sku: inv.products?.sku || '',
+        store_name: inv.stores?.name || '',
+        current_stock: inv.quantity,
+        min_stock_level: inv.min_stock_level,
+        max_stock_level: inv.max_stock_level,
+        price: inv.price,
+        last_updated: inv.updated_at
+      })));
+      setLoading(false);
+    };
+    fetchInventory();
+  }, [storeId]);
 
   const filteredInventory = inventory.filter(item =>
     item.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,6 +108,10 @@ const InventoryManager: React.FC<InventoryManagerProps> = ({ storeId }) => {
   const handleBulkStockUpdate = () => {
     toast.info('Bulk stock update functionality coming soon');
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">

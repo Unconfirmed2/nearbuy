@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MerchantSettings from '../components/MerchantSettings';
@@ -7,78 +6,83 @@ import NotificationSettings from '../components/NotificationSettings';
 import SupportTicketSystem from '../components/SupportTicketSystem';
 import MerchantProfileForm from '../components/MerchantProfileForm';
 import SecuritySettings from '../components/SecuritySettings';
+import { supabase } from '@/integrations/supabase/client';
 
 const Settings: React.FC = () => {
   const { user } = useAuth();
-  // Mock notification preferences
-  const [notificationPreferences, setNotificationPreferences] = useState({
-    email_new_orders: true,
-    email_low_stock: true,
-    email_customer_reviews: false,
-    email_marketing_updates: false,
-    push_new_orders: true,
-    push_order_updates: true,
-    push_low_stock: true,
-    sms_urgent_alerts: false,
-    sms_order_confirmations: false,
-    in_app_all: true
-  });
+  const [notificationPreferences, setNotificationPreferences] = useState<any>(null);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
+  const [merchantProfile, setMerchantProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock support tickets
-  const [supportTickets, setSupportTickets] = useState([
-    {
-      id: 'ticket-1',
-      subject: 'Issue with product upload',
-      description: 'Having trouble uploading product images',
-      category: 'technical',
-      priority: 'medium' as const,
-      status: 'open' as const,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      merchant_id: user?.id || ''
-    }
-  ]);
-
-  // Real merchant profile data would come from database
-  const [merchantProfile, setMerchantProfile] = useState({
-    name: '',
-    email: user?.email || '',
-    phone: '',
-    business_name: '',
-    business_description: '',
-    business_address: ''
-  });
-
-  const handleSaveNotifications = (preferences: any) => {
-    setNotificationPreferences(preferences);
-    // TODO: Save notification preferences to database
-  };
-
-  const handleCreateTicket = (ticket: any) => {
-    const newTicket = {
-      ...ticket,
-      id: `ticket-${Date.now()}`,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      merchant_id: user?.id || ''
+  // Fetch all settings and tickets from Supabase
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      if (!user?.id) return;
+      // Fetch notification preferences
+      const { data: notifData } = await supabase
+        .from('notification_preferences')
+        .select('*')
+        .eq('merchant_id', user.id)
+        .single();
+      setNotificationPreferences(notifData || {});
+      // Fetch support tickets
+      const { data: ticketsData } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('merchant_id', user.id)
+        .order('created_at', { ascending: false });
+      setSupportTickets(ticketsData || []);
+      // Fetch merchant profile
+      const { data: profileData } = await supabase
+        .from('merchants')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      setMerchantProfile(profileData || {});
+      setLoading(false);
     };
-    setSupportTickets([newTicket, ...supportTickets]);
+    fetchData();
+  }, [user?.id]);
+
+  const handleSaveNotifications = async (preferences: any) => {
+    setNotificationPreferences(preferences);
+    if (!user?.id) return;
+    await supabase.from('notification_preferences').upsert({
+      ...preferences,
+      merchant_id: user.id
+    });
   };
 
-  const handleUpdateTicket = (ticketId: string, updates: any) => {
-    setSupportTickets(tickets =>
-      tickets.map(ticket =>
-        ticket.id === ticketId
-          ? { ...ticket, ...updates, updated_at: new Date().toISOString() }
-          : ticket
-      )
+  const handleCreateTicket = async (ticket: any) => {
+    if (!user?.id) return;
+    const { data: newTicket } = await supabase.from('support_tickets').insert({
+      ...ticket,
+      merchant_id: user.id
+    }).select('*').single();
+    if (newTicket) setSupportTickets([newTicket, ...supportTickets]);
+  };
+
+  const handleUpdateTicket = async (ticketId: string, updates: any) => {
+    const { data: updated } = await supabase.from('support_tickets').update({
+      ...updates,
+      updated_at: new Date().toISOString()
+    }).eq('id', ticketId).select('*').single();
+    if (updated) setSupportTickets(tickets =>
+      tickets.map(ticket => ticket.id === ticketId ? updated : ticket)
     );
   };
 
-  const handleSaveProfile = (profile: any) => {
+  const handleSaveProfile = async (profile: any) => {
     setMerchantProfile(profile);
-    // TODO: Save merchant profile to database
+    if (!user?.id) return;
+    await supabase.from('merchants').update(profile).eq('id', user.id);
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">

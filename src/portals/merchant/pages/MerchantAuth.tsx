@@ -162,6 +162,7 @@ const MerchantAuth: React.FC = () => {
       }
 
       toast.success('Welcome back!');
+      navigate('/merchant'); // Explicit redirect for merchants
       // Navigation will happen automatically via useAuth
     } catch (error) {
       const err = error as Error;

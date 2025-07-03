@@ -36,7 +36,7 @@ const TopProductsTable: React.FC<TopProductsTableProps> = ({
           </TableHeader>
           <TableBody>
             {products.map((product, index) => (
-              <TableRow key={product.product_id}>
+              <TableRow key={product.sku}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full text-blue-600 text-sm font-medium">

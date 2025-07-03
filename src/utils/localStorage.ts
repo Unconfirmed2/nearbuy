@@ -1,6 +1,6 @@
-
 export interface BasketItem {
   productId: number;
+  sku: string;
   storeId: number;
   productName: string;
   storeName: string;
@@ -10,9 +10,10 @@ export interface BasketItem {
 
 export interface FavoriteItem {
   productId: number;
+  sku: string;
   productName: string;
   image: string;
-  addedAt: string;
+  addedAt?: string;
 }
 
 // Basket management
@@ -78,7 +79,7 @@ export const getFavorites = (): FavoriteItem[] => {
   }
 };
 
-export const addToFavorites = (item: Omit<FavoriteItem, 'addedAt'>): void => {
+export const addToFavorites = (item: FavoriteItem): void => {
   try {
     const favorites = getFavorites();
     const exists = favorites.some((fav) => fav.productId === item.productId);

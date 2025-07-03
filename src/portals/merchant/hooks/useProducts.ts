@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Product, InventoryItem } from '../types/product';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,6 +46,7 @@ export const useProducts = (merchantId: string) => {
             price,
             quantity,
             store_id,
+            sku,
             updated_at,
             products (
               id,
@@ -55,6 +55,7 @@ export const useProducts = (merchantId: string) => {
               brand,
               category_id,
               image_url,
+              sku,
               created_at
             )
           `)
@@ -84,7 +85,7 @@ export const useProducts = (merchantId: string) => {
           updated_at: inv.updated_at,
           inventory: [{
             id: inv.id.toString(),
-            product_id: inv.products?.id || '',
+            sku: inv.products?.id || '',
             store_id: inv.store_id,
             quantity: inv.quantity,
             reserved_quantity: 0,
@@ -132,7 +133,7 @@ export const useProducts = (merchantId: string) => {
         .from('inventory')
         .insert({
           store_id: productData.store_id,
-          product_id: productRecord.id,
+          sku: productData.sku, // use sku
           price: productData.price || 0,
           quantity: 0 // Default quantity
         })
@@ -160,7 +161,7 @@ export const useProducts = (merchantId: string) => {
         variants: productData.variants || [],
         inventory: [{
           id: inventoryRecord.id.toString(),
-          product_id: productRecord.id,
+          sku: productRecord.id,
           store_id: productData.store_id,
           quantity: inventoryRecord.quantity,
           reserved_quantity: 0,

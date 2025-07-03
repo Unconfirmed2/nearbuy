@@ -97,7 +97,7 @@ const ProductSearch: React.FC = () => {
           price,
           quantity,
           store_id,
-          product_id,
+          sku,
           stores!inner(
             id,
             name,
@@ -105,7 +105,7 @@ const ProductSearch: React.FC = () => {
             description
           )
         `)
-        .in('product_id', products?.map(p => p.id) || [])
+        .in('sku', products?.map(p => p.id) || [])
         .gt('quantity', 0);
 
       if (inventoryError) {
@@ -117,10 +117,10 @@ const ProductSearch: React.FC = () => {
       // Group inventory by product
       const productInventoryMap = new Map();
       inventoryData?.forEach(item => {
-        if (!productInventoryMap.has(item.product_id)) {
-          productInventoryMap.set(item.product_id, []);
+        if (!productInventoryMap.has(item.sku)) {
+          productInventoryMap.set(item.sku, []);
         }
-        productInventoryMap.get(item.product_id).push({
+        productInventoryMap.get(item.sku).push({
           id: uuidToNumber(item.store_id),
           seller: item.stores.name,
           price: Number(item.price),

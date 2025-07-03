@@ -9,6 +9,28 @@ import LocationButton from "@/components/LocationButton";
 import TravelFilter, { TravelFilterValue } from "@/components/TravelFilter";
 import MainNavigation from "@/components/navigation/MainNavigation";
 import { getBasket, addToBasket, getFavorites } from "@/utils/localStorage";
+import { supabase } from "@/integrations/supabase/client";
+
+// Define types for clarity and type safety
+interface Store {
+  id: string; // string to match Supabase
+  seller: string;
+  price: number;
+  distance: number;
+  rating: number;
+  nbScore: number;
+  address?: string;
+}
+
+interface Product {
+  id: string; // string to match Supabase
+  name: string;
+  description: string;
+  image: string;
+  sku: string;
+  category: string | null;
+  stores: Store[];
+}
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,15 +45,14 @@ const Index = () => {
     value: 2
   });
   const [searchType, setSearchType] = useState<'product' | 'store'>("product");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Update basket and favorites from localStorage on mount
   useEffect(() => {
     const updateFromStorage = () => {
       setBasket(getBasket());
       setFavorites(getFavorites());
     };
-    
-    // Listen for storage changes (when user adds items in another tab)
     window.addEventListener('storage', updateFromStorage);
     return () => window.removeEventListener('storage', updateFromStorage);
   }, []);
@@ -43,101 +64,66 @@ const Index = () => {
     return Math.round((distanceScore + priceScore) * 10) / 10;
   };
 
-  // Mock product data with 30 diverse products
-  const mockProducts = [
-    // Electronics
-    { id: 1, name: "iPhone 15 Pro", price: 999.99, image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=400&fit=crop", distance: 0.8, rating: 4.8, seller: "TechZone Electronics", category: "Electronics", description: "Latest iPhone with advanced features and camera" },
-    { id: 2, name: "iPhone 15 Pro", price: 1049.99, image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400&h=400&fit=crop", distance: 1.2, rating: 4.9, seller: "Digital Dreams", category: "Electronics", description: "Latest iPhone with advanced features and camera" },
-    { id: 3, name: "MacBook Air M2", price: 1199.99, image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop", distance: 1.5, rating: 4.7, seller: "TechZone Electronics", category: "Electronics", description: "Powerful laptop for work and creativity" },
-    { id: 4, name: "Sony WH-1000XM5", price: 349.99, image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=400&fit=crop", distance: 2.1, rating: 4.6, seller: "AudioHub", category: "Electronics", description: "Premium noise-cancelling headphones" },
-    { id: 5, name: "iPad Pro 11\"", price: 799.99, image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=400&fit=crop", distance: 0.9, rating: 4.8, seller: "Digital Dreams", category: "Electronics", description: "Professional tablet for creative work" },
-    
-    // Clothing
-    { id: 6, name: "Levi's 501 Jeans", price: 89.99, image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop", distance: 1.3, rating: 4.5, seller: "Urban Threads", category: "Clothing", description: "Classic denim jeans with timeless style" },
-    { id: 7, name: "Nike Air Force 1", price: 110.00, image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop", distance: 0.7, rating: 4.7, seller: "Sneaker Palace", category: "Clothing", description: "Iconic basketball sneakers" },
-    { id: 8, name: "Nike Air Force 1", price: 95.99, image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=400&fit=crop", distance: 2.4, rating: 4.4, seller: "FootLocker Downtown", category: "Clothing", description: "Iconic basketball sneakers" },
-    { id: 9, name: "Champion Hoodie", price: 55.00, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=400&fit=crop", distance: 1.8, rating: 4.3, seller: "Urban Threads", category: "Clothing", description: "Comfortable cotton hoodie" },
-    { id: 10, name: "Adidas Ultraboost 22", price: 180.00, image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=400&h=400&fit=crop", distance: 1.1, rating: 4.6, seller: "Sneaker Palace", category: "Clothing", description: "High-performance running shoes" },
-    
-    // Home & Furniture
-    { id: 11, name: "IKEA Billy Bookshelf", price: 49.99, image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop", distance: 3.2, rating: 4.2, seller: "Furniture Express", category: "Furniture", description: "Versatile bookshelf for any room" },
-    { id: 12, name: "Dyson V15 Vacuum", price: 749.99, image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop", distance: 1.4, rating: 4.8, seller: "Home Essentials", category: "Home", description: "Powerful cordless vacuum cleaner" },
-    { id: 13, name: "KitchenAid Stand Mixer", price: 449.99, image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop", distance: 2.0, rating: 4.9, seller: "Kitchen World", category: "Home", description: "Professional stand mixer for baking" },
-    { id: 14, name: "Sectional Sofa", price: 1299.99, image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=400&fit=crop", distance: 2.8, rating: 4.5, seller: "Furniture Express", category: "Furniture", description: "Comfortable sectional sofa" },
-    { id: 15, name: "Coffee Table", price: 199.99, image: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=400&h=400&fit=crop", distance: 1.9, rating: 4.4, seller: "Modern Living", category: "Furniture", description: "Modern coffee table for living room" },
-    
-    // Sports & Outdoors
-    { id: 16, name: "Yeti Rambler 30oz", price: 39.99, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop", distance: 1.6, rating: 4.7, seller: "Outdoor Gear Co", category: "Sports", description: "Insulated stainless steel tumbler" },
-    { id: 17, name: "Wilson Tennis Racket", price: 129.99, image: "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=400&fit=crop", distance: 2.3, rating: 4.5, seller: "Sports Authority", category: "Sports", description: "Professional tennis racket" },
-    { id: 18, name: "Patagonia Fleece Jacket", price: 179.99, image: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?w=400&h=400&fit=crop", distance: 0.6, rating: 4.8, seller: "Outdoor Gear Co", category: "Sports", description: "Warm fleece jacket for outdoor activities" },
-    { id: 19, name: "Hydro Flask 32oz", price: 44.95, image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400&h=400&fit=crop", distance: 3.1, rating: 4.6, seller: "Sports Authority", category: "Sports", description: "Insulated water bottle" },
-    { id: 20, name: "Yoga Mat Premium", price: 79.99, image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=400&fit=crop", distance: 1.7, rating: 4.4, seller: "Zen Fitness", category: "Sports", description: "High-quality yoga mat" },
-    
-    // Books & Media
-    { id: 21, name: "The Psychology of Money", price: 16.99, image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop", distance: 0.9, rating: 4.6, seller: "Barnes & Noble", category: "Books", description: "Bestselling book about financial psychology" },
-    { id: 22, name: "Atomic Habits", price: 18.99, image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=400&fit=crop", distance: 1.4, rating: 4.8, seller: "Book Haven", category: "Books", description: "Guide to building good habits" },
-    { id: 23, name: "Vinyl Record Player", price: 249.99, image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop", distance: 2.2, rating: 4.5, seller: "AudioHub", category: "Electronics", description: "Vintage-style turntable" },
-    
-    // Food & Beverages
-    { id: 24, name: "Organic Coffee Beans", price: 24.99, image: "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=400&fit=crop", distance: 0.8, rating: 4.7, seller: "Local Roastery", category: "Food", description: "Premium organic coffee beans" },
-    { id: 25, name: "Artisan Chocolate Box", price: 32.99, image: "https://images.unsplash.com/photo-1511381939415-e44015466834?w=400&h=400&fit=crop", distance: 1.3, rating: 4.9, seller: "Sweet Treats", category: "Food", description: "Handcrafted chocolate collection" },
-    { id: 26, name: "Green Tea Set", price: 45.00, image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&h=400&fit=crop", distance: 2.1, rating: 4.4, seller: "Tea Corner", category: "Food", description: "Traditional green tea set" },
-    
-    // Beauty & Personal Care
-    { id: 27, name: "Skincare Routine Kit", price: 89.99, image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=400&h=400&fit=crop", distance: 1.2, rating: 4.6, seller: "Beauty Boutique", category: "Beauty", description: "Complete skincare routine" },
-    { id: 28, name: "Electric Toothbrush", price: 129.99, image: "https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=400&h=400&fit=crop", distance: 0.5, rating: 4.7, seller: "Health Plus", category: "Health", description: "Advanced electric toothbrush" },
-    { id: 29, name: "Massage Gun", price: 199.99, image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop", distance: 1.8, rating: 4.5, seller: "Zen Fitness", category: "Health", description: "Percussive therapy device" },
-    { id: 30, name: "Essential Oil Diffuser", price: 49.99, image: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400&h=400&fit=crop", distance: 2.5, rating: 4.3, seller: "Wellness Store", category: "Health", description: "Aromatherapy diffuser" }
-  ].map(product => ({
-    ...product,
-    nbScore: calculateNBScore(product.distance, product.price)
-  }));
-
-  // Group products by name and structure them for the new card format
-  const groupedProducts = mockProducts.reduce((acc, product) => {
-    const existingProduct = acc.find(p => p.name === product.name);
-    
-    const store = {
-      id: product.id,
-      seller: product.seller,
-      price: product.price,
-      distance: product.distance,
-      rating: product.rating,
-      nbScore: product.nbScore
-    };
-
-    if (existingProduct) {
-      existingProduct.stores.push(store);
-    } else {
-      acc.push({
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        image: product.image,
-        category: product.category,
-        stores: [store]
+  // Fetch products and inventory from Supabase
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      // Fetch all products
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('id, name, description, image_url, category_id, brand');
+      if (productsError || !productsData) {
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+      // Fetch all inventory with store and product info
+      const { data: inventoryData, error: inventoryError } = await supabase
+        .from('inventory')
+        .select(`
+          id,
+          price,
+          quantity,
+          store_id,
+          sku,
+          updated_at,
+          stores(id, name, address)
+        `);
+      if (inventoryError || !inventoryData) {
+        setProducts([]);
+        setLoading(false);
+        return;
+      }
+      // Group inventory by product
+      const grouped: Product[] = [];
+      productsData.forEach(product => {
+        const productStores = inventoryData.filter(inv => inv.sku === product.id);
+        if (productStores.length === 0) return;
+        grouped.push({
+          id: product.sku,
+          name: product.name,
+          description: product.description || '',
+          image: product.image_url || '',
+          category: product.category_id || null,
+          stores: productStores.map(inv => ({
+            id: String(inv.sku),
+            seller: inv.stores?.name || '',
+            price: inv.price,
+            distance: Math.random() * 3 + 0.5, // TODO: Replace with real distance
+            rating: 4.5, // TODO: Replace with real rating
+            nbScore: calculateNBScore(Math.random() * 3 + 0.5, inv.price),
+            address: inv.stores?.address || undefined,
+          }))
+        });
       });
-    }
-    
-    return acc;
-  }, [] as Array<{
-    id: number;
-    name: string;
-    description: string;
-    image: string;
-    category: string;
-    stores: Array<{
-      id: number;
-      seller: string;
-      price: number;
-      distance: number;
-      rating: number;
-      nbScore: number;
-    }>;
-  }>);
+      setProducts(grouped);
+      setLoading(false);
+    };
+    fetchProducts();
+  }, []);
 
   // Sort stores within each product
-  groupedProducts.forEach(product => {
+  products.forEach(product => {
     product.stores.sort((a, b) => {
       switch (sortBy) {
         case "distance":
@@ -152,12 +138,12 @@ const Index = () => {
     });
   });
 
-  const filteredProducts = groupedProducts.filter(product => {
+  const filteredProducts = products.filter(product => {
     if (searchType === "store") {
       const storeMatch = product.stores.some(store =>
         store.seller.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (searchQuery.toLowerCase().includes("store") && product.category.toLowerCase().includes(searchQuery.replace(/store(s)?/gi, "").trim()))
+        product.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (searchQuery.toLowerCase().includes("store") && product.category?.toLowerCase().includes(searchQuery.replace(/store(s)?/gi, "").trim()))
       );
       return storeMatch;
     } else {
@@ -178,25 +164,30 @@ const Index = () => {
       });
       const matchesSearch = searchQuery === "" || 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.stores.some(store => store.seller.toLowerCase().includes(searchQuery.toLowerCase()));
       return hasValidStore && matchesSearch;
     }
   });
 
+  // Patch: convert all IDs to numbers for ProductCard/StoreSelectionModal compatibility
+  const toNumberId = (id: string | number): number => typeof id === 'number' ? id : parseInt(id, 10);
+
+  // Update ProductCard and StoreSelectionModal usage to use string IDs
   const handleAddToBasket = (productId: number, storeId: number) => {
-    const product = mockProducts.find(p => p.id === storeId);
-    if (product) {
+    const product = products.find(p => p.stores.some(s => s.id === storeId));
+    const store = product?.stores.find(s => s.id === storeId);
+    if (product && store) {
       const newItem = {
         productId,
+        sku: product.sku,
         storeId,
         productName: product.name,
-        storeName: product.seller,
-        price: product.price
+        storeName: store.seller,
+        price: store.price
       };
       addToBasket(newItem);
-      setBasket(getBasket()); // Update state
-      
+      setBasket(getBasket());
     }
   };
 
@@ -214,7 +205,7 @@ const Index = () => {
           });
         },
         (error) => {
-          
+          // ignore
         }
       );
     }
@@ -312,7 +303,11 @@ const Index = () => {
             {filteredProducts.map((product) => (
               <ProductCard 
                 key={`${product.name}-${product.id}`} 
-                product={product} 
+                product={{
+                  ...product,
+                  id: toNumberId(product.id),
+                  stores: product.stores.map(s => ({ ...s, id: toNumberId(s.id) }))
+                }}
                 onAddToBasket={handleAddToBasket}
               />
             ))}

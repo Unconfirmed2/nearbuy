@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Store } from '../types/store';
@@ -167,7 +166,9 @@ export const useStores = (merchantId?: string) => {
         contact_email: updates.contact_email,
         phone: updates.phone,
         tax_id: updates.tax_id,
-        is_active: updates.is_active
+        is_active: updates.is_active,
+        business_hours: updates.business_hours, // now included
+        social_media: updates.social_media // now included
       };
 
       // Remove undefined values
@@ -182,7 +183,10 @@ export const useStores = (merchantId?: string) => {
         .update(updateData)
         .eq('id', storeId);
 
-      if (error) throw error;
+      if (error) {
+        toast.error('Supabase error: ' + error.message);
+        throw error;
+      }
       
       setStores(prev => 
         prev.map(store => 
@@ -193,8 +197,9 @@ export const useStores = (merchantId?: string) => {
       );
       
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating store:', err);
+      toast.error('Failed to update store: ' + (err?.message || err));
       throw new Error('Failed to update store');
     }
   };

@@ -9,7 +9,7 @@ export interface SalesMetrics {
 }
 
 export interface ProductPerformance {
-  product_id: string;
+  sku: string;
   product_name: string;
   product_image?: string;
   total_revenue: number;

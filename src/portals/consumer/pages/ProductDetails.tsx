@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,33 +6,63 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Heart, ShoppingCart, Star, MapPin, Plus, Minus } from 'lucide-react';
 import { addToBasket, addToFavorites } from '@/utils/localStorage';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock product data - in a real app, this would be fetched based on the ID
-  const product = {
-    id: parseInt(id || '1'),
-    name: 'Organic Bananas',
-    price: 2.49,
-    image: '/placeholder.svg',
-    store: 'Fresh Market',
-    storeAddress: '123 Main St, Downtown',
-    distance: '0.8 mi',
-    rating: 4.5,
-    reviewCount: 128,
-    category: 'Produce',
-    description: 'Fresh, organic bananas sourced from local farms. Perfect for smoothies, snacks, or baking.',
-    inStock: true,
-    stockCount: 24
-  };
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) return;
+      setLoading(true);
+      // Fetch product details
+      const { data: productData, error: productError } = await supabase
+        .from('products')
+        .select('id, name, description, image_url, category, brand')
+        .eq('id', id)
+        .single();
+      if (productError || !productData) {
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
+      // Fetch inventory for this product
+      const { data: inventoryData } = await supabase
+        .from('inventory')
+        .select('id, price, quantity, stores(name, address)')
+        .eq('sku', id)
+        .order('quantity', { ascending: false });
+      const inventory = (inventoryData && inventoryData.length > 0) ? inventoryData[0] : null;
+      setProduct({
+        id: parseInt(productData.id, 10),
+        sku: productData.sku,
+        name: productData.name,
+        description: productData.description || '',
+        image: productData.image_url || '/placeholder.svg',
+        category: productData.category_id || '',
+        rating: 4.5, // TODO: fetch real rating
+        reviewCount: 128, // TODO: fetch real review count
+        store: inventory?.stores?.name || '',
+        storeAddress: inventory?.stores?.address || '',
+        distance: '0.8 mi', // TODO: calculate real distance
+        price: inventory?.price ?? 0,
+        inStock: inventory?.quantity > 0,
+        stockCount: inventory?.quantity ?? 0
+      });
+      setLoading(false);
+    };
+    fetchProduct();
+  }, [id]);
 
   const handleAddToCart = () => {
     addToBasket({
       productId: product.id,
+      sku: product.sku,
       storeId: 1,
       productName: product.name,
       storeName: product.store,
@@ -46,6 +75,7 @@ const ProductDetails: React.FC = () => {
   const handleAddToFavorites = () => {
     addToFavorites({
       productId: product.id,
+      sku: product.sku,
       productName: product.name,
       image: product.image
     });
@@ -60,6 +90,13 @@ const ProductDetails: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return <div className="text-center py-12">Loading...</div>;
+  }
+  if (!product) {
+    return <div className="text-center py-12">Product not found.</div>;
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Back Navigation */}
@@ -71,7 +108,6 @@ const ProductDetails: React.FC = () => {
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back
       </Button>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Product Image */}
         <div className="space-y-4">
