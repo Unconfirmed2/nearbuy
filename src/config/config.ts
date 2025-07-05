@@ -1,2 +1,2 @@
 // Google Maps API key config
-export const googleMapsApiKey = "AIzaSyDfet8p_diZqiG0ibgXw0xdye-jPByI4Ak";
+export const googleMapsApiKey = import.meta.env.VITE_GMAPS_API_KEY || process.env.GMAPS_API_KEY || "";

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useStores } from '../hooks/useStores';
 import { useProducts } from '../hooks/useProducts';
 import TravelFilter, { TravelFilterValue } from '@/components/TravelFilter';
+import LocationAutocompleteInput from "@/components/LocationAutocompleteInput";
 
 const MerchantPreview: React.FC = () => {
   const navigate = useNavigate();
@@ -113,11 +113,11 @@ const MerchantPreview: React.FC = () => {
             {/* Location Input */}
             <div className="relative flex-1 max-w-xs">
               <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
+              <LocationAutocompleteInput
                 type="text"
                 placeholder="Location"
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={setLocation}
                 className="pl-10 bg-gray-50 border-gray-200 focus:bg-white"
               />
             </div>
@@ -162,10 +162,10 @@ const MerchantPreview: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card key={product.sku} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="aspect-square bg-gray-100 relative">
                   <img
-                    src={product.images[0] || '/placeholder.svg'}
+                    src={product.image[0] || '/placeholder.svg'}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />

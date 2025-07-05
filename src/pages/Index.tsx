@@ -74,7 +74,7 @@ const Index = () => {
       // Fetch all products
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('id, name, description, image_url, category_id, brand');
+        .select('sku, name, description, image_url, category_id, brand');
       if (productsError || !productsData) {
         setProducts([]);
         setLoading(false);
@@ -100,7 +100,7 @@ const Index = () => {
       // Group inventory by product
       const grouped: Product[] = [];
       for (const product of productsData) {
-        const productStores = inventoryData.filter(inv => inv.sku === product.id);
+        const productStores = inventoryData.filter(inv => inv.sku === product.sku);
         if (productStores.length === 0) continue;
         // Calculate distances and travel times for each store
         const storesWithDistance = await Promise.all(productStores.map(async inv => {
@@ -127,13 +127,13 @@ const Index = () => {
             travelTime = 9999;
           }
           return {
-            id: String(inv.sku),
+            id: String(inv.sku || inv.store_id),
             seller: inv.stores?.name || '',
-            price: inv.price,
+            price: inv.price || 0,
             distance,
             travelTime,
             rating: 4.5, // TODO: Replace with real rating
-            nbScore: calculateNBScore(distance, inv.price),
+            nbScore: calculateNBScore(distance, inv.price || 0),
             address: inv.stores?.address || undefined,
           };
         }));

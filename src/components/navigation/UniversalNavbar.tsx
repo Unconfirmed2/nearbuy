@@ -44,6 +44,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import LocationAutocompleteInput from "@/components/LocationAutocompleteInput";
 
 interface UniversalNavbarProps {
   user?: User | null;
@@ -126,20 +127,17 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
               <PopoverTrigger asChild>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                  <Input
+                  <LocationAutocompleteInput
                     placeholder="Location"
                     value={locationValue}
-                    onChange={(e) => setLocationValue(e.target.value)}
+                    onChange={setLocationValue}
                     className="w-32 pl-10 cursor-pointer text-sm"
-                    readOnly
-                    onClick={() => setIsLocationPopoverOpen(true)}
                   />
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-80 p-4" align="end">
                 <div className="space-y-4">
                   <h4 className="font-medium text-gray-900">Enter your location</h4>
-                  
                   <Button
                     onClick={handleUseMyLocation}
                     variant="outline"
@@ -148,51 +146,12 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
                     <Navigation className="h-4 w-4 mr-2" />
                     Use My Current Location
                   </Button>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-muted-foreground">
-                        Or enter manually
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <Input
+                  <LocationAutocompleteInput
                     placeholder="Type your address..."
                     value={locationValue}
-                    onChange={(e) => setLocationValue(e.target.value)}
+                    onChange={setLocationValue}
                     className="w-full"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && locationValue.trim()) {
-                        handleLocationSelect(locationValue);
-                      }
-                    }}
                   />
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-600">Popular locations:</p>
-                    <div className="space-y-1">
-                      {[
-                        'Downtown',
-                        'Main Street',
-                        'Shopping District',
-                        'University Area'
-                      ].map((popularLocation) => (
-                        <Button
-                          key={popularLocation}
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start text-left"
-                          onClick={() => handleLocationSelect(popularLocation)}
-                        >
-                          <MapPin className="h-4 w-4 mr-2" />
-                          {popularLocation}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
                   {locationValue.trim() && (
                     <Button
                       onClick={() => handleLocationSelect(locationValue)}

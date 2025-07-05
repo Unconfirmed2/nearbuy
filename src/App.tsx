@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Home from './portals/consumer/pages/Home';
 import ProductSearch from './portals/consumer/pages/ProductSearch';
 import ProductDetails from './portals/consumer/pages/ProductDetails';
+import StoreProducts from './portals/consumer/pages/StoreProducts';
 import Cart from './portals/consumer/pages/Cart';
 import Profile from './portals/consumer/pages/Profile';
 import OrderHistory from './portals/consumer/pages/OrderHistory';
@@ -157,6 +158,11 @@ const AppRoutes = () => {
               <ProductDetails />
             </ConsumerLayout>
           )
+        } />
+        <Route path="/store/:storeId" element={
+          <ConsumerLayout user={user} profile={profile}>
+            <StoreProducts />
+          </ConsumerLayout>
         } />
         <Route path="/cart" element={
           <ConsumerLayout user={user} profile={profile}>

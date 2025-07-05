@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, MapPin, Edit, Trash2, Star } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import LocationAutocompleteInput from "@/components/LocationAutocompleteInput";
 
 interface Address {
   id: string;
@@ -145,11 +145,12 @@ const Addresses: React.FC = () => {
               </div>
               <div>
                 <Label htmlFor="address">Full Address</Label>
-                <Input
+                <LocationAutocompleteInput
                   id="address"
                   placeholder="123 Main St, City, State ZIP"
                   value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  onChange={val => setFormData({...formData, address: val})}
+                  className="mt-2"
                 />
               </div>
               <Button 

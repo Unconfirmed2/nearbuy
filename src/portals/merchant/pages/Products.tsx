@@ -66,7 +66,7 @@ const Products: React.FC = () => {
     if (!editingProduct) return;
     
     try {
-      await updateProduct(editingProduct.id, productData);
+      await updateProduct(editingProduct.sku, productData);
       setShowProductForm(false);
       setEditingProduct(null);
       toast.success('Product updated successfully');
@@ -77,6 +77,7 @@ const Products: React.FC = () => {
   };
 
   const handleDeleteProduct = async (productId: string) => {
+    // productId represents the product's SKU
     try {
       await deleteProduct(productId);
       toast.success('Product deleted successfully');
@@ -87,6 +88,7 @@ const Products: React.FC = () => {
   };
 
   const handleToggleStatus = async (productId: string, isActive: boolean) => {
+    // productId represents the product's SKU
     try {
       await updateProduct(productId, { is_active: isActive });
       toast.success(`Product ${isActive ? 'activated' : 'deactivated'} successfully`);
@@ -212,7 +214,7 @@ const Products: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProducts.map(product => (
                 <ProductCard
-                  key={product.id}
+                  key={product.sku}
                   product={product}
                   onEdit={handleEditProduct}
                   onDelete={handleDeleteProduct}

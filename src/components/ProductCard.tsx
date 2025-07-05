@@ -31,9 +31,10 @@ interface ProductCardProps {
   onAddToBasket: (sku: string, storeId: string) => void;
   isMerchantPreview?: boolean;
   locationValue?: string;
+  hideStoreSelection?: boolean;
 }
 
-const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false, locationValue }: ProductCardProps) => {
+const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false, locationValue, hideStoreSelection = false }: ProductCardProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -87,11 +88,23 @@ const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false, locati
             </div>
             
             <Button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                if (hideStoreSelection && product.stores.length === 1) {
+                  // Direct add to basket if only one store and hideStoreSelection is true
+                  onAddToBasket(product.sku, product.stores[0].id);
+                } else {
+                  setIsModalOpen(true);
+                }
+              }}
               className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
               size="sm"
             >
-              {isMerchantPreview ? 'View stores' : 'See stores'}
+              {isMerchantPreview 
+                ? 'View stores' 
+                : hideStoreSelection && product.stores.length === 1
+                  ? 'Add to cart'
+                  : 'See stores'
+              }
             </Button>
           </div>
         </CardContent>

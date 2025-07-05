@@ -20,11 +20,11 @@ const ProductDetails: React.FC = () => {
     const fetchProduct = async () => {
       if (!id) return;
       setLoading(true);
-      // Fetch product details
+      // Fetch product details by SKU
       const { data: productData, error: productError } = await supabase
         .from('products')
-        .select('id, name, description, image_url, category, brand')
-        .eq('id', id)
+        .select('name, description, image_url, category_id, brand, sku')
+        .eq('sku', id)
         .single();
       if (productError || !productData) {
         setProduct(null);
@@ -68,7 +68,7 @@ const ProductDetails: React.FC = () => {
         travelTimeStr = '';
       }
       setProduct({
-        id: parseInt(productData.id, 10),
+        id: productData.sku, // Use SKU as the identifier
         sku: productData.sku,
         name: productData.name,
         description: productData.description || '',

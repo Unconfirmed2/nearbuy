@@ -78,7 +78,7 @@ export interface CreateProductData {
   price: number;
   cost_price?: number;
   compare_at_price?: number;
-  images: string[];
+  image: string[];
   tags: string[];
   track_inventory: boolean;
   store_id: string;
@@ -100,8 +100,8 @@ export interface ProductFilters {
 }
 
 export interface FavoriteItem {
-  productId: number;
-  sku: string;
+  productId: number; // Legacy field - consider using sku instead
+  sku: string; // Use this as the primary identifier
   productName: string;
   image: string;
   addedAt?: string;

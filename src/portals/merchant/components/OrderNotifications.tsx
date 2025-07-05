@@ -14,7 +14,7 @@ interface Notification {
   timestamp: Date;
   read: boolean;
   orderId?: string;
-  productId?: string;
+  productId?: string; // productId represents the product's SKU
 }
 
 interface OrderNotificationsProps {

@@ -45,7 +45,7 @@ export type Database = {
           event_type: string
           id: string
           metadata: Json | null
-          product_id: string | null
+          product_sku: string | null
           store_id: string | null
           user_id: string | null
         }
@@ -54,7 +54,7 @@ export type Database = {
           event_type: string
           id?: string
           metadata?: Json | null
-          product_id?: string | null
+          product_sku?: string | null
           store_id?: string | null
           user_id?: string | null
         }
@@ -63,17 +63,17 @@ export type Database = {
           event_type?: string
           id?: string
           metadata?: Json | null
-          product_id?: string | null
+          product_sku?: string | null
           store_id?: string | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "analytics_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "analytics_product_sku_fkey"
+            columns: ["product_sku"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["sku"]
           },
           {
             foreignKeyName: "analytics_store_id_fkey"
@@ -207,31 +207,31 @@ export type Database = {
         Row: {
           created_at: string
           id: number
-          product_id: string | null
+          product_sku: string | null
           store_id: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: number
-          product_id?: string | null
+          product_sku?: string | null
           store_id?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           id?: number
-          product_id?: string | null
+          product_sku?: string | null
           store_id?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "favorites_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "favorites_product_sku_fkey"
+            columns: ["product_sku"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["sku"]
           },
           {
             foreignKeyName: "favorites_store_id_fkey"
@@ -499,19 +499,19 @@ export type Database = {
       order_items: {
         Row: {
           order_id: string
-          product_id: string
+          product_sku: string
           quantity: number
           unit_price: number
         }
         Insert: {
           order_id: string
-          product_id: string
+          product_sku: string
           quantity: number
           unit_price: number
         }
         Update: {
           order_id?: string
-          product_id?: string
+          product_sku?: string
           quantity?: number
           unit_price?: number
         }
@@ -524,11 +524,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "order_items_product_sku_fkey"
+            columns: ["product_sku"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["sku"]
           },
         ]
       }
@@ -653,7 +653,6 @@ export type Database = {
           category_id: string | null
           created_at: string
           description: string | null
-          id: string
           image_url: string | null
           name: string
           sku: string
@@ -663,17 +662,15 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
-          id?: string
           image_url?: string | null
           name: string
-          sku?: string
+          sku: string
         }
         Update: {
           brand?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
-          id?: string
           image_url?: string | null
           name?: string
           sku?: string
@@ -735,7 +732,7 @@ export type Database = {
           comment: string | null
           created_at: string
           id: string
-          product_id: string | null
+          product_sku: string | null
           rating: number
           store_id: string | null
           user_id: string
@@ -744,7 +741,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
-          product_id?: string | null
+          product_sku?: string | null
           rating: number
           store_id?: string | null
           user_id: string
@@ -753,18 +750,18 @@ export type Database = {
           comment?: string | null
           created_at?: string
           id?: string
-          product_id?: string | null
+          product_sku?: string | null
           rating?: number
           store_id?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "reviews_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "reviews_product_sku_fkey"
+            columns: ["product_sku"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["sku"]
           },
           {
             foreignKeyName: "reviews_store_id_fkey"
@@ -812,7 +809,7 @@ export type Database = {
           bid_amount: number
           created_at: string
           id: string
-          product_id: string
+          product_sku: string
           store_id: string
         }
         Insert: {
@@ -820,7 +817,7 @@ export type Database = {
           bid_amount: number
           created_at?: string
           id?: string
-          product_id: string
+          product_sku: string
           store_id: string
         }
         Update: {
@@ -828,16 +825,16 @@ export type Database = {
           bid_amount?: number
           created_at?: string
           id?: string
-          product_id?: string
+          product_sku?: string
           store_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "sponsored_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "sponsored_items_product_sku_fkey"
+            columns: ["product_sku"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
+            referencedColumns: ["sku"]
           },
           {
             foreignKeyName: "sponsored_items_store_id_fkey"

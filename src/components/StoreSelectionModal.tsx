@@ -1,9 +1,29 @@
-
-import { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star, ShoppingCart, Map } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import MapModal from "./MapModal";
+
+// Utility to load Google Maps JS API script if not already loaded
+function loadGoogleMapsScript(callback: () => void) {
+  if (window.google && window.google.maps && window.google.maps.places) {
+    callback();
+    return;
+  }
+  const existingScript = document.getElementById('google-maps-script');
+  if (existingScript) {
+    existingScript.addEventListener('load', callback);
+    return;
+  }
+  const script = document.createElement('script');
+  script.id = 'google-maps-script';
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GMAPS_API_KEY}&libraries=places`;
+  script.async = true;
+  script.defer = true;
+  script.onload = callback;
+  document.head.appendChild(script);
+}
 
 interface Store {
   id: string;
@@ -41,18 +61,59 @@ const StoreSelectionModal = ({
   onAddToBasket, 
   isMerchantPreview = false 
 }: StoreSelectionModalProps) => {
-  const [selectedStoreForMap, setSelectedStoreForMap] = useState<Store | null>(null);
+  const [userLatLng, setUserLatLng] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapModalOpen, setMapModalOpen] = useState(false);
+  const [mapStoreLocation, setMapStoreLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
 
   const handleAddToBasket = (storeId: string) => {
     onAddToBasket(product.sku, storeId);
     onClose();
   };
 
-  const handleShowOnMap = (store: Store) => {
-    setSelectedStoreForMap(store);
-    // Here you could integrate with a map service
-    // For now, we'll show an alert with the address
-    alert(`${store.seller}\n${store.address || 'Address not available'}\n\nMap integration coming soon!`);
+  // Helper to geocode location string to lat/lng
+  const geocodeLocation = useCallback((location: string): Promise<{ lat: number; lng: number } | null> => {
+    return new Promise((resolve) => {
+      loadGoogleMapsScript(() => {
+        if (!window.google || !window.google.maps) return resolve(null);
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: location }, (results, status) => {
+          if (status === 'OK' && results && results[0]) {
+            const { lat, lng } = results[0].geometry.location;
+            resolve({ lat: lat(), lng: lng() });
+          } else {
+            resolve(null);
+          }
+        });
+      });
+    });
+  }, []);
+
+  // On mount, geocode user location if available
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const loc = window.localStorage.getItem('nearbuy_user_location');
+      if (loc) {
+        geocodeLocation(loc).then((coords) => {
+          if (coords) setUserLatLng(coords);
+        });
+      }
+    }
+  }, [geocodeLocation]);
+
+  // Universal map button handler
+  const handleUniversalMap = async (store: Store) => {
+    if (!store.address) return alert('Store address not available');
+    if (!userLatLng) {
+      alert('User location not available');
+      return;
+    }
+    const storeCoords = await geocodeLocation(store.address);
+    if (!storeCoords) {
+      alert('Could not geocode store address');
+      return;
+    }
+    setMapStoreLocation({ ...storeCoords, name: store.seller });
+    setMapModalOpen(true);
   };
 
   return (
@@ -85,11 +146,11 @@ const StoreSelectionModal = ({
                   <div className="flex items-center space-x-3 text-xs text-gray-600 mt-1">
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-3 h-3" />
-                      <span>{store.distance.toFixed(1)}mi/{Math.round(store.distance * 16)}min</span>
+                      <span>{(store.distance || 0).toFixed(1)}mi/{Math.round((store.distance || 0) * 16)}min</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      <span>{store.rating.toFixed(1)}</span>
+                      <span>{(store.rating || 0).toFixed(1)}</span>
                     </div>
                   </div>
                   {store.address && (
@@ -99,9 +160,9 @@ const StoreSelectionModal = ({
                   )}
                 </div>
                 <div className="text-right ml-3">
-                  <div className="text-lg font-bold">${store.price}</div>
+                  <div className="text-lg font-bold">${(store.price || 0).toFixed(2)}</div>
                   <Badge variant="secondary" className="text-xs">
-                    NB: {store.nbScore}/5
+                    NB: {(store.nbScore || 0).toFixed(1)}/5
                   </Badge>
                 </div>
               </div>
@@ -119,7 +180,7 @@ const StoreSelectionModal = ({
                   {isMerchantPreview ? 'Cart Disabled' : 'Add to Basket'}
                 </Button>
                 <Button 
-                  onClick={() => handleShowOnMap(store)}
+                  onClick={() => handleUniversalMap(store)}
                   variant="outline"
                   className="text-sm"
                   size="sm"
@@ -130,6 +191,17 @@ const StoreSelectionModal = ({
             </div>
           ))}
         </div>
+
+        {/* Universal Map Modal */}
+        {mapModalOpen && userLatLng && mapStoreLocation && (
+          <MapModal
+            isOpen={mapModalOpen}
+            onClose={() => setMapModalOpen(false)}
+            userLocation={userLatLng}
+            storeLocation={{ lat: mapStoreLocation.lat, lng: mapStoreLocation.lng }}
+            storeName={mapStoreLocation.name}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

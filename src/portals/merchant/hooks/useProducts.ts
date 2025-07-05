@@ -49,7 +49,6 @@ export const useProducts = (merchantId: string) => {
             sku,
             updated_at,
             products (
-              id,
               name,
               description,
               brand,
@@ -69,14 +68,14 @@ export const useProducts = (merchantId: string) => {
 
         // Transform data to Product type
         const transformedProducts: Product[] = (inventoryData || []).map(inv => ({
-          id: inv.products?.id || '',
+          id: inv.sku || inv.products?.sku || '', // Use SKU as the primary identifier
           name: inv.products?.name || '',
           description: inv.products?.description || '',
           brand: inv.products?.brand || '',
           category_id: inv.products?.category_id || '',
-          sku: '', // Not in current schema
+          sku: inv.sku || inv.products?.sku || '',
           price: inv.price,
-          images: inv.products?.image_url ? [inv.products.image_url] : ['/placeholder.svg'],
+          image: inv.products?.image_url ? [inv.products.image_url] : ['/placeholder.svg'],
           tags: [], // Not in current schema
           is_active: true, // Assuming active if in inventory
           track_inventory: true,
@@ -85,7 +84,7 @@ export const useProducts = (merchantId: string) => {
           updated_at: inv.updated_at,
           inventory: [{
             id: inv.id.toString(),
-            sku: inv.products?.id || '',
+            sku: inv.sku || inv.products?.sku || '',
             store_id: inv.store_id,
             quantity: inv.quantity,
             reserved_quantity: 0,
@@ -93,7 +92,7 @@ export const useProducts = (merchantId: string) => {
             track_quantity: true,
             updated_at: inv.updated_at
           }]
-        })).filter(product => product.id); // Filter out products without IDs
+        })).filter(product => product.sku); // Filter out products without SKUs
         
         setProducts(transformedProducts);
       } catch (err) {
@@ -121,7 +120,7 @@ export const useProducts = (merchantId: string) => {
           description: productData.description || '',
           brand: productData.brand || '',
           category_id: productData.category_id || null,
-          image_url: productData.images?.[0] || null
+          image_url: productData.image?.[0] || null
         })
         .select()
         .single();
@@ -143,14 +142,14 @@ export const useProducts = (merchantId: string) => {
       if (inventoryError) throw inventoryError;
 
       const newProduct: Product = {
-        id: productRecord.id,
+        id: productData.sku || '', // Use SKU as the primary identifier
         name: productRecord.name,
         description: productRecord.description || '',
         brand: productRecord.brand || '',
         category_id: productRecord.category_id || '',
         sku: productData.sku || '',
         price: inventoryRecord.price,
-        images: productRecord.image_url ? [productRecord.image_url] : ['/placeholder.svg'],
+        image: productRecord.image_url ? [productRecord.image_url] : ['/placeholder.svg'],
         tags: productData.tags || [],
         is_active: true,
         track_inventory: true,
@@ -161,7 +160,7 @@ export const useProducts = (merchantId: string) => {
         variants: productData.variants || [],
         inventory: [{
           id: inventoryRecord.id.toString(),
-          sku: productRecord.id,
+          sku: inventoryRecord.sku || productData.sku || '',
           store_id: productData.store_id,
           quantity: inventoryRecord.quantity,
           reserved_quantity: 0,
@@ -180,13 +179,14 @@ export const useProducts = (merchantId: string) => {
   };
 
   const updateProduct = async (productId: string, updates: Partial<Product>) => {
+    // productId parameter represents the product's SKU for identification
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       setProducts(prev => 
         prev.map(product => 
-          product.id === productId 
+          product.sku === productId 
             ? { ...product, ...updates, updated_at: new Date().toISOString() }
             : product
         )
@@ -198,11 +198,12 @@ export const useProducts = (merchantId: string) => {
   };
 
   const deleteProduct = async (productId: string) => {
+    // productId parameter represents the product's SKU for identification
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setProducts(prev => prev.filter(product => product.id !== productId));
+      setProducts(prev => prev.filter(product => product.sku !== productId));
     } catch (err) {
       console.error('Error deleting product:', err);
       throw new Error('Failed to delete product');

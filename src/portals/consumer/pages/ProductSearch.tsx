@@ -13,6 +13,7 @@ import ProductCard from '@/components/ProductCard';
 import { toast } from 'sonner';
 import { addToBasket } from '@/utils/localStorage';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import LocationAutocompleteInput from "@/components/LocationAutocompleteInput";
 
 interface Store {
   id: string;
@@ -86,7 +87,7 @@ const ProductSearch: React.FC = () => {
       const { data: products, error, count } = await supabase
         .from('products')
         .select(`
-          id,
+          sku,
           name,
           description,
           image_url,
@@ -119,7 +120,7 @@ const ProductSearch: React.FC = () => {
             description
           )
         `)
-        .in('sku', products?.map(p => p.id) || [])
+        .in('sku', products?.map(p => p.sku) || [])
         .gt('quantity', 0);
 
       if (inventoryError) {
@@ -148,10 +149,10 @@ const ProductSearch: React.FC = () => {
 
       // Calculate distance/travelTime for each store if locationValue is set
       let transformedProducts: Product[] = products?.map((product) => {
-        let stores = productInventoryMap.get(product.id) || [];
+        let stores = productInventoryMap.get(product.sku) || [];
         return {
-          id: product.id,
-          sku: product.id,
+          id: product.sku,
+          sku: product.sku,
           name: product.name,
           description: product.description || 'No description available',
           image: product.image_url || '/placeholder.svg',
@@ -388,12 +389,12 @@ const ProductSearch: React.FC = () => {
               className="flex-1"
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
-            <Input
+            <LocationAutocompleteInput
               placeholder="Set your location"
               value={locationValue}
-              onChange={e => {
-                setLocationValue(e.target.value);
-                setUserLocation(e.target.value);
+              onChange={val => {
+                setLocationValue(val);
+                setUserLocation(val);
               }}
               className="w-64"
             />
@@ -443,7 +444,7 @@ const ProductSearch: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {products.map((product) => (
                   <ProductCard
-                    key={product.id}
+                    key={product.sku}
                     product={product}
                     onAddToBasket={handleAddToBasket}
                     locationValue={locationValue}

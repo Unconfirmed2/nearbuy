@@ -11,8 +11,8 @@ interface ProductCardProps {
   product: Product;
   onEdit: (product: Product) => void;
   onDuplicate: (product: Product) => void;
-  onDelete: (productId: string) => void;
-  onToggleStatus: (productId: string, isActive: boolean) => void;
+  onDelete: (productId: string) => void; // productId represents the product's SKU
+  onToggleStatus: (productId: string, isActive: boolean) => void; // productId represents the product's SKU
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -22,7 +22,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onDelete,
   onToggleStatus
 }) => {
-  const primaryImage = product.images?.[0] || '/placeholder.svg';
+  const primaryImage = product.image?.[0] || '/placeholder.svg';
   const lowStock = product.inventory?.[0]?.quantity <= (product.inventory?.[0]?.low_stock_threshold || 0);
 
   return (
@@ -64,7 +64,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <Copy className="h-4 w-4 mr-2" />
                 Duplicate
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onToggleStatus(product.id, !product.is_active)}>
+              <DropdownMenuItem onClick={() => onToggleStatus(product.sku, !product.is_active)}>
                 {product.is_active ? (
                   <>
                     <EyeOff className="h-4 w-4 mr-2" />
@@ -78,7 +78,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 )}
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => onDelete(product.id)}
+                onClick={() => onDelete(product.sku)}
                 className="text-red-600 focus:text-red-600"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
