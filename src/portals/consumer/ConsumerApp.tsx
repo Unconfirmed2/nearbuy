@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { User } from '@supabase/supabase-js';
@@ -18,6 +17,7 @@ import RoutePlanner from './pages/RoutePlanner';
 import Support from './pages/Support';
 import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
+import Search from './pages/Search';
 import { useAuth } from './hooks/useAuth';
 
 interface ConsumerAppProps {
@@ -48,7 +48,7 @@ const ConsumerApp: React.FC<ConsumerAppProps> = () => {
       <Routes>
         {/* Public routes - accessible without authentication */}
         <Route path="/" element={<Home />} />
-        <Route path="/search" element={<ProductSearch />} />
+        {/* <Route path="/search" element={<ProductSearch />} /> */}
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/route-planner" element={<RoutePlanner />} />
@@ -56,6 +56,7 @@ const ConsumerApp: React.FC<ConsumerAppProps> = () => {
         <Route path="/support" element={<Support />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/search" element={<Search />} />
         
         {/* Protected routes - require authentication */}
         <Route path="/profile" element={

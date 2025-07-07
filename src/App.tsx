@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
@@ -21,6 +20,8 @@ import RoutePlanner from './portals/consumer/pages/RoutePlanner';
 import Support from './portals/consumer/pages/Support';
 import Checkout from './portals/consumer/pages/Checkout';
 import OrderConfirmation from './portals/consumer/pages/OrderConfirmation';
+
+import Search from './portals/consumer/pages/Search';
 
 // Portal components
 import MerchantApp from './portals/merchant/MerchantApp';
@@ -135,18 +136,6 @@ const AppRoutes = () => {
         <Route path="/" element={<RootHandler user={user} profile={profile} />} />
 
         {/* Consumer routes with merchant navbar support */}
-        <Route path="/search" element={
-          isMerchantView && user ? (
-            <div className="min-h-screen bg-gray-50">
-              <MerchantNavbar />
-              <ProductSearch />
-            </div>
-          ) : (
-            <ConsumerLayout user={user} profile={profile}>
-              <ProductSearch />
-            </ConsumerLayout>
-          )
-        } />
         <Route path="/product/:id" element={
           isMerchantView && user ? (
             <div className="min-h-screen bg-gray-50">
@@ -207,6 +196,9 @@ const AppRoutes = () => {
           <ConsumerLayout user={user} profile={profile}>
             <ForgotPassword />
           </ConsumerLayout>
+        } />
+        <Route path="/search" element={
+          <Search />
         } />
         
         {/* Protected routes - require authentication */}

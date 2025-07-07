@@ -52,6 +52,7 @@ interface StoreSelectionModalProps {
   product: Product;
   onAddToBasket: (sku: string, storeId: string) => void;
   isMerchantPreview?: boolean;
+  unit?: 'km' | 'mi';
 }
 
 const StoreSelectionModal = ({ 
@@ -59,11 +60,13 @@ const StoreSelectionModal = ({
   onClose, 
   product, 
   onAddToBasket, 
-  isMerchantPreview = false 
+  isMerchantPreview = false,
+  unit = 'km'
 }: StoreSelectionModalProps) => {
   const [userLatLng, setUserLatLng] = useState<{ lat: number; lng: number } | null>(null);
   const [mapModalOpen, setMapModalOpen] = useState(false);
-  const [mapStoreLocation, setMapStoreLocation] = useState<{ lat: number; lng: number; name: string } | null>(null);
+  const [mapStores, setMapStores] = useState<any[]>([]); // stores with lat/lng
+  const [loadingMap, setLoadingMap] = useState(false);
 
   const handleAddToBasket = (storeId: string) => {
     onAddToBasket(product.sku, storeId);
@@ -100,31 +103,53 @@ const StoreSelectionModal = ({
     }
   }, [geocodeLocation]);
 
-  // Universal map button handler
-  const handleUniversalMap = async (store: Store) => {
-    if (!store.address) return alert('Store address not available');
-    if (!userLatLng) {
-      alert('User location not available');
-      return;
-    }
-    const storeCoords = await geocodeLocation(store.address);
-    if (!storeCoords) {
-      alert('Could not geocode store address');
-      return;
-    }
-    setMapStoreLocation({ ...storeCoords, name: store.seller });
+  // Pre-geocode all store addresses before opening map
+  const handleShowAllOnMap = async () => {
+    setLoadingMap(true);
+    const geocodedStores = await Promise.all(
+      product.stores.map(async (store) => {
+        if (store.address) {
+          const coords = await geocodeLocation(store.address);
+          if (coords) {
+            return { ...store, lat: coords.lat, lng: coords.lng };
+          }
+        }
+        return { ...store };
+      })
+    );
+    setMapStores(geocodedStores);
+    setLoadingMap(false);
     setMapModalOpen(true);
   };
 
+  // Calculate average rating for the product
+  const averageRating = product.stores.length > 0 ? (
+    product.stores.reduce((sum, s) => sum + (s.rating || 0), 0) / product.stores.length
+  ) : 0;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" aria-describedby="store-selection-modal-desc">
+        <span id="store-selection-modal-desc" className="sr-only">
+          Select a store to add this product to your basket, or view all stores on a map.
+        </span>
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-3">
             <img src={product.image} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
             <div>
               <div className="font-semibold">{product.name}</div>
               <div className="text-sm text-gray-500">{product.category}</div>
+              <div className="flex items-center gap-1 mt-1">
+                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <span className="text-xs font-medium">{averageRating.toFixed(1)}</span>
+                <span className="inline-block w-24 text-right tabular-nums text-gray-500 ml-2" aria-label={`Average Distance (${unit})`}>
+                  {product.stores.length > 0 ? `${(
+                    product.stores.reduce((sum, s) => sum + (s.distance || 0), 0) / product.stores.length
+                  ).toFixed(1)}${unit}/${Math.round(
+                    product.stores.reduce((sum, s) => sum + (s.travelTime || 0), 0) / product.stores.length
+                  )}min` : '--'}
+                </span>
+              </div>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -146,7 +171,9 @@ const StoreSelectionModal = ({
                   <div className="flex items-center space-x-3 text-xs text-gray-600 mt-1">
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-3 h-3" />
-                      <span>{(store.distance || 0).toFixed(1)}mi/{Math.round((store.distance || 0) * 16)}min</span>
+                      <span className="inline-block w-20 text-right tabular-nums">
+                        {(store.distance || 0).toFixed(1)}{unit}/{Math.round((store.travelTime || 0))}min
+                      </span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
@@ -166,7 +193,6 @@ const StoreSelectionModal = ({
                   </Badge>
                 </div>
               </div>
-              
               <div className="flex space-x-2">
                 <Button 
                   onClick={() => handleAddToBasket(store.id)}
@@ -179,27 +205,38 @@ const StoreSelectionModal = ({
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   {isMerchantPreview ? 'Cart Disabled' : 'Add to Basket'}
                 </Button>
-                <Button 
-                  onClick={() => handleUniversalMap(store)}
-                  variant="outline"
-                  className="text-sm"
-                  size="sm"
-                >
-                  <Map className="w-4 h-4" />
-                </Button>
               </div>
             </div>
           ))}
         </div>
-
-        {/* Universal Map Modal */}
-        {mapModalOpen && userLatLng && mapStoreLocation && (
+        {/* Single map button for all stores */}
+        {product.stores.length > 0 && (
+          <div className="flex justify-center mt-4">
+            <Button 
+              variant="outline"
+              className="text-sm"
+              size="sm"
+              onClick={handleShowAllOnMap}
+              disabled={loadingMap}
+            >
+              <Map className="w-4 h-4 mr-2" />
+              {loadingMap ? 'Loading...' : 'Show All on Map'}
+            </Button>
+          </div>
+        )}
+        {/* Universal Map Modal for all stores */}
+        {mapModalOpen && (
           <MapModal
             isOpen={mapModalOpen}
             onClose={() => setMapModalOpen(false)}
-            userLocation={userLatLng}
-            storeLocation={{ lat: mapStoreLocation.lat, lng: mapStoreLocation.lng }}
-            storeName={mapStoreLocation.name}
+            userLocation={userLatLng || undefined}
+            stores={mapStores.map(store => ({
+              id: store.id,
+              name: store.seller,
+              address: store.address || '',
+              lat: store.lat,
+              lng: store.lng,
+            }))}
           />
         )}
       </DialogContent>

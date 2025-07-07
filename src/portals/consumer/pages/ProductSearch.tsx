@@ -66,12 +66,21 @@ const ProductSearch: React.FC = () => {
   // Persistent location value
   const [locationValue, setLocationValue] = useState('');
 
+  // Always sync locationValue with persistent storage on navigation or mount
   useEffect(() => {
     const stored = getUserLocation();
     if (stored && stored !== locationValue) {
       setLocationValue(stored);
     }
-  }, []);
+    // Listen for storage changes (cross-tab sync)
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'user_location') {
+        setLocationValue(e.newValue || '');
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [searchParams]);
 
   // Fetch products from Supabase with pagination
   const fetchProducts = useCallback(async (query: string, pageNum: number = 0, reset: boolean = false) => {

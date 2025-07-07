@@ -22,27 +22,6 @@ import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { GOOGLE_MAPS_API_KEY } from '@/config';
 import LocationAutocompleteInput from "@/components/LocationAutocompleteInput";
 
-// Fetch user's approximate location via IP
-async function fetchApproxLocation() {
-  try {
-    const res = await fetch('https://ip-api.com/json/?fields=status,city,zip,lat,lon');
-    const data = await res.json();
-    if (data.status === 'success') {
-      return {
-        city: data.city,
-        zip: data.zip,
-        lat: data.lat,
-        lon: data.lon
-      };
-    } else {
-      throw new Error('IP lookup failed');
-    }
-  } catch (err) {
-    console.error('Error fetching IP location:', err);
-    return null;
-  }
-}
-
 // Utility to load Google Maps JS API script if not already loaded
 function loadGoogleMapsScript(callback: () => void) {
   if (window.google && window.google.maps && window.google.maps.places) {
@@ -256,25 +235,15 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
 
   const locationInputRef = useRef<HTMLInputElement>(null);
 
-  // Always sync locationValue with persistent storage on mount, or use IP location if not set
+  // Always sync locationValue with persistent storage on mount
   useEffect(() => {
     const stored = getUserLocation();
     if (stored && stored !== locationValue) {
       setLocationValue(stored);
       setLocationInitialized(true);
     } else if (!stored && !locationInitialized) {
-      // Try to fetch approximate location
-      fetchApproxLocation().then((loc) => {
-        if (loc && loc.lat && loc.lon) {
-          const locString = `${loc.lat}, ${loc.lon}`;
-          setLocationValue(locString);
-          setUserLocation(locString);
-        } else if (loc && loc.city) {
-          setLocationValue(loc.city);
-          setUserLocation(loc.city);
-        }
-        setLocationInitialized(true);
-      });
+      // Set initialized to true without IP lookup to avoid 403 errors
+      setLocationInitialized(true);
     }
   }, [locationInitialized, locationValue]);
 
@@ -811,9 +780,6 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
                         value={locationValue}
                         onChange={setLocationValue}
                         className="pl-10 cursor-pointer text-sm"
-                        readOnly
-                        onClick={() => setIsLocationPopoverOpen(true)}
-                        ref={locationInputRef}
                       />
                     </div>
                   </PopoverTrigger>
@@ -829,7 +795,6 @@ const Home: React.FC<HomeProps> = ({ isMerchantPreview = false }) => {
                         Use My Current Location
                       </Button>
                       <LocationAutocompleteInput
-                        ref={locationInputRef}
                         placeholder="Type your address..."
                         value={locationValue}
                         onChange={setLocationValue}

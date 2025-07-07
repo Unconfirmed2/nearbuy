@@ -1,9 +1,10 @@
-
 import { Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import StoreSelectionModal from "./StoreSelectionModal";
+import { addToFavorites, removeFromFavorites, isFavorite } from "@/utils/localStorage";
+import { Star } from "lucide-react";
 
 interface Store {
   id: string;
@@ -32,19 +33,38 @@ interface ProductCardProps {
   isMerchantPreview?: boolean;
   locationValue?: string;
   hideStoreSelection?: boolean;
+  unit?: 'km' | 'mi';
 }
 
-const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false, locationValue, hideStoreSelection = false }: ProductCardProps) => {
+const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false, locationValue, hideStoreSelection = false, unit = 'km' }: ProductCardProps) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    setIsFavorited(isFavorite(product.sku));
+  }, [product.sku]);
 
   const bestPriceStore = product.stores.reduce((best, current) => 
     current.price < best.price ? current : best
   );
+  // Calculate average rating for the product
+  const averageRating = product.stores.length > 0 ? (
+    product.stores.reduce((sum, s) => sum + (s.rating || 0), 0) / product.stores.length
+  ) : 0;
 
   const handleFavoriteClick = () => {
     if (isMerchantPreview) return; // Disable for merchants
-    setIsFavorited(!isFavorited);
+    if (isFavorited) {
+      removeFromFavorites(product.sku);
+      setIsFavorited(false);
+    } else {
+      addToFavorites({
+        sku: product.sku,
+        productName: product.name,
+        image: product.image
+      });
+      setIsFavorited(true);
+    }
   };
 
   return (
@@ -82,9 +102,12 @@ const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false, locati
             <p className="text-xs text-gray-600 line-clamp-2">
               {product.description}
             </p>
-            
-            <div className="text-xs text-gray-500">
-              From ${bestPriceStore.price} • {product.stores.length} store{product.stores.length !== 1 ? 's' : ''}
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span>From ${bestPriceStore.price} • {product.stores.length} store{product.stores.length !== 1 ? 's' : ''}</span>
+              <span className="flex items-center gap-1 ml-auto">
+                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                {averageRating.toFixed(1)}
+              </span>
             </div>
             
             <Button
@@ -116,6 +139,7 @@ const ProductCard = ({ product, onAddToBasket, isMerchantPreview = false, locati
         product={product}
         onAddToBasket={onAddToBasket}
         isMerchantPreview={isMerchantPreview}
+        unit={unit}
       />
     </>
   );

@@ -45,6 +45,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import LocationAutocompleteInput from "@/components/LocationAutocompleteInput";
+import { getUserLocation, setUserLocation } from '@/utils/location';
 
 interface UniversalNavbarProps {
   user?: User | null;
@@ -69,6 +70,21 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
     value: 5
   });
 
+  // Sync locationValue with persistent storage on mount and when changed elsewhere
+  React.useEffect(() => {
+    const stored = getUserLocation();
+    if (stored && stored !== locationValue) {
+      setLocationValue(stored);
+    }
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'user_location') {
+        setLocationValue(e.newValue || '');
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
   const handleSignOut = async () => {
     await signOut();
     toast.success('Signed out successfully');
@@ -81,6 +97,7 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
 
   const handleLocationSelect = (selectedLocation: string) => {
     setLocationValue(selectedLocation);
+    setUserLocation(selectedLocation);
     setIsLocationPopoverOpen(false);
     toast.success('Location updated!');
   };
@@ -92,6 +109,7 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
           const { latitude, longitude } = position.coords;
           const locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
           setLocationValue(locationString);
+          setUserLocation(locationString);
           setIsLocationPopoverOpen(false);
           toast.success('Location updated to your current position!');
         },
@@ -125,13 +143,13 @@ const UniversalNavbar: React.FC<UniversalNavbarProps> = ({ user: propUser, profi
           <div className="hidden lg:flex items-center gap-2">
             <Popover open={isLocationPopoverOpen} onOpenChange={setIsLocationPopoverOpen}>
               <PopoverTrigger asChild>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <div className="relative flex items-center">
+                  <MapPin className="h-4 w-4 text-gray-500 mr-2" />
                   <LocationAutocompleteInput
-                    placeholder="Location"
+                    placeholder="Set location"
                     value={locationValue}
                     onChange={setLocationValue}
-                    className="w-32 pl-10 cursor-pointer text-sm"
+                    className="w-48 cursor-pointer text-sm"
                   />
                 </div>
               </PopoverTrigger>

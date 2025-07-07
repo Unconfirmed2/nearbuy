@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { calculateDistance, calculateTravelTime } from "@/lib/distance";
-import { latLngToString } from "@/lib/latLngToString";
-import { MapPin, Search, Filter, Star, Clock, Navigation, Menu, Heart } from "lucide-react";
+import { MapPin, Search as SearchIcon, Heart, Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,11 +10,13 @@ import TravelFilter, { TravelFilterValue } from "@/components/TravelFilter";
 import MainNavigation from "@/components/navigation/MainNavigation";
 import { getBasket, addToBasket, getFavorites } from "@/utils/localStorage";
 import { supabase } from "@/integrations/supabase/client";
+import { calculateDistance, calculateTravelTime } from "@/lib/distance";
+import { latLngToString } from "@/lib/latLngToString";
 import { getDefaultDistanceUnit, metersToUnit } from "@/lib/units";
 
-// Define types for clarity and type safety
+// Types
 interface Store {
-  id: string; // string to match Supabase
+  id: string;
   seller: string;
   price: number;
   distance: number;
@@ -27,7 +27,7 @@ interface Store {
 }
 
 interface Product {
-  id: string; // string to match Supabase
+  id: string;
   name: string;
   description: string;
   image: string;
@@ -36,36 +36,7 @@ interface Product {
   stores: Store[];
 }
 
-// Configuration for NB/EZ Score
-const PRICE_WEIGHT = 0.6;
-const DISTANCE_WEIGHT = 0.4;
-const EPSILON = 0.001;
-
-// Calculate NB/EZ Scores for each store offering a product
-function calculateEZScores(offers: { storeId: string; price: number; distanceKm: number }[], maxReasonableDistanceKm: number) {
-  if (offers.length === 1) {
-    const offer = offers[0];
-    const normalizedDistanceScore = 1 - offer.distanceKm / maxReasonableDistanceKm;
-    const nbScore = Math.round(10 * (PRICE_WEIGHT + DISTANCE_WEIGHT * normalizedDistanceScore));
-    return [{ ...offer, nbScore }];
-  }
-  const prices = offers.map(o => o.price);
-  const distances = offers.map(o => o.distanceKm);
-  const minPrice = Math.min(...prices);
-  const maxPrice = Math.max(...prices);
-  const minDistance = Math.min(...distances);
-  const maxDistance = Math.max(...distances);
-  return offers.map(offer => {
-    const normalizedPrice = 1 - (offer.price - minPrice) / (maxPrice - minPrice + EPSILON);
-    const normalizedDistance = 1 - (offer.distanceKm - minDistance) / (maxDistance - minDistance + EPSILON);
-    const nbScore = Math.round(
-      10 * (PRICE_WEIGHT * normalizedPrice + DISTANCE_WEIGHT * normalizedDistance)
-    );
-    return { ...offer, nbScore };
-  });
-}
-
-const Index = () => {
+const Search = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [maxDistance, setMaxDistance] = useState(10);
@@ -80,6 +51,7 @@ const Index = () => {
   const [searchType, setSearchType] = useState<'product' | 'store'>("product");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [distanceUnit, setDistanceUnit] = useState<'km' | 'mi'>('km');
 
   // Fetch user's general location and country on mount if not set
@@ -106,7 +78,12 @@ const Index = () => {
     return () => window.removeEventListener('storage', updateFromStorage);
   }, []);
 
-  // Fetch products and inventory from Supabase
+  const calculateNBScore = (distance: number, price: number) => {
+    const distanceScore = Math.max(0, (10 - distance) / 10 * 2.5);
+    const priceScore = Math.max(0, (2000 - price) / 2000 * 2.5);
+    return Math.round((distanceScore + priceScore) * 10) / 10;
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -165,7 +142,7 @@ const Index = () => {
                 latLngToString(userLocation),
                 inv.stores.address
               );
-              // Convert meters to correct unit for EZ Score
+              // Convert meters to correct unit for display
               distance = metersToUnit(distance, distanceUnit);
               travelTime = await calculateTravelTime(
                 latLngToString(userLocation),
@@ -186,20 +163,10 @@ const Index = () => {
             distance, // in correct unit
             travelTime,
             rating: avgRatings[product.sku] || 0,
+            nbScore: calculateNBScore(distance, inv.price || 0),
             address: inv.stores?.address || undefined,
-            storeId: String(inv.store_id),
-            distanceKm: distanceUnit === 'km' ? distance : distance * 1.60934 // always provide km for scoring
           };
         }));
-        // Calculate NB/EZ Score for all store offers for this product
-        const maxReasonableDistance = userLocation ? Math.max(2, travelFilter.value || 20) : 20;
-        const offers = storesWithDistance.map(s => ({ storeId: s.storeId, price: s.price, distanceKm: s.distanceKm }));
-        const scoredOffers = calculateEZScores(offers, maxReasonableDistance);
-        // Merge scores back into storesWithDistance
-        const storesWithScore = storesWithDistance.map(store => {
-          const scoreObj = scoredOffers.find(o => o.storeId === store.storeId);
-          return { ...store, nbScore: scoreObj ? scoreObj.nbScore : 0 };
-        });
         grouped.push({
           id: product.sku,
           sku: product.sku,
@@ -207,17 +174,15 @@ const Index = () => {
           description: product.description || '',
           image: product.image_url || '',
           category: product.category_id || null,
-          stores: storesWithScore
+          stores: storesWithDistance
         });
       }
       setProducts(grouped);
       setLoading(false);
     };
     fetchProducts();
-    // Re-run when userLocation changes
-  }, [userLocation, travelFilter]);
+  }, [userLocation]);
 
-  // Sort stores within each product
   products.forEach(product => {
     product.stores.sort((a, b) => {
       switch (sortBy) {
@@ -247,7 +212,6 @@ const Index = () => {
           const storeDistanceKm = store.distance * 1.60934;
           return storeDistanceKm <= travelFilter.value;
         } else {
-          // Use real travel time if available
           return store.travelTime <= travelFilter.value;
         }
       });
@@ -259,10 +223,6 @@ const Index = () => {
     }
   });
 
-  // Patch: convert all IDs to numbers for ProductCard/StoreSelectionModal compatibility
-  // (No longer needed, using sku everywhere)
-
-  // Use sku as the main identifier for products
   const handleAddToBasket = (sku: string, storeId: string) => {
     const product = products.find(p => p.sku === sku);
     const store = product?.stores.find(s => s.id === storeId);
@@ -301,24 +261,12 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header - Use MainNavigation with UniversalNavbar */}
       <MainNavigation />
-
-      {/* Hero Section with Headline */}
-      <section className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-4xl mx-auto text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Find products you want NearBuy with our NB score that combines price and proximity for the best deals.
-          </h2>
-        </div>
-      </section>
-
-      {/* Search Section */}
       <section className="px-4 sm:px-6 lg:px-8 pb-6">
         <div className="max-w-4xl mx-auto">
           {/* Search Bar */}
           <div className="relative flex items-center bg-white rounded-lg shadow-md p-2 mb-4">
-            <Search className="w-5 h-5 text-gray-400 ml-2" />
+            <SearchIcon className="w-5 h-5 text-gray-400 ml-2" />
             <Input
               placeholder={searchType === "product" ? "Search products near me" : "Search stores near me"}
               value={searchQuery}
@@ -341,28 +289,35 @@ const Index = () => {
                 Stores
               </button>
             </div>
+            {searchType === "store" && (
+              <Button
+                variant="outline"
+                className="ml-2 flex items-center gap-1"
+                onClick={() => setShowMap((v) => !v)}
+              >
+                <Map className="w-4 h-4" />
+                Map
+              </Button>
+            )}
           </div>
-
           {/* Filter Controls */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-base font-medium text-gray-700">Nearby</span>
-                <TravelFilter value={travelFilter} onChange={setTravelFilter} unit={distanceUnit} />
-                <LocationButton userLocation={userLocation} onLocationChange={handleLocationChange} />
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Sort by:</span>
-                <select 
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="text-sm border border-gray-300 rounded px-2 py-1"
-                >
-                  <option value="distance">Distance</option>
-                  <option value="price">Price</option>
-                  <option value="nbScore">NB Score</option>
-                </select>
-              </div>
+              <span className="text-base font-medium text-gray-700">Nearby</span>
+              <TravelFilter value={travelFilter} onChange={setTravelFilter} unit={distanceUnit} />
+              <LocationButton userLocation={userLocation} onLocationChange={handleLocationChange} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Sort by:</span>
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="text-sm border border-gray-300 rounded px-2 py-1"
+              >
+                <option value="distance">Distance</option>
+                <option value="price">Price</option>
+                <option value="nbScore">NB Score</option>
+              </select>
             </div>
             {basket.length > 0 && (
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
@@ -376,43 +331,30 @@ const Index = () => {
               </Badge>
             )}
           </div>
-
           {/* Results Count */}
           <div className="text-sm text-gray-600 mb-4">
             {filteredProducts.length} results found
           </div>
-        </div>
-      </section>
-
-      {/* Products Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        {filteredProducts.length > 0 ? (
+          {/* Map modal or section */}
+          {showMap && (
+            <div className="mb-4 w-full h-96 bg-gray-100 rounded-lg flex items-center justify-center">
+              <span className="text-gray-500">[Map with stores and user location here]</span>
+            </div>
+          )}
+          {/* Products Grid (results below search) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
               <ProductCard 
                 key={`${product.name}-${product.sku}`} 
                 product={product}
                 onAddToBasket={handleAddToBasket}
-                unit={distanceUnit}
               />
             ))}
           </div>
-        ) : (
-          <Card className="p-12 text-center">
-            <CardContent>
-              <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                No products found
-              </h3>
-              <p className="text-gray-500">
-                Try adjusting your search criteria or expanding your search distance.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        </div>
       </section>
     </div>
   );
 };
 
-export default Index;
+export default Search;
