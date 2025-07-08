@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Users, Mail, Trash2, Edit, Shield, UserX, Clock, AlertTriangle } from 'lucide-react';
@@ -288,6 +288,9 @@ const UserManagement: React.FC = () => {
               <Users className="w-5 h-5" />
               Add New User
             </DialogTitle>
+            <DialogDescription>
+              Create a new user account for your organization.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -369,6 +372,9 @@ const UserManagement: React.FC = () => {
               <Edit className="w-5 h-5" />
               Edit User Permissions
             </DialogTitle>
+            <DialogDescription>
+              Modify the user's role and permissions within your organization.
+            </DialogDescription>
           </DialogHeader>
 
           {selectedUser && (

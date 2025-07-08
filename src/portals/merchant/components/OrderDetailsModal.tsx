@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -64,6 +63,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <DialogTitle>Order #{order.order_number}</DialogTitle>
             {getStatusBadge(order.status)}
           </div>
+          <DialogDescription>
+            View and manage order details, including customer information and order items.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6">

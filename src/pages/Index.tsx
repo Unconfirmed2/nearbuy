@@ -85,15 +85,54 @@ const Index = () => {
   // Fetch user's general location and country on mount if not set
   useEffect(() => {
     if (!userLocation) {
-      fetch('https://ipapi.co/json/')
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.latitude && data.longitude) {
-            setUserLocation({ lat: data.latitude, lng: data.longitude });
-            setDistanceUnit(getDefaultDistanceUnit(data.country_code));
+      // First try to get precise location via navigator.geolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const newLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            setUserLocation(newLocation);
+            
+            // Still fetch country info for distance unit
+            fetch('https://ipapi.co/json/')
+              .then(res => res.json())
+              .then(data => {
+                if (data && data.country_code) {
+                  setDistanceUnit(getDefaultDistanceUnit(data.country_code));
+                }
+              })
+              .catch(() => {
+                // Default to km if country detection fails
+                setDistanceUnit('km');
+              });
+          },
+          (error) => {
+            // If geolocation fails, fall back to IP-based location
+            fetch('https://ipapi.co/json/')
+              .then(res => res.json())
+              .then(data => {
+                if (data && data.latitude && data.longitude) {
+                  setUserLocation({ lat: data.latitude, lng: data.longitude });
+                  setDistanceUnit(getDefaultDistanceUnit(data.country_code));
+                }
+              })
+              .catch(() => {});
           }
-        })
-        .catch(() => {});
+        );
+      } else {
+        // If geolocation is not available, use IP-based location
+        fetch('https://ipapi.co/json/')
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.latitude && data.longitude) {
+              setUserLocation({ lat: data.latitude, lng: data.longitude });
+              setDistanceUnit(getDefaultDistanceUnit(data.country_code));
+            }
+          })
+          .catch(() => {});
+      }
     }
   }, [userLocation]);
 
@@ -214,8 +253,8 @@ const Index = () => {
       setLoading(false);
     };
     fetchProducts();
-    // Re-run when userLocation changes
-  }, [userLocation, travelFilter]);
+    // Re-run when userLocation or distanceUnit changes
+  }, [userLocation, distanceUnit]);
 
   // Sort stores within each product
   products.forEach(product => {
@@ -244,8 +283,8 @@ const Index = () => {
     } else {
       const hasValidStore = product.stores.some(store => {
         if (travelFilter.type === "distance") {
-          const storeDistanceKm = store.distance * 1.60934;
-          return storeDistanceKm <= travelFilter.value;
+          // store.distance is already in the correct unit (km or mi) based on distanceUnit
+          return store.distance <= travelFilter.value;
         } else {
           // Use real travel time if available
           return store.travelTime <= travelFilter.value;
@@ -282,22 +321,6 @@ const Index = () => {
   const handleLocationChange = (location: {lat: number, lng: number} | null) => {
     setUserLocation(location);
   };
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          // ignore
-        }
-      );
-    }
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

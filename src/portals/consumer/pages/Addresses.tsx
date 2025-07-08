@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, MapPin, Edit, Trash2, Star } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import LocationAutocompleteInput from "@/components/LocationAutocompleteInput";
 
@@ -120,6 +120,9 @@ const Addresses: React.FC = () => {
               <DialogTitle>
                 {editingAddress ? 'Edit Address' : 'Add New Address'}
               </DialogTitle>
+              <DialogDescription>
+                {editingAddress ? 'Update your saved address information.' : 'Add a new address to your saved addresses.'}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>

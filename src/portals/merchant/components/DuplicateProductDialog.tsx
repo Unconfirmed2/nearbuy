@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,7 +85,14 @@ const DuplicateProductDialog: React.FC<DuplicateProductDialogProps> = ({
             <Copy className="w-5 h-5" />
             Duplicate Product
           </DialogTitle>
+          <DialogDescription>
+            Create a copy of this product with the option to duplicate to multiple stores.
+          </DialogDescription>
         </DialogHeader>
+
+        <DialogDescription className="text-sm text-gray-500 mb-4">
+          Duplicate this product to create a new one with similar attributes. Modify the fields as necessary.
+        </DialogDescription>
 
         <div className="space-y-4">
           <div className="bg-gray-50 p-3 rounded-lg">

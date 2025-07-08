@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Plus, Copy, Edit, Trash2, Calendar, Percent } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -200,6 +200,9 @@ const CouponManager: React.FC<CouponManagerProps> = ({ merchantId, storeId }) =>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create New Coupon</DialogTitle>
+                <DialogDescription>
+                  Create promotional coupons to offer discounts to your customers.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>

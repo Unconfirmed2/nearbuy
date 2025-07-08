@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Store, Zap, Settings, Plus, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -148,6 +147,9 @@ const POSIntegration: React.FC<POSIntegrationProps> = ({
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Connect POS System</DialogTitle>
+                <DialogDescription>
+                  Connect your Point of Sale system to sync inventory and orders automatically.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { GOOGLE_MAPS_API_KEY } from "@/config";
 
 interface LocationButtonProps {
   userLocation: {lat: number, lng: number} | null;
@@ -117,6 +118,41 @@ const LocationButton = ({ userLocation, onLocationChange }: LocationButtonProps)
     setIsManualInput(true);
   };
 
+  const handleAddressSubmit = async () => {
+    if (!locationText.trim()) return;
+    
+    try {
+      // Geocode the manually entered address
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(locationText)}&key=${GOOGLE_MAPS_API_KEY}`;
+      const response = await fetch(geocodeUrl);
+      const data = await response.json();
+      
+      if (data.status === 'OK' && data.results && data.results[0]) {
+        const location = data.results[0].geometry.location;
+        const newLocation = { lat: location.lat, lng: location.lng };
+        
+        if (onLocationChange) {
+          onLocationChange(newLocation);
+        }
+        
+        // Update the text with the formatted address
+        setLocationText(data.results[0].formatted_address);
+      } else {
+        console.error('Geocoding failed:', data.status);
+        // Keep the original text if geocoding fails
+      }
+    } catch (error) {
+      console.error('Error geocoding address:', error);
+      // Keep the original text if there's an error
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleAddressSubmit();
+    }
+  };
+
   if (isManualInput || (userLocation && locationText)) {
     return (
       <>
@@ -127,6 +163,8 @@ const LocationButton = ({ userLocation, onLocationChange }: LocationButtonProps)
             placeholder="Enter your address"
             value={locationText}
             onChange={(e) => setLocationText(e.target.value)}
+            onKeyPress={handleKeyPress}
+            onBlur={handleAddressSubmit}
             className="w-64 h-8 text-sm"
           />
           <Button

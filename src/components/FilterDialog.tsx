@@ -4,6 +4,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,9 @@ const FilterDialog = ({ isOpen, onClose, maxDistance, onDistanceChange }: Filter
             <Filter className="w-5 h-5" />
             <span>Filter Products</span>
           </DialogTitle>
+          <DialogDescription>
+            Filter products by category, price range, and distance to find exactly what you're looking for.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

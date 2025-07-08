@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -124,6 +124,9 @@ const CreateStoreDialog: React.FC<CreateStoreDialogProps> = ({
             <Store className="w-5 h-5" />
             {isEdit ? 'Edit Store' : 'Create New Store'}
           </DialogTitle>
+          <DialogDescription>
+            {isEdit ? 'Update your store information and settings.' : 'Create a new store to start selling your products.'}
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="basic" className="space-y-4">

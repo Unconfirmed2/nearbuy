@@ -14,8 +14,8 @@ export const calculateTravelTime = async (
 ): Promise<number> => {
   const url = `https://routes.googleapis.com/directions/v2:computeRoutes`;
   const body = {
-    origin: { location: { latLng: parseLatLng(origin) } },
-    destination: { location: { latLng: parseLatLng(destination) } },
+    origin: { location: { latLng: await parseLatLng(origin) } },
+    destination: { location: { latLng: await parseLatLng(destination) } },
     travelMode: mode,
     routingPreference: "TRAFFIC_AWARE",
     computeAlternativeRoutes: false,
@@ -52,8 +52,8 @@ export const calculateDistance = async (
 ): Promise<number> => {
   const url = `https://routes.googleapis.com/directions/v2:computeRoutes`;
   const body = {
-    origin: { location: { latLng: parseLatLng(origin) } },
-    destination: { location: { latLng: parseLatLng(destination) } },
+    origin: { location: { latLng: await parseLatLng(origin) } },
+    destination: { location: { latLng: await parseLatLng(destination) } },
     travelMode: mode,
     routingPreference: "TRAFFIC_AWARE",
     computeAlternativeRoutes: false,
@@ -76,11 +76,21 @@ export const calculateDistance = async (
 };
 
 // Helper to parse lat,lng string or address to { latitude, longitude }
-function parseLatLng(input: string): { latitude: number; longitude: number } {
+async function parseLatLng(input: string): Promise<{ latitude: number; longitude: number }> {
   // If input is already a lat,lng string
   if (/^-?\d+\.\d+,-?\d+\.\d+$/.test(input)) {
     const [lat, lng] = input.split(",").map(Number);
     return { latitude: lat, longitude: lng };
   }
-  throw new Error("Only lat,lng string supported in this implementation");
+  
+  // Otherwise, geocode the address
+  const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}`;
+  const res = await fetch(geocodeUrl);
+  if (!res.ok) throw new Error("Failed to geocode address");
+  const data = await res.json();
+  if (data.status !== 'OK' || !data.results || !data.results[0]) {
+    throw new Error("No geocoding results found");
+  }
+  const location = data.results[0].geometry.location;
+  return { latitude: location.lat, longitude: location.lng };
 }

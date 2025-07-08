@@ -62,7 +62,7 @@ const TravelFilter: React.FC<TravelFilterProps> = ({ value, onChange, unit = 'km
         value={value.value}
         onChange={handleValueChange}
         className="w-10 text-xs px-1 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 text-center no-spinners"
-        aria-label={value.type === "time" ? "Max Time (min)" : "Max Distance (km)"}
+        aria-label={value.type === "time" ? "Max Time (min)" : `Max Distance (${unit})`}
         inputMode="numeric"
         pattern="[1-9][0-9]*"
         style={{ MozAppearance: 'textfield' }}
@@ -74,7 +74,7 @@ const TravelFilter: React.FC<TravelFilterProps> = ({ value, onChange, unit = 'km
         value={value.value}
         onChange={handleValueChange}
         className="w-24 mx-1 accent-blue-600"
-        aria-label={value.type === "time" ? "Max Time (min)" : "Max Distance (km)"}
+        aria-label={value.type === "time" ? "Max Time (min)" : `Max Distance (${unit})`}
       />
       <span className="w-5 text-xs text-gray-600 mr-2">
         {value.type === "time" ? "min" : unit}
